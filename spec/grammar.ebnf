@@ -1,1 +1,583 @@
-# EBNF grammar for Lattice text
+(*
+  LSTP v0.1 — Lattice text grammar
+  Status: Normative Phase 1 grammar
+  Encoding: UTF-8
+
+  EBNF notation used in this file:
+    =        definition
+    |        alternative
+    ,        concatenation
+    [ ... ]  optional
+    { ... }  zero-or-more repetition
+    ( ... )  grouping
+    "..."    terminal string
+    ? ... ?  implementation-defined lexical character class
+    ;        ends a grammar production
+
+  IMPORTANT:
+  - A semicolon in this EBNF file terminates an EBNF production.
+  - A semicolon in Lattice source is the quoted terminal ";" and begins metadata.
+  - Context-stack resolution and macro expansion are Phase 3 semantics.
+  - Undefined draft glyphs such as "<=" are intentionally absent from strict v0.1.
+*)
+
+lstp_document
+  = bom_opt,
+    horizontal_space_opt,
+    [ top_level_clause,
+      { line_break_plus, horizontal_space_opt, [ top_level_clause ] }
+    ],
+    horizontal_space_opt
+  ;
+
+bom_opt
+  = [ utf8_bom ]
+  ;
+
+utf8_bom
+  = ? U+FEFF ?
+  ;
+
+top_level_clause
+  = main_clause
+  | constraint_clause
+  | output_clause
+  | confidence_clause
+  | metadata_clause
+  | evidence_clause
+  | claim_clause
+  | ambiguity_clause
+  | context_command
+  | macro_definition
+  ;
+
+(* ---------- Main communicative clauses ---------- *)
+
+main_clause
+  = force_prefix,
+    action_identifier,
+    [ horizontal_space_plus, focus ],
+    [ horizontal_space_opt, relation_tail ],
+    [ horizontal_space_opt, operation_block ],
+    { horizontal_space_plus, inline_modifier },
+    [ horizontal_space_plus, output_clause ],
+    [ horizontal_space_plus, confidence_clause ],
+    [ horizontal_space_plus, metadata_clause ]
+  ;
+
+force_prefix
+  = urgent_directive
+  | directive
+  | interrogative
+  | declarative
+  ;
+
+urgent_directive = "!!" ;
+directive        = "!" ;
+interrogative    = "?" ;
+declarative      = "." ;
+
+action_identifier
+  = qualified_identifier
+  ;
+
+focus
+  = target_reference, [ horizontal_space_plus, context_reference ]
+  | context_reference
+  ;
+
+target_reference
+  = "@", qualified_identifier, [ scope_block ]
+  ;
+
+relation_tail
+  = "=", horizontal_space_opt, expression
+  | ":", horizontal_space_opt, expression
+  ;
+
+operation_block
+  = "::", horizontal_space_opt, expression
+  ;
+
+inline_modifier
+  = constraint_block
+  | evidence_clause
+  | confidence_clause
+  ;
+
+(* ---------- Packet-level continuation clauses ---------- *)
+
+constraint_clause
+  = constraint_block
+  ;
+
+constraint_block
+  = "{",
+    layout_space_opt,
+    [ constraint_entry,
+      { layout_space_opt, ",", layout_space_opt, constraint_entry }
+    ],
+    layout_space_opt,
+    "}"
+  ;
+
+constraint_entry
+  = qualified_identifier,
+    horizontal_space_opt,
+    constraint_separator,
+    horizontal_space_opt,
+    expression
+  ;
+
+constraint_separator
+  = "="
+  | ":"
+  ;
+
+output_clause
+  = "->",
+    horizontal_space_opt,
+    output_format,
+    [ zoom_marker ]
+  ;
+
+output_format
+  = qualified_identifier
+  | string_literal
+  ;
+
+zoom_marker
+  = "@z", zoom_value
+  ;
+
+zoom_value
+  = "0" | "1" | "2" | "3" | "4" | "5" | "max"
+  ;
+
+confidence_clause
+  = "%", confidence_number
+  ;
+
+confidence_number
+  = zero_to_one_number
+  ;
+
+metadata_clause
+  = ";",
+    horizontal_space_opt,
+    metadata_item,
+    { horizontal_space_opt, ",", horizontal_space_opt, metadata_item }
+  ;
+
+metadata_item
+  = context_metadata
+  | qualified_identifier,
+    horizontal_space_opt,
+    constraint_separator,
+    horizontal_space_opt,
+    expression
+  ;
+
+context_metadata
+  = "ctx", context_reference
+  ;
+
+(* ---------- Context syntax: parsed in Phase 2, resolved in Phase 3 ---------- *)
+
+context_reference
+  = "↑",
+    unsigned_integer,
+    [ "@", identifier ]
+  ;
+
+context_command
+  = "ctx.",
+    ( "push", horizontal_space_opt, constraint_block
+    | "pop"
+    )
+  ;
+
+(* ---------- Macro syntax: parsed in Phase 2, expanded in Phase 3 ---------- *)
+
+macro_reference
+  = "#", identifier
+  ;
+
+macro_definition
+  = "def",
+    horizontal_space_plus,
+    macro_reference,
+    horizontal_space_opt,
+    "=",
+    horizontal_space_opt,
+    macro_body
+  ;
+
+macro_body
+  = "{",
+    layout_space_opt,
+    [ expression ],
+    layout_space_opt,
+    "}"
+  ;
+
+(* ---------- Evidence / assumption / challenge syntax ---------- *)
+
+evidence_clause
+  = evidence_keyword,
+    "[",
+    layout_space_opt,
+    [ expression_list ],
+    layout_space_opt,
+    "]"
+  ;
+
+evidence_keyword
+  = "because"
+  | "assume"
+  | "challenge"
+  ;
+
+claim_clause
+  = "claim",
+    horizontal_space_opt,
+    ":",
+    horizontal_space_opt,
+    expression,
+    [ horizontal_space_plus, confidence_clause ]
+  ;
+
+(* ---------- Explicit ambiguity syntax ---------- *)
+
+ambiguity_clause
+  = "ambig",
+    "{",
+    layout_space_opt,
+    ambiguity_key,
+    layout_space_opt,
+    ":",
+    layout_space_opt,
+    weighted_alternative,
+    { layout_space_opt, "|", layout_space_opt, weighted_alternative },
+    layout_space_opt,
+    "}"
+  ;
+
+ambiguity_key
+  = string_literal
+  | qualified_identifier
+  ;
+
+weighted_alternative
+  = primary_expression,
+    [ confidence_clause ]
+  ;
+
+(* ---------- Expressions ---------- *)
+
+expression
+  = annotation_expression
+  | alternative_expression
+  ;
+
+annotation_expression
+  = qualified_identifier,
+    horizontal_space_opt,
+    ":",
+    horizontal_space_opt,
+    alternative_expression
+  ;
+
+alternative_expression
+  = composition_expression,
+    { horizontal_space_opt, "|", horizontal_space_opt, composition_expression }
+  ;
+
+composition_expression
+  = unary_expression,
+    { horizontal_space_opt, "+", horizontal_space_opt, unary_expression }
+  ;
+
+unary_expression
+  = [ "-", horizontal_space_opt ],
+    postfix_expression
+  ;
+
+postfix_expression
+  = primary_expression,
+    [ "~" ],
+    [ confidence_clause ]
+  ;
+
+primary_expression
+  = function_call
+  | parenthesized_expression
+  | macro_reference
+  | target_reference
+  | context_reference
+  | list_literal
+  | string_literal
+  | signed_period
+  | signed_number
+  | boolean_literal
+  | null_literal
+  | qualified_identifier
+  ;
+
+parenthesized_expression
+  = "(",
+    layout_space_opt,
+    expression,
+    layout_space_opt,
+    ")"
+  ;
+
+function_call
+  = qualified_identifier,
+    "(",
+    layout_space_opt,
+    [ expression_list ],
+    layout_space_opt,
+    ")"
+  ;
+
+expression_list
+  = expression,
+    { horizontal_space_opt, ",", horizontal_space_opt, expression }
+  ;
+
+list_literal
+  = "[",
+    layout_space_opt,
+    [ expression_list ],
+    layout_space_opt,
+    "]"
+  ;
+
+(* ---------- Target scope ---------- *)
+
+scope_block
+  = "[",
+    layout_space_opt,
+    [ scope_expression ],
+    layout_space_opt,
+    "]"
+  ;
+
+scope_expression
+  = scope_item,
+    { horizontal_space_opt, scope_joiner, horizontal_space_opt, scope_item }
+  ;
+
+scope_joiner
+  = ","
+  | "|"
+  ;
+
+scope_item
+  = scope_assignment
+  | signed_period
+  | range_literal
+  | string_literal
+  | signed_number
+  | qualified_identifier
+  ;
+
+scope_assignment
+  = qualified_identifier,
+    horizontal_space_opt,
+    constraint_separator,
+    horizontal_space_opt,
+    scope_scalar
+  ;
+
+scope_scalar
+  = signed_period
+  | string_literal
+  | signed_number
+  | qualified_identifier
+  ;
+
+signed_period
+  = [ sign ],
+    unsigned_number,
+    period_unit
+  ;
+
+period_unit
+  = "s" | "m" | "h" | "D" | "W" | "M" | "Q" | "Y"
+  ;
+
+range_literal
+  = scope_scalar,
+    horizontal_space_opt,
+    "..",
+    horizontal_space_opt,
+    scope_scalar
+  ;
+
+(* ---------- Literals ---------- *)
+
+boolean_literal
+  = "true" | "false"
+  ;
+
+null_literal
+  = "null"
+  ;
+
+signed_number
+  = [ sign ], unsigned_number
+  ;
+
+sign
+  = "+" | "-"
+  ;
+
+zero_to_one_number
+  = "0"
+  | "1"
+  | "0.", digit, { digit }
+  | "1.", zero, { zero }
+  ;
+
+unsigned_number
+  = unsigned_integer, [ ".", digit, { digit } ]
+  ;
+
+unsigned_integer
+  = "0"
+  | nonzero_digit, { digit }
+  ;
+
+string_literal
+  = quotation_mark, { string_character | escape_sequence }, quotation_mark
+  ;
+
+string_character
+  = ? any Unicode scalar value except U+0022 QUOTATION MARK,
+      U+005C REVERSE SOLIDUS, and U+0000 through U+001F ?
+  ;
+
+escape_sequence
+  = reverse_solidus,
+    ( quotation_mark
+    | reverse_solidus
+    | "/"
+    | "b" | "f" | "n" | "r" | "t"
+    | unicode_escape
+    )
+  ;
+
+quotation_mark
+  = ? U+0022 QUOTATION MARK ?
+  ;
+
+reverse_solidus
+  = ? U+005C REVERSE SOLIDUS ?
+  ;
+
+unicode_escape
+  = "u", hex_digit, hex_digit, hex_digit, hex_digit
+  ;
+
+(* ---------- Identifiers ---------- *)
+
+qualified_identifier
+  = identifier, { ".", identifier }
+  ;
+
+identifier
+  = identifier_start, { identifier_continue }
+  ;
+
+identifier_start
+  = ascii_letter | "_"
+  ;
+
+identifier_continue
+  = ascii_letter | digit | "_" | "-"
+  ;
+
+ascii_letter
+  = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J"
+  | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T"
+  | "U" | "V" | "W" | "X" | "Y" | "Z"
+  | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j"
+  | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t"
+  | "u" | "v" | "w" | "x" | "y" | "z"
+  ;
+
+digit
+  = zero | nonzero_digit
+  ;
+
+zero
+  = "0"
+  ;
+
+nonzero_digit
+  = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+  ;
+
+hex_digit
+  = digit
+  | "A" | "B" | "C" | "D" | "E" | "F"
+  | "a" | "b" | "c" | "d" | "e" | "f"
+  ;
+
+(* ---------- Whitespace ---------- *)
+
+layout_space_opt
+  = { layout_space }
+  ;
+
+layout_space
+  = horizontal_space | line_break
+  ;
+
+horizontal_space_opt
+  = { horizontal_space }
+  ;
+
+horizontal_space_plus
+  = horizontal_space, { horizontal_space }
+  ;
+
+horizontal_space
+  = " " | tab
+  ;
+
+line_break_plus
+  = line_break, { line_break }
+  ;
+
+line_break
+  = crlf | lf | cr
+  ;
+
+tab  = ? U+0009 CHARACTER TABULATION ? ;
+lf   = ? U+000A LINE FEED ? ;
+cr   = ? U+000D CARRIAGE RETURN ? ;
+crlf = cr, lf ;
+
+(*
+  Strict-core exclusions / reserved syntax
+  ----------------------------------------
+  The following draft glyphs are NOT productions in v0.1 strict grammar:
+    <=  >=  =>  <=>  &&  ||  ^  postfix ↑  postfix ↓
+
+  A permissive implementation may tokenize them as extension operators only
+  when an extension vocabulary is explicitly enabled. It must not infer core
+  semantics for them.
+
+  Semantic constraints not expressible in EBNF
+  ---------------------------------------------
+  1. % confidence is limited to [0,1]; zero_to_one_number enforces the lexical form.
+  2. @z is limited to 0..5 or max.
+  3. ↑ depth is a non-negative integer.
+  4. Unknown core permission modes are rejected during semantic compilation.
+  5. A target/reference must be resolved by semantic validation where required.
+  6. Context references and macros may parse before their values are resolvable.
+  7. Lattice syntax never grants host execution authority.
+*)
