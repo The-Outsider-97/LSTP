@@ -1,1 +1,661 @@
 # JSON Schema for canonical packet
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:lstp:schema:octad:0.1",
+  "title": "LSTP v0.1 Canonical Octad Packet",
+  "description": "Structural schema for the Lattice Semantic Transport Protocol (LSTP) v0.1 canonical packet. The semantic Octad comprises pragmatics, atoms, relations, context, confidence, permissions, evidence, and output. id/version/carrier/audit and extensions are envelope metadata.",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "pragmatics",
+    "atoms",
+    "relations",
+    "context",
+    "confidence",
+    "permissions",
+    "evidence",
+    "output",
+    "carrier",
+    "audit"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/packetId"
+    },
+    "version": {
+      "const": "0.1"
+    },
+    "pragmatics": {
+      "$ref": "#/$defs/pragmatics"
+    },
+    "atoms": {
+      "$ref": "#/$defs/atoms"
+    },
+    "relations": {
+      "$ref": "#/$defs/relations"
+    },
+    "context": {
+      "$ref": "#/$defs/context"
+    },
+    "confidence": {
+      "$ref": "#/$defs/confidence"
+    },
+    "permissions": {
+      "$ref": "#/$defs/permissions"
+    },
+    "evidence": {
+      "$ref": "#/$defs/evidence"
+    },
+    "output": {
+      "$ref": "#/$defs/output"
+    },
+    "carrier": {
+      "$ref": "#/$defs/carrier"
+    },
+    "audit": {
+      "$ref": "#/$defs/audit"
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "packetId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "description": "Opaque packet identifier. v0.1 does not require UUID syntax."
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
+      "maxLength": 128
+    },
+    "qualifiedIdentifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(?:\\.[A-Za-z_][A-Za-z0-9_-]*)*$",
+      "maxLength": 256
+    },
+    "atomRef": {
+      "type": "string",
+      "pattern": "^@[A-Za-z_][A-Za-z0-9_-]*(?:\\.[A-Za-z_][A-Za-z0-9_-]*)*$",
+      "maxLength": 257
+    },
+    "jsonScalar": {
+      "type": [
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "null"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Namespaced extension data. Keys SHOULD identify the owning implementation or domain (for example 'slai'). Extensions MUST NOT override normative core semantics.",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$"
+      },
+      "additionalProperties": true
+    },
+    "atomObject": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "value": true,
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "atomValue": {
+      "description": "Atom payload. Scalar shorthand preserves compatibility with the draft whitepaper; structured atom objects are preferred when type, label, reference, or attributes matter.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/jsonScalar"
+        },
+        {
+          "$ref": "#/$defs/atomObject"
+        },
+        {
+          "type": "array",
+          "items": true
+        }
+      ]
+    },
+    "atoms": {
+      "type": "object",
+      "description": "Map of local atom names to atom payloads.",
+      "propertyNames": {
+        "$ref": "#/$defs/identifier"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/atomValue"
+      }
+    },
+    "relationEndpoint": {
+      "description": "A relation endpoint, normally an atom reference such as @sales, or an explicit literal.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/atomRef"
+        },
+        {
+          "$ref": "#/$defs/jsonScalar"
+        },
+        {
+          "type": "array",
+          "items": true
+        },
+        {
+          "type": "object",
+          "additionalProperties": true
+        }
+      ]
+    },
+    "relation": {
+      "type": "object",
+      "required": [
+        "type",
+        "subject"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "subject": {
+          "$ref": "#/$defs/relationEndpoint"
+        },
+        "predicate": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "object": {
+          "$ref": "#/$defs/relationEndpoint"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/relationEndpoint"
+          }
+        },
+        "qualifiers": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relation"
+      }
+    },
+    "pragmatics": {
+      "type": "object",
+      "description": "Communicative purpose and interaction-level attributes.",
+      "properties": {
+        "intent": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "force": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "uniqueItems": true
+        },
+        "tone": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          ]
+        },
+        "urgency": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "contextReference": {
+      "type": "object",
+      "required": [
+        "depth"
+      ],
+      "properties": {
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "agent": {
+          "$ref": "#/$defs/identifier"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "packet_id": {
+          "$ref": "#/$defs/packetId"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/contextReference"
+          }
+        },
+        "prior_message_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "description": "Compatibility field for draft examples such as ctx↑1. Canonical producers SHOULD use refs."
+        },
+        "variables": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "frame": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "confidence": {
+      "type": "object",
+      "description": "Packet-level confidence metadata; relation/claim-specific confidence may be carried in extensions until a later vocabulary is standardized.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "required": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "approximate": {
+          "type": "boolean"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "readonly",
+            "preview",
+            "sandbox",
+            "confirm",
+            "commit",
+            "auto",
+            "advisory",
+            "reply_or_explain_only"
+          ]
+        },
+        "scope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "uniqueItems": true
+        },
+        "authorization_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "description": "Opaque host-issued reference to prior authorization. It is not itself proof of authority."
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "constraints": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "auto"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "required": [
+              "authorization_ref"
+            ]
+          }
+        }
+      ]
+    },
+    "evidenceItem": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "type": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 8192
+            },
+            "supports": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "uniqueItems": true
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "provided": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidenceItem"
+          }
+        },
+        "needed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidenceItem"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "challenges": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "zoom": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        {
+          "const": "max"
+        }
+      ]
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "zoom": {
+          "$ref": "#/$defs/zoom"
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "carrier": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "lattice_text",
+            "json_packet",
+            "semantic_graph",
+            "radial",
+            "spatial",
+            "audio_signal",
+            "haptic_signal",
+            "vector_pointer",
+            "other"
+          ]
+        },
+        "preferred": {
+          "type": "string",
+          "enum": [
+            "lattice_text",
+            "json_packet",
+            "semantic_graph",
+            "radial",
+            "spatial",
+            "audio_signal",
+            "haptic_signal",
+            "vector_pointer",
+            "other"
+          ]
+        },
+        "available": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "lattice_text",
+              "json_packet",
+              "semantic_graph",
+              "radial",
+              "spatial",
+              "audio_signal",
+              "haptic_signal",
+              "vector_pointer",
+              "other"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "content_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "audit": {
+      "type": "object",
+      "properties": {
+        "created_by": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_carrier": {
+          "type": "string",
+          "enum": [
+            "lattice_text",
+            "json_packet",
+            "semantic_graph",
+            "radial",
+            "spatial",
+            "audio_signal",
+            "haptic_signal",
+            "vector_pointer",
+            "other"
+          ]
+        },
+        "validated": {
+          "type": "boolean"
+        },
+        "schema_version": {
+          "const": "0.1"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
