@@ -1,5 +1,3 @@
-# JSON Schema for canonical packet
-
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:lstp:schema:octad:0.1",
@@ -71,17 +69,17 @@
     },
     "identifier": {
       "type": "string",
-      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(?![\\s\\S])",
       "maxLength": 128
     },
     "qualifiedIdentifier": {
       "type": "string",
-      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(?:\\.[A-Za-z_][A-Za-z0-9_-]*)*$",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(?:\\.[A-Za-z_][A-Za-z0-9_-]*)*(?![\\s\\S])",
       "maxLength": 256
     },
     "atomRef": {
       "type": "string",
-      "pattern": "^@[A-Za-z_][A-Za-z0-9_-]*(?:\\.[A-Za-z_][A-Za-z0-9_-]*)*$",
+      "pattern": "^@[A-Za-z_][A-Za-z0-9_-]*(?:\\.[A-Za-z_][A-Za-z0-9_-]*)*(?![\\s\\S])",
       "maxLength": 257
     },
     "jsonScalar": {
@@ -98,7 +96,7 @@
       "description": "Namespaced extension data. Keys SHOULD identify the owning implementation or domain (for example 'slai'). Extensions MUST NOT override normative core semantics.",
       "propertyNames": {
         "type": "string",
-        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$"
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"
       },
       "additionalProperties": true
     },

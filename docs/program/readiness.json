@@ -1,0 +1,14 @@
+{
+  "training_ready": false,
+  "blockers": [
+    {"id": "SPEC-001", "summary": "Whitepaper canonical Lattice syntax is absent from the current EBNF."},
+    {"id": "SPEC-002", "summary": "JSON field shapes conflict with Whitepaper sections 6.1-6.9."},
+    {"id": "SPEC-003", "summary": "Permission vocabularies, ordering and fields conflict with Whitepaper section 10."},
+    {"id": "SPEC-004", "summary": "Packet identity versus context identity and envelope shape need explicit reconciliation."},
+    {"id": "IMPL-001", "summary": "Lattice parser, canonical model, compiler and semantic validator are unimplemented."},
+    {"id": "IMPL-002", "summary": "Carrier serialization, runtime boundary and policy conformance are unimplemented."},
+    {"id": "TEST-001", "summary": "Full protocol positive/negative, round-trip, hostile-input and interoperability evidence is absent."},
+    {"id": "DOC-001", "summary": "Whitepaper source figure files and reproducible publication build are missing."},
+    {"id": "REL-001", "summary": "Final clean release audit, compatibility evidence, migration policy and pre-training freeze are incomplete."}
+  ]
+}

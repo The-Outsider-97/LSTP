@@ -1,0 +1,48 @@
+name: Engineering and readiness
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  tooling:
+    name: Tooling / Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e '.[dev]'
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy
+      - run: pytest
+      - run: python -m build
+      - name: Clean wheel installation and CLI smoke
+        run: |
+          python -m venv /tmp/lstp-wheel
+          /tmp/lstp-wheel/bin/python -m pip install dist/*.whl
+          cd /tmp
+          /tmp/lstp-wheel/bin/lstp --help
+          /tmp/lstp-wheel/bin/lstp --version
+          printf '{}' | /tmp/lstp-wheel/bin/lstp json-check
+      - name: Clean source distribution tests
+        run: |
+          mkdir /tmp/lstp-source
+          tar -xzf dist/*.tar.gz -C /tmp/lstp-source
+          python -m venv /tmp/lstp-sdist
+          cd /tmp/lstp-source/lstp-*
+          /tmp/lstp-sdist/bin/python -m pip install '.[dev]'
+          /tmp/lstp-sdist/bin/python -m pytest
+  protocol-readiness:
+    name: Protocol readiness (blocked until conformance evidence exists)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tools/check_readiness.py
