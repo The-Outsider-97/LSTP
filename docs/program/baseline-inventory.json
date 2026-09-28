@@ -1,0 +1,251 @@
+{
+  "commit": "37eade2e2dcbece7b837833f546d9b8a75673a8b",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 665,
+      "sha256": "f53523f34f7f9b015184f95dcc8509e7ac6f729c5105657e450652282e4f23dd",
+      "blank": false
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1066,
+      "sha256": "c6966f16bc431b5918e189a45dd303af1864124353a47b4ce719db3bb7d0a24f",
+      "blank": false
+    },
+    {
+      "path": "README.md",
+      "bytes": 19394,
+      "sha256": "9fa9e4cc67370b59ff5a285a194f8bb8a5f39e853b69453810831d943757e13e",
+      "blank": false
+    },
+    {
+      "path": "docs/LSTP_Whitepaper.pdf",
+      "bytes": 258750,
+      "sha256": "2cccae2d889cf09a92e08c74a4617ca05fbad4ef0b1f1d1e694d80276b563ffd",
+      "blank": false
+    },
+    {
+      "path": "docs/WHITEPAPER.md",
+      "bytes": 58630,
+      "sha256": "20ece4aac15742f6deebc98bf82b9002c14440648083cb2318dea990a0b10dd1",
+      "blank": false
+    },
+    {
+      "path": "examples/lattice/analyze-sales.lat",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "examples/lattice/context-reference.lat",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "examples/lattice/decision.lat",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "examples/lattice/preview-email.lat",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "examples/lattice/summarize-meeting.lat",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "examples/packets/analyze-sales.packet.json",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "examples/packets/context-reference.packet.json",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "examples/packets/decision.packet.json",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "examples/packets/preview-email.packet.json",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "examples/packets/summarize-meeting.packet.json",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "spec/grammar.ebnf",
+      "bytes": 10580,
+      "sha256": "22b3eb72d1d51b97414a0a6c6abe0add916866b9013ff3a5a089e77953308448",
+      "blank": false
+    },
+    {
+      "path": "spec/lattice.bnf",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "spec/lstp-v0.1.md",
+      "bytes": 46274,
+      "sha256": "a33c8a343dcce7a9667222aa3c8229d36cda84a51495f02bd2780cebaf3f4d6c",
+      "blank": false
+    },
+    {
+      "path": "spec/octad_schema.json",
+      "bytes": 15600,
+      "sha256": "60d338e4ba8a8ce00936a67257f6022116c8ac3af12f4937dd596d8be3f00540",
+      "blank": false
+    },
+    {
+      "path": "spec/operator-table.md",
+      "bytes": 18531,
+      "sha256": "8c3ccf3c1f5e97e48dd2108a084f31df04d6bd220b69f412ab52ac7b084eef72",
+      "blank": false
+    },
+    {
+      "path": "spec/packet-schema.json",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "spec/permissions-safety.md",
+      "bytes": 21263,
+      "sha256": "3d1c72c162de7d2bee84799097499e6f3539a1a82d67a905f02f171d00762179",
+      "blank": false
+    },
+    {
+      "path": "spec/vocabulary.md",
+      "bytes": 37,
+      "sha256": "09d53f1d85c672a0ff0990e57a92381035069cd6aa7622a42e874a3cbe96e652",
+      "blank": false
+    },
+    {
+      "path": "src/lstp/__init__.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/cli.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/diagnostics.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/errors.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/packet/__init__.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/packet/compiler.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/packet/serializer.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/packet/validator.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/schema/__init__.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/schema/loader.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/source.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/text/__init__.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/text/ast.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/text/parser.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/text/tokenizer.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/text/tokens.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    },
+    {
+      "path": "src/lstp/version.py",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "blank": true
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # LSTP v0.1 Permissions and Safety
 
+> **Reconciliation notice (22 September 2026):** This draft conflicts with the authoritative PDF. See [the audit](../docs/program/AUDIT-2026-09-22.md). It is not a frozen training or conformance contract. The PDF takes precedence.
+
 **Status:** Normative Phase 1 specification  
 **Protocol:** Lattice Semantic Transport Protocol (LSTP)  
 **Version:** 0.1  
@@ -438,7 +440,9 @@ When LSTP is placed alongside SLAI, for example:
 
 ```text
 SLAI/
-├── LSTP/
+├── run_lstp.py
+├── model/
+│   └── LSTP/
 ├── src/
 ├── data/
 ├── logs/

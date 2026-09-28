@@ -1,5 +1,7 @@
 # Lattice Semantic Transport Protocol (LSTP) v0.1
 
+> **Reconciliation notice (22 September 2026):** This draft conflicts with the authoritative PDF. See [the audit](../docs/program/AUDIT-2026-09-22.md). It is not a frozen training or conformance contract. The PDF takes precedence.
+
 **Status:** Draft normative specification — Phase 1  
 **Protocol name:** Lattice Semantic Transport Protocol  
 **Short name:** LSTP  
@@ -255,7 +257,7 @@ A complete v0.1 packet has the following shape:
 }
 ```
 
-`extensions` is optional. Every other top-level field shown above is REQUIRED by `spec/octad-schema.json`.
+`extensions` is optional. Every other top-level field shown above is REQUIRED by `spec/octad_schema.json`.
 
 The structural schema is authoritative for JSON shape. This document is authoritative for semantic requirements that JSON Schema cannot fully express.
 
@@ -1301,7 +1303,7 @@ These corrections intentionally prefer explicit meaning over speculative compres
 
 ## 30. JSON Schema
 
-`spec/octad-schema.json` uses JSON Schema Draft 2020-12.
+`spec/octad_schema.json` uses JSON Schema Draft 2020-12.
 
 Its responsibilities are structural:
 
@@ -1321,7 +1323,7 @@ JSON Schema does not prove semantic correctness.
 
 ## 31. Structural validation
 
-A packet is **structurally valid** when it validates against `spec/octad-schema.json` using Draft 2020-12 semantics.
+A packet is **structurally valid** when it validates against `spec/octad_schema.json` using Draft 2020-12 semantics.
 
 Implementations SHOULD enable date-time format checking for protocol timestamp fields.
 
@@ -1522,7 +1524,9 @@ LSTP is intended to remain usable independently and later be installable alongsi
 
 ```text
 SLAI/
-├── LSTP/
+├── run_lstp.py
+├── model/
+│   └── LSTP/
 ├── src/
 ├── data/
 ├── logs/
@@ -1823,7 +1827,7 @@ Phase 1 is complete only when the following repository paths are populated with 
 
 ```text
 spec/lstp-v0.1.md
-spec/octad-schema.json
+spec/octad_schema.json
 spec/grammar.ebnf
 spec/operator-table.md
 spec/permissions-safety.md
@@ -1833,21 +1837,8 @@ The roadmap also requires examples in `.lat` and `.packet.json`; those should be
 
 ### 49.1 Naming
 
-The normative Phase 1 filenames use:
-
-```text
-lstp-v0.1.md
-octad-schema.json
-```
-
-not the placeholder variants:
-
-```text
-LSTP-v0.1.md
-octad_schema.json
-```
-
-Keeping one canonical path prevents platform-dependent casing and tooling divergence.
+The repository uses `lstp-v0.1.md` and `octad_schema.json`.
+Use these exact names; do not create duplicate hyphenated/case variants.
 
 ---
 

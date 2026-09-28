@@ -1,5 +1,7 @@
 # LSTP v0.1 Operator Table
 
+> **Reconciliation notice (22 September 2026):** This draft conflicts with the authoritative PDF. See [the audit](../docs/program/AUDIT-2026-09-22.md). It is not a frozen training or conformance contract. The PDF takes precedence.
+
 **Status:** Normative Phase 1 reference  
 **Protocol:** Lattice Semantic Transport Protocol (LSTP)  
 **Text carrier:** Lattice text  
