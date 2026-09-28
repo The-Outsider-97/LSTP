@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import pytest
 
 from lstp.models import Octad, PacketEnvelope
@@ -58,5 +60,21 @@ def test_envelope_rejects_empty_identity_or_version() -> None:
 
 
 def test_model_rejects_non_json_like_runtime_objects() -> None:
-    with pytest.raises(TypeError, match="unsupported canonical value type"):
+    with pytest.raises(TypeError, match=r"unsupported canonical value type at \$\.output"):
         Octad({}, {}, [], {}, 1.0, {}, [], object())
+
+
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+def test_model_rejects_non_finite_numbers(value: float) -> None:
+    with pytest.raises(ValueError, match=r"non-finite number at \$\.confidence"):
+        Octad({}, {}, [], {}, value, {}, [], {})
+
+
+def test_model_rejects_non_string_mapping_keys_instead_of_coercing() -> None:
+    with pytest.raises(TypeError, match=r"non-string object key at \$\.context: int"):
+        Octad({}, {}, [], {1: "one", "1": "string-one"}, 1.0, {}, [], {})  # type: ignore[dict-item]
+
+
+def test_envelope_applies_same_strict_json_boundary() -> None:
+    with pytest.raises(ValueError, match=r"non-finite number at \$\.audit\.duration"):
+        PacketEnvelope(make_octad(), "p-1", "0.1", audit={"duration": math.inf})
