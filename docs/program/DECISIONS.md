@@ -65,3 +65,23 @@ The readiness gate may be cleared only after the relevant authoritative requirem
 The canonical Python containers accept only values representable by the JSON data model: null, booleans, finite numbers, strings, arrays, and objects with string keys. Host-language mappings with non-string keys are rejected rather than coerced because coercion can collapse distinct keys (for example `1` and `"1"`). NaN and positive/negative infinity are rejected because they are outside the JSON number model and make cross-carrier equality non-portable.
 
 This decision constrains the implementation boundary only. It does not define number precision, Unicode normalization, member ordering, textual formatting, or canonical bytes; those remain part of the unresolved serialization profile. Diagnostics include the value path so malformed nested data can be rejected deterministically without echoing payload content.
+
+## D-014 — Evidence constructors are normative vocabulary, not an invented JSON shape
+
+**Status:** active blocker; conservative interpretation accepted.
+
+**Authority:** Whitepaper evidence/provenance requirements and the Lattice evidence constructors identified by the authoritative audit.
+
+The authoritative material establishes evidence as a semantic Octad domain and identifies source/provenance constructors for user, sensor, model, tool, retrieved, and inferred evidence. It does not establish enough detail to derive a unique canonical JSON object shape, item cardinality, or field mapping for those constructors.
+
+The subordinate `spec/lstp-v0.1.md` and current JSON Schema instead describe `provided`, `needed`, `assumptions`, and `challenges`, and permit concise strings or structured items. Those shapes must not become canonical merely because they already exist in a subordinate artifact.
+
+Until the authoritative contract is deliberately clarified:
+
+1. the current `evidence` schema remains non-canonical;
+2. no compiler may translate authoritative evidence constructors into `provided`/`needed`/`assumptions`/`challenges` heuristically;
+3. no validator may certify that subordinate evidence shape as canonical v0.1 evidence;
+4. unknown or unmappable evidence syntax must be preserved only as explicitly namespaced extension data where the protocol permits that, otherwise rejected with a deterministic diagnostic;
+5. training-data generation remains blocked from treating the current evidence JSON shape as frozen protocol semantics.
+
+This decision intentionally resolves only implementation behavior under ambiguity: **fail closed rather than invent a mapping**. It does not change the Whitepaper and does not define the missing evidence JSON representation.
