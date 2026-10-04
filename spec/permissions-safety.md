@@ -1,540 +1,213 @@
 # LSTP v0.1 Permissions and Safety
 
-> **Reconciliation notice (22 September 2026):** This draft conflicts with the authoritative PDF. See [the audit](../docs/program/AUDIT-2026-09-22.md). It is not a frozen training or conformance contract. The PDF takes precedence.
+Status: normative profile subordinate to `spec/CANONICAL-v0.1.md`.
 
-**Status:** Normative Phase 1 specification  
-**Protocol:** Lattice Semantic Transport Protocol (LSTP)  
-**Version:** 0.1  
-**Applies to:** Canonical Octad packets, Lattice text, packet consumers, host runtimes, and future SLAI integration
+## 1. Principle
 
----
+`permissions` expresses **requested authority** only. It is never authentication, authorization, consent, or a bearer capability.
 
-## 1. Purpose
+A host MUST independently resolve principal identity, host policy, current authorization, resource scope, runtime capability, and safety policy before a side effect occurs.
 
-LSTP makes permission state a first-class semantic field because a compact instruction language can otherwise make it too easy to blur the boundary between analysis, preparation, simulation, and real-world action.
-
-This document defines the normative meaning of the LSTP v0.1 permission modes and the minimum safety behavior required of conforming consumers.
-
-The central rule is:
-
-> A permission declaration describes the action mode requested by a packet. It does **not** by itself grant authority.
-
-A conforming host MUST independently determine whether the sender, user, agent, process, or policy is authorized to perform the requested operation. In particular, the presence of `mode=commit` or `mode=auto` MUST NOT be treated as a bearer capability, authentication token, or proof of user consent.
-
-This separation is essential for LSTP to remain safe when embedded in an agent system such as SLAI. LSTP transports semantic intent and requested permission state; the host runtime retains execution authority and policy enforcement.
-
----
-
-## 2. Normative language
-
-The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **NOT RECOMMENDED**, **MAY**, and **OPTIONAL** are to be interpreted as described in BCP 14 (RFC 2119 and RFC 8174) when, and only when, they appear in all capitals.
-
----
-
-## 3. Threat model
-
-The v0.1 safety model is designed to reduce, not eliminate, the following classes of failure:
-
-1. **Permission ambiguity** — a request is interpreted as authorization to act.
-2. **Privilege escalation through serialization** — a packet claims a stronger permission mode than the sender is actually entitled to use.
-3. **Prompt or packet injection** — untrusted content attempts to alter execution permissions.
-4. **Context confusion** — an action inherits a permission state from unrelated or stale context.
-5. **Agent delegation escalation** — one agent delegates work to another with broader execution authority than it possesses.
-6. **Preview-to-execution collapse** — a generated draft is sent, committed, purchased, deleted, or otherwise enacted without a distinct authorization boundary.
-7. **Sandbox escape** — a sandbox-designated packet causes effects in authoritative or external state.
-8. **Replay** — a previously authorized packet is executed again outside its intended scope or lifetime.
-9. **Audit loss** — an action occurs without retaining the effective permission state and authorization provenance used at execution time.
-
-LSTP v0.1 does not provide authentication, cryptographic signatures, identity management, capability tokens, secure storage, transport encryption, or policy engines. Those remain responsibilities of the host system or future protocol layers.
-
----
-
-## 4. Permission object
-
-The canonical packet contains the Octad field:
+## 2. Canonical fields
 
 ```json
 {
   "permissions": {
-    "mode": "preview",
-    "scope": ["email:draft"],
-    "authorization_ref": "auth://host/policy/meeting-email",
-    "expires_at": "2026-08-28T18:00:00+02:00",
-    "constraints": {
-      "recipient_change": false
-    },
-    "extensions": {}
+    "capabilities": ["read", "prepare"],
+    "resources": [{"id": "urn:example:document:1", "kind": "document"}],
+    "profile": "PREVIEW",
+    "forbid": ["commit"],
+    "require_confirmation": false,
+    "require_review": false,
+    "require_logging": true,
+    "limits": {},
+    "authorization_ref": "host-auth-reference",
+    "expires_at": "2026-10-04T23:59:00+02:00"
   }
 }
 ```
 
-The fields have the following meaning:
+Only `capabilities` and `resources` are structurally required. The remaining fields narrow or annotate the request.
 
-| Field | Requirement | Meaning |
+## 3. Core capabilities
+
+The v0.1 capability vocabulary is:
+
+- `read` — inspect already-authorized information without authoritative mutation;
+- `suggest` — propose a judgment, plan, recommendation, or response without preparing an executable mutation;
+- `prepare` — construct a draft, patch, transaction preview, command preview, or other non-committed change artifact;
+- `write` — modify authoritative data where host policy permits;
+- `execute` — run an operation or code where host policy permits;
+- `commit` — cause an externally observable or authoritative effect, including send, publish, deploy, purchase, merge, schedule, or physical actuation.
+
+Capabilities do **not** form a numeric privilege ladder. A host MUST evaluate each requested capability against the requested resources and constraints.
+
+`forbid` subtracts authority from the request. If the same capability appears in `capabilities` and `forbid`, the effective request excludes it and semantic validation SHOULD report the contradiction.
+
+## 4. Convenience profiles
+
+Profiles are ergonomic named bundles. They MUST be expanded to capabilities and constraints before host authorization. They MUST NOT be compared numerically.
+
+| Profile | Requested capabilities | Required narrowing semantics |
 |---|---|---|
-| `mode` | Conditional | Requested LSTP permission mode. It is REQUIRED for any packet that may lead to an operation with side effects. |
-| `scope` | Optional | Human- and host-readable declaration of the intended action scope. It does not grant authority. |
-| `authorization_ref` | Conditional | Opaque reference to prior host-side authorization. REQUIRED by the v0.1 schema for `auto`. It is not proof of authorization by itself. |
-| `expires_at` | Optional | RFC 3339 timestamp after which the referenced authorization or requested permission SHOULD be treated as expired. |
-| `constraints` | Optional | Additional declared limits on the requested action. Host enforcement is REQUIRED if the host relies on these constraints. |
-| `extensions` | Optional | Namespaced host- or domain-specific metadata. Extensions MUST NOT override core permission semantics. |
+| `RO` | `read` | no `write`, `execute`, or `commit` |
+| `SUGGEST` | `read`, `suggest` | no authoritative mutation |
+| `PREVIEW` | `read`, `suggest`, `prepare` | produced artifacts remain non-authoritative |
+| `RW` | `read`, `write` | no implied `execute` or `commit` |
+| `EXEC` | `read`, `execute` | execution target/environment must be explicitly authorized; no implied external commit |
+| `COMMIT` | capabilities explicitly listed by the producer, normally including `commit` | real effect requires independent host authorization |
 
-A packet that has no executable or side-effecting meaning MAY carry an empty permissions object. Once a packet can plausibly cause an external or authoritative-state mutation, `permissions.mode` becomes REQUIRED at the semantic-validation layer even when structural JSON Schema validation alone cannot infer that fact.
+A profile never silently adds a capability that is absent from `capabilities`. If a producer supplies both `profile` and `capabilities`, semantic validation MUST ensure the capability set is compatible with the profile rather than widening it to match the profile.
 
----
+## 5. Resources and scope
 
-## 5. Permission modes
+Every permission request contains `resources`, which is an array of typed resource records. Free-form scope strings are not canonical v0.1.
 
-LSTP v0.1 defines exactly eight core modes.
-
-### 5.1 `readonly`
-
-**Intent:** Inspect or transform information without changing authoritative state.
-
-Allowed:
-
-- reading already-authorized data;
-- parsing;
-- validation;
-- summarization;
-- analysis;
-- comparison;
-- extraction;
-- non-mutating search over data the host already permits the caller to access.
-
-Not allowed:
-
-- sending messages;
-- modifying files or records;
-- creating authoritative calendar events;
-- changing configuration;
-- committing code;
-- purchasing;
-- deleting;
-- invoking another agent with greater execution authority;
-- any operation whose purpose is to mutate authoritative state.
-
-A host MAY create ephemeral in-memory data required to perform the read-only computation. Such internal implementation state does not convert the packet into a state-changing request.
-
-### 5.2 `preview`
-
-**Intent:** Prepare an action or artifact without enacting it.
-
-Allowed:
-
-- draft an email;
-- generate a patch;
-- prepare a calendar event;
-- produce a proposed command;
-- construct a transaction preview;
-- calculate a prospective change set.
-
-Not allowed:
-
-- sending the email;
-- applying the patch to an authoritative branch;
-- creating the real calendar event;
-- executing the command against an authoritative environment;
-- submitting the transaction.
-
-A preview artifact MUST remain distinguishable from committed state. Hosts SHOULD label preview artifacts and SHOULD retain the packet ID that produced them.
-
-### 5.3 `sandbox`
-
-**Intent:** Execute only in an isolated, non-authoritative test context.
-
-Allowed effects are limited to the sandbox designated by the host.
-
-A sandbox consumer MUST enforce isolation appropriate to the operation. Merely receiving `mode=sandbox` is not evidence that the execution environment is actually isolated.
-
-A sandbox packet MUST NOT be allowed to mutate production or otherwise authoritative state. Network, credential, file-system, device, and inter-agent access SHOULD be restricted according to host policy.
-
-If adequate isolation cannot be established, the host MUST refuse the sandbox execution or downgrade it to a non-executing mode such as `preview`. It MUST NOT silently run the action in the authoritative environment.
-
-### 5.4 `confirm`
-
-**Intent:** Prepare the action and obtain explicit authorization immediately before real execution.
-
-A `confirm` packet MUST NOT itself cause the external side effect.
-
-The host MUST:
-
-1. resolve the concrete action;
-2. surface the material target, effect, and relevant parameters to an authorized confirmer;
-3. obtain an affirmative confirmation through a trusted host interaction;
-4. verify that the action has not materially changed since confirmation was requested; and
-5. record the resulting authorization provenance before execution.
-
-After confirmation, the host MAY produce a revised packet or an execution record whose effective mode is `commit`, preserving the original packet ID or linkage in audit metadata. The system SHOULD avoid mutating the original packet in place when doing so would erase the pre-confirmation state.
-
-Silence, timeout, UI dismissal, parser success, or continuation of the conversation MUST NOT count as confirmation.
-
-### 5.5 `commit`
-
-**Intent:** Request a real mutation of authoritative state.
-
-Examples include:
-
-- send;
-- write;
-- update;
-- create;
-- delete;
-- purchase;
-- merge;
-- deploy;
-- schedule;
-- publish;
-- operate a physical actuator.
-
-`commit` is the strongest one-shot execution request in the core vocabulary. A consumer MUST still independently verify identity, authorization, scope, current policy, and target state.
-
-A `commit` packet MUST NOT be executed merely because it is syntactically valid or schema-valid.
-
-For irreversible or materially consequential actions, hosts SHOULD require explicit confirmation or an equivalent trusted authorization mechanism even if the incoming packet says `commit`.
-
-### 5.6 `auto`
-
-**Intent:** Permit repeated or unattended execution under a previously established authorization policy.
-
-`auto` is not shorthand for unrestricted execution.
-
-For v0.1:
-
-- `permissions.authorization_ref` is REQUIRED.
-- The host MUST resolve that reference to authorization state it controls.
-- The resolved authorization MUST still be valid, unexpired, and applicable to the requested target and operation.
-- The operation MUST remain within the authorized scope and constraints.
-- The host MUST apply any rate, frequency, budget, resource, or risk limits established by its policy.
-- If the authorization cannot be verified, the host MUST NOT execute automatically.
-
-An `authorization_ref` supplied by an untrusted packet MUST be treated as an opaque claim until the host verifies it against its own authorization store.
-
-### 5.7 `advisory`
-
-**Intent:** Provide a recommendation, judgment, plan, ranking, or decision support only.
-
-The consumer MAY reason about actions but MUST NOT enact them on the basis of this packet.
-
-This is appropriate for requests such as:
-
-```lattice
-!decide @product_launch[next_Q] :: eval(demand + readiness + legal_risk)
-{mode=advisory}
--> recommendation@z4
+```json
+{"id":"urn:slai:file:report","kind":"file"}
 ```
 
-### 5.8 `reply_or_explain_only`
+A resource MAY also reference an Octad atom through `atom`.
 
-**Intent:** Restrict the response to explanation, clarification, or direct reply.
+Resource matching is exact on the canonical `id` unless a host-specific extension explicitly defines another matching profile. Core LSTP does not interpret glob syntax, prefixes, regular expressions, or URI hierarchy as implicit permission expansion.
 
-This mode is narrower than `readonly`. A consumer MUST NOT use it as authority to take external action, delegate execution, mutate state, or initiate workflows beyond what is needed to construct the response.
+## 6. Side effects
 
-It is useful for socially or semantically sensitive exchanges where the sender is explicitly asking for an explanation rather than an action.
+A side effect is an externally observable or authoritative-state change beyond ephemeral internal computation. Examples include:
 
----
+- sending a message;
+- modifying persistent files or records;
+- committing or pushing code;
+- creating a calendar/task record;
+- purchasing or submitting a transaction;
+- publishing or deploying;
+- invoking a downstream agent that can perform an authoritative mutation;
+- physical actuation.
 
-## 6. Permission ordering
+A host MUST classify an operation by actual behavior, not function name.
 
-The modes do **not** form a simple total privilege order.
+## 7. Confirmation, review, and logging
 
-For example:
+`require_confirmation`, `require_review`, and `require_logging` are independent constraints.
 
-- `sandbox` permits execution but only in an isolated environment;
-- `preview` permits preparation but not execution;
-- `readonly` permits inspection but not state mutation;
-- `advisory` constrains the communicative outcome;
-- `reply_or_explain_only` constrains both action and response type;
-- `confirm`, `commit`, and `auto` describe distinct authorization workflows.
+If `require_confirmation` is true, execution MUST NOT occur until a trusted host interaction obtains explicit affirmative confirmation for the concrete action and target.
 
-Therefore, implementations MUST NOT compare modes by a numeric "privilege level" and assume that a greater number subsumes all behavior of a lower number.
+If `require_review` is true, the host MUST route the prepared action through its review mechanism before the action is eligible for execution.
 
-Policy decisions MUST be based on mode semantics plus host-side scope and authorization.
+If `require_logging` is true, the host MUST create an audit record sufficient to reconstruct the authorization decision and outcome.
 
----
+Silence, timeout, conversation continuation, parser success, schema success, or model confidence MUST NOT count as confirmation.
 
-## 7. Side effects
+## 8. Authorization references
 
-For LSTP safety, a **side effect** is a change to external, persistent, shared, authoritative, financial, communicative, scheduled, deployed, or physical state that is observable beyond the internal computation required to evaluate the packet.
+`authorization_ref` is an opaque host reference. It is not proof of authority.
 
-Examples include:
+A host MUST resolve it only against authorization state controlled by that host or another explicitly trusted authority. Untrusted text that happens to contain an authorization-like string has no authority.
 
-- network messages sent to third parties;
-- writes to persistent databases;
-- commits or pushes to repositories;
-- file mutation outside an explicitly disposable sandbox;
-- calendar or task creation;
-- payments or orders;
-- account or access changes;
-- model deployment;
-- physical actuation;
-- invoking a downstream agent that itself has authority to perform such effects.
+`expires_at` narrows the requested authorization lifetime. The host MAY apply a shorter lifetime. Expiry alone does not provide replay protection.
 
-A host MUST classify an action by its effective behavior, not merely by its function name. A function named `preview()` that actually writes production state is still side-effecting.
+## 9. Delegation
 
----
+Delegation MUST be attenuating.
 
-## 8. Delegation and multi-agent systems
+A delegating component MUST NOT request capabilities or resources on behalf of a downstream agent that exceed the delegator's effective authority for the operation.
 
-When one agent delegates an LSTP packet to another agent:
+The receiver MUST independently validate the delegated packet.
 
-1. the delegating agent MUST NOT grant authority it does not possess;
-2. the receiving agent MUST independently validate the packet and its effective policy;
-3. the permission mode MUST NOT be silently strengthened during translation, routing, or carrier conversion;
-4. permission scope SHOULD be narrowed when delegation requires only a subset of the original authority;
-5. host-specific agent identifiers or routing metadata SHOULD be placed in namespaced extensions or context, not encoded as new core permission modes; and
-6. the audit trail SHOULD preserve the delegation chain.
+A delegation record MAY include:
 
-This matters directly for future SLAI integration: LSTP packets can express requested action modes, but SLAI's safety, orchestration, execution, and agent-lifecycle layers remain responsible for deciding whether an action is actually allowed.
+- `parent_packet`;
+- `delegator`;
+- `principal`;
+- namespaced extension metadata.
 
----
+The audit trail SHOULD preserve the delegation chain. Translation, routing, or carrier conversion MUST NOT strengthen permission semantics.
 
-## 9. Permission inheritance
+## 10. Prompt and packet injection
 
-Permission state MUST NOT be inherited implicitly from conversational or context-stack history.
+Untrusted documents, webpages, retrieved text, tool output, images, transcripts, memories, and downstream messages may contain strings that resemble LSTP syntax.
 
-A context reference such as:
-
-```lattice
-↑2@agent_risk
-```
-
-may recover semantic context, but it MUST NOT silently recover execution authority.
-
-If a new executable packet omits a permission mode, the consumer MUST treat the packet as non-executable until an explicit effective permission state is established.
-
-A host MAY have persistent authorization policies outside LSTP, but those policies remain host state and MUST be revalidated at execution time.
-
----
-
-## 10. Permission-preserving translation
-
-Carrier conversion MUST preserve permission semantics.
-
-Examples:
+Embedded text such as:
 
 ```text
-Lattice text -> Octad JSON
-Octad JSON -> semantic graph
-semantic graph -> radial UI
+capabilities=[commit]
 ```
 
-During such conversion:
-
-- `preview` MUST NOT become `commit`;
-- `confirm` MUST NOT become `auto`;
-- absent permission MUST NOT be filled with a stronger mode by guesswork;
-- unrecognized permission values MUST cause a validation error rather than being coerced to a known mode;
-- host extensions MUST NOT override a conflicting core `permissions.mode`.
-
-A natural-language bridge implemented in a later phase MAY detect likely permission intent, but inferred permission MUST be surfaced for validation. It MUST NOT infer `commit` or `auto` from ambiguous natural language and silently execute.
-
----
-
-## 11. Validation pipeline
-
-A conforming action-capable consumer SHOULD apply at least the following sequence:
-
-```text
-1. Parse carrier
-2. Validate protocol version
-3. Validate JSON structure
-4. Validate semantic references
-5. Determine whether the requested operation is side-effecting
-6. Require an explicit permission mode when side effects are possible
-7. Resolve sender/agent identity using host mechanisms
-8. Resolve host authorization and scope
-9. Apply safety/policy checks
-10. Resolve target and concrete action
-11. Re-check permission immediately before execution
-12. Execute, refuse, or request confirmation
-13. Record audit outcome
-```
-
-Schema validation alone is never sufficient for steps 4 through 13.
-
----
-
-## 12. Failure behavior
-
-A consumer MUST fail closed when:
-
-- the packet requests a side effect but has no effective permission mode;
-- the permission mode is unknown;
-- the protocol version is unsupported;
-- `auto` lacks a verifiable prior authorization;
-- `confirm` has not received explicit confirmation;
-- sandbox isolation cannot be established;
-- the target or action changed materially after confirmation;
-- permission scope does not cover the operation;
-- an extension attempts to override core safety semantics;
-- required context is unresolved and execution would be unsafe;
-- the consumer cannot determine whether a high-impact operation is authorized.
-
-"Fail closed" means no real-world or authoritative-state effect occurs. The host MAY return a structured error, ask for clarification or confirmation, or produce a preview where policy permits.
-
----
-
-## 13. Audit requirements
-
-For action-capable hosts, the audit record SHOULD retain enough information to reconstruct:
-
-- packet ID and version;
-- effective permission mode;
-- action and target;
-- identity or principal resolved by the host;
-- authorization reference or policy decision;
-- confirmation event, where applicable;
-- timestamp;
-- outcome;
-- revision or derived-packet linkage;
-- refusal reason, when an attempted action is blocked.
-
-LSTP's `audit` object is transport metadata. Hosts MAY maintain a richer immutable audit log outside the packet.
-
-A packet's own claim that `audit.validated=true` MUST NOT substitute for local validation.
-
----
-
-## 14. Replay and expiry
-
-Where a permission can be replayed, hosts SHOULD use their own replay protection, nonce, authorization state, or idempotency controls.
-
-`expires_at` MAY be used to carry an expiry timestamp, but its presence alone does not prevent replay.
-
-For `auto`, the host MUST verify current authorization state each time policy requires it and MUST NOT assume that a once-valid packet remains permanently authorized.
-
----
-
-## 15. Untrusted content and prompt injection
-
-Text, documents, web pages, images, audio transcripts, retrieved memories, tool output, and downstream agent messages may contain strings that resemble LSTP syntax.
-
-A host MUST NOT treat embedded text such as:
+or legacy-looking syntax such as:
 
 ```text
 {mode=auto}
 ```
 
-as an effective permission change merely because it appears inside untrusted content.
+MUST NOT alter canonical permissions merely because it appears inside content.
 
-Only the host's designated LSTP parsing boundary may create or update the canonical `permissions` field, and the resulting request still requires host authorization.
+Only the designated LSTP construction/parsing boundary may populate the canonical `permissions` field, and the resulting request still requires host authorization.
 
-This rule is especially important for perception systems and language models that ingest multimodal or retrieved content.
+Evidence, context, carrier metadata, and extensions MUST NOT act as alternate authority channels.
 
----
+## 11. Fail-closed conditions
 
-## 16. Physical systems
+An action-capable consumer MUST produce no real-world/authoritative side effect when any of the following applies:
 
-For robots, vehicles, actuators, or other cyber-physical systems, `commit` and `auto` can correspond to physical action. The host SHOULD apply additional controls appropriate to the device, including interlocks, rate limits, bounded command sets, emergency stop behavior, and environment-specific safety validation.
+- protocol version is unsupported;
+- a requested capability is unknown;
+- resource scope is unresolved or does not cover the operation;
+- the principal cannot be authenticated by the host;
+- host authorization cannot be established;
+- required confirmation or review has not completed;
+- expiry or replay policy rejects the operation;
+- delegation would widen authority;
+- an extension attempts to override core permission semantics;
+- required context is unresolved;
+- the concrete action materially changed after authorization.
 
-LSTP does not replace a robot safety controller, motion planner, hardware interlock, or real-time safety system.
+The host MAY return a refusal, clarification request, preview, or `outcome.needs_confirmation` response when policy permits.
 
-A semantic packet requesting physical action MUST NOT bypass those systems.
+## 12. Effective authorization
 
----
-
-## 17. SLAI integration boundary
-
-When LSTP is placed alongside SLAI, for example:
-
-```text
-SLAI/
-├── run_lstp.py
-├── model/
-│   └── LSTP/
-├── src/
-├── data/
-├── logs/
-└── .github/
-```
-
-the core protocol SHOULD remain independently testable and MUST NOT depend on imports from `SLAI/src/`.
-
-Recommended responsibility split:
+A host SHOULD model effective authority as an intersection:
 
 ```text
-LSTP core
-  parses / validates / serializes semantic packets
-            |
-            v
-SLAI adapter
-  maps packet fields to SLAI runtime contracts
-            |
-            v
-SLAI safety + orchestration + execution authority
-  decides what may actually happen
+requested capabilities/resources
+∩ authenticated principal authority
+∩ host policy
+∩ runtime capability
+∩ current resource scope
+∩ explicit constraints
 ```
 
-The Language Agent may later translate between natural language structures and LSTP pragmatics/atoms. Perception components may later contribute multimodal atom references or carrier metadata. Neither component should be allowed to mint execution authority merely by populating `permissions`.
+This is set/capability intersection, not an ordering of named modes.
 
-SLAI-specific values SHOULD be carried under a namespace such as:
+## 13. Carrier conversion
 
-```json
-{
-  "extensions": {
-    "slai": {
-      "trace_id": "trace_example",
-      "agent": "language"
-    }
-  }
-}
-```
+Conversion among Lattice, canonical JSON, semantic graphs, UI renderings, or future carriers MUST preserve or narrow permissions.
 
-Such metadata is illustrative host integration data, not part of the LSTP core vocabulary.
+Conversion MUST NOT:
 
----
+- add `write`, `execute`, or `commit` by inference;
+- convert missing permissions into executable authority;
+- infer authority from urgency, confidence, evidence, context, or output target;
+- promote extension values into core permissions.
 
-## 18. Conformance requirements
+## 14. Replay and idempotency
 
-A **permission-aware LSTP consumer** is conforming to v0.1 only if it:
+LSTP carries packet identity and optional expiry metadata, but v0.1 does not itself provide cryptographic replay protection.
 
-- recognizes all eight core modes;
-- does not silently reinterpret unknown modes;
-- does not treat the packet itself as proof of authorization;
-- prevents real side effects for `readonly`, `preview`, `advisory`, and `reply_or_explain_only`;
-- confines `sandbox` effects to an actual sandbox;
-- does not execute `confirm` without explicit confirmation;
-- independently authorizes `commit`;
-- requires and verifies prior authorization for `auto`;
-- preserves or narrows permission semantics across delegation and carrier conversion;
-- fails closed when authorization cannot be established.
+Action-capable hosts SHOULD use appropriate nonce, idempotency, authorization-state, or replay-cache controls and MUST revalidate current authorization when policy requires it.
 
----
+## 15. Physical systems
 
-## 19. Non-goals of v0.1
+For cyber-physical systems, LSTP permission semantics sit above device-specific safety systems. A semantic packet MUST NOT bypass motion planners, interlocks, rate limits, emergency-stop behavior, or other hardware/runtime safety controls.
 
-This document intentionally does not standardize:
+## 16. Conformance
 
-- user identity formats;
-- authentication;
-- signatures;
-- capability-token formats;
-- organization policy languages;
-- risk scoring;
-- approval UI;
-- cryptographic audit logs;
-- secure transport;
-- distributed consensus;
-- robot safety standards.
+A permission-aware v0.1 host is conforming only if it:
 
-Those concerns may be layered on top of LSTP but must not be conflated with the semantic permission field.
-
----
-
-## 20. Summary table
-
-| Mode | Prepare | Inspect | Isolated execute | Real execute | Additional gate |
-|---|---:|---:|---:|---:|---|
-| `readonly` | Limited internal | Yes | No | No | None |
-| `preview` | Yes | Yes | No | No | Separate later authorization |
-| `sandbox` | Yes | Yes | Yes | No | Real isolation |
-| `confirm` | Yes | Yes | No before approval | After explicit approval only | Trusted confirmation |
-| `commit` | Yes | Yes | Host-dependent | Yes | Independent host authorization |
-| `auto` | Yes | Yes | Host-dependent | Yes | Verified prior authorization policy |
-| `advisory` | Recommendation only | Yes | No | No | None |
-| `reply_or_explain_only` | Response only | Limited | No | No | None |
-
-The invariant remains:
-
-> The packet may request authority; the host decides whether authority exists.
+- recognizes all six core capabilities;
+- treats profiles as non-authoritative bundles rather than privilege ranks;
+- performs exact resource-scope validation unless an explicit host profile defines otherwise;
+- prevents extensions and untrusted content from modifying core authority;
+- independently authorizes requested side effects;
+- enforces confirmation/review/logging constraints;
+- prevents delegation widening;
+- fails closed when authority cannot be established.
