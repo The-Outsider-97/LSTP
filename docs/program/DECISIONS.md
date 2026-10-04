@@ -85,3 +85,17 @@ Until the authoritative contract is deliberately clarified:
 5. training-data generation remains blocked from treating the current evidence JSON shape as frozen protocol semantics.
 
 This decision intentionally resolves only implementation behavior under ambiguity: **fail closed rather than invent a mapping**. It does not change the Whitepaper and does not define the missing evidence JSON representation.
+
+## D-015 — Envelope versions and extensions fail closed
+
+**Status:** accepted implementation hardening; no new semantic vocabulary introduced.
+
+**Authority:** Whitepaper envelope/version boundary and extension rules; subordinate version rule is consistent with the authoritative fail-closed compatibility principle.
+
+The v0.1 reference model accepts protocol version `0.1` only. Empty, future, alias, or convenience labels such as `latest` are rejected rather than interpreted as compatible. Version negotiation is not inferred by the model.
+
+Envelope `carrier`, `audit`, and `extensions` values are required to be JSON objects at the Python model boundary. Extension entries must use explicit non-empty top-level namespace keys, and each namespace maps to an object. The model preserves such data without assigning semantic meaning to it.
+
+Extensions are never an alternate permission channel. An extension payload containing action-like or permission-like data does not modify `Octad.permissions`, does not grant authority, and is not promoted into a core field. Unknown extension meaning remains opaque to the core implementation; execution that depends on it requires separate host understanding and validation.
+
+This decision deliberately does not define a namespace registry, extension naming ontology, carrier-specific preservation policy, or canonical extension bytes. Those remain specification/serialization work rather than assumptions in the model.
