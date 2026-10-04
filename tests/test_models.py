@@ -51,12 +51,15 @@ def test_envelope_metadata_is_not_semantic_equality() -> None:
     assert left.semantically_equals(right)
 
 
-def test_envelope_rejects_empty_identity_or_version() -> None:
-    octad = make_octad()
+def test_envelope_rejects_empty_identity() -> None:
     with pytest.raises(ValueError, match="packet_id"):
-        PacketEnvelope(octad, "", "0.1")
-    with pytest.raises(ValueError, match="protocol_version"):
-        PacketEnvelope(octad, "p-1", "")
+        PacketEnvelope(make_octad(), "", "0.1")
+
+
+@pytest.mark.parametrize("version", ["", "0.0", "0.2", "1.0", "latest"])
+def test_envelope_rejects_unknown_protocol_versions(version: str) -> None:
+    with pytest.raises(ValueError, match="unsupported protocol_version"):
+        PacketEnvelope(make_octad(), "p-1", version)
 
 
 def test_model_rejects_non_json_like_runtime_objects() -> None:
@@ -78,3 +81,35 @@ def test_model_rejects_non_string_mapping_keys_instead_of_coercing() -> None:
 def test_envelope_applies_same_strict_json_boundary() -> None:
     with pytest.raises(ValueError, match=r"non-finite number at \$\.audit\.duration"):
         PacketEnvelope(make_octad(), "p-1", "0.1", audit={"duration": math.inf})
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("carrier", "json"), ("audit", []), ("extensions", ["slai"])],
+)
+def test_envelope_structures_must_be_objects(field: str, value: object) -> None:
+    kwargs = {field: value}
+    with pytest.raises(TypeError, match=rf"expected object at \$\.{field}"):
+        PacketEnvelope(make_octad(), "p-1", "0.1", **kwargs)  # type: ignore[arg-type]
+
+
+def test_namespaced_extensions_are_preserved_without_interpretation() -> None:
+    packet = PacketEnvelope(
+        make_octad(),
+        "p-1",
+        "0.1",
+        extensions={"slai": {"trace_id": "trace-1", "requested_mode": "EXEC"}},
+    )
+    assert packet.extensions["slai"]["trace_id"] == "trace-1"  # type: ignore[index]
+    assert packet.octad.permissions == {"mode": "RO"}
+
+
+@pytest.mark.parametrize("namespace", ["", " ", "\t"])
+def test_empty_extension_namespace_is_rejected(namespace: str) -> None:
+    with pytest.raises(ValueError, match="extension namespace"):
+        PacketEnvelope(make_octad(), "p-1", "0.1", extensions={namespace: {}})
+
+
+def test_extension_namespace_payload_must_be_object() -> None:
+    with pytest.raises(TypeError, match="must contain an object"):
+        PacketEnvelope(make_octad(), "p-1", "0.1", extensions={"slai": "EXEC"})
