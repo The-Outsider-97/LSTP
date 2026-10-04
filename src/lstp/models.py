@@ -1,9 +1,10 @@
 """Canonical semantic containers for LSTP v0.1.
 
-This module intentionally models only the protocol boundary that is unambiguous in
-the authoritative Whitepaper: an Octad has exactly eight semantic domains. It does
-not guess unresolved carrier grammar, permission subfields, or canonical byte
-serialization.
+This module intentionally models only protocol boundaries that are unambiguous in
+the authoritative Whitepaper. An Octad has exactly eight semantic domains;
+envelope metadata remains outside semantic equality. Unresolved carrier grammar,
+permission subfields, evidence shape, and canonical byte serialization are not
+guessed here.
 """
 
 from __future__ import annotations
@@ -15,14 +16,16 @@ from typing import Any, Mapping
 
 JSONValue = None | bool | int | float | str | tuple["JSONValue", ...] | Mapping[str, "JSONValue"]
 
+SUPPORTED_PROTOCOL_VERSIONS = frozenset({"0.1"})
+
 
 def _freeze(value: Any, *, path: str = "$") -> JSONValue:
     """Return a strict immutable JSON-value snapshot for semantic comparison.
 
     Canonical semantic containers must not silently coerce host-language values.
-    In particular, JSON object keys are strings and JSON numbers exclude NaN and
-    infinities. Rejecting those values here keeps the model boundary deterministic
-    without claiming a byte-canonical serialization profile.
+    JSON object keys are strings and JSON numbers exclude NaN and infinities.
+    Rejecting those values here keeps the model boundary deterministic without
+    claiming a byte-canonical serialization profile.
     """
     if value is None or isinstance(value, (bool, str)):
         return value
@@ -42,6 +45,29 @@ def _freeze(value: Any, *, path: str = "$") -> JSONValue:
     if isinstance(value, (list, tuple)):
         return tuple(_freeze(item, path=f"{path}[{index}]") for index, item in enumerate(value))
     raise TypeError(f"unsupported canonical value type at {path}: {type(value).__name__}")
+
+
+def _freeze_object(value: Any, *, path: str) -> Mapping[str, JSONValue]:
+    """Freeze a value that is required to be a JSON object."""
+    frozen = _freeze(value, path=path)
+    if not isinstance(frozen, Mapping):
+        raise TypeError(f"expected object at {path}")
+    return frozen
+
+
+def _validate_extension_namespaces(extensions: Mapping[str, JSONValue]) -> None:
+    """Require explicit non-empty extension namespaces.
+
+    The Whitepaper permits namespaced host/domain extension data but does not
+    define a registry. This validator therefore enforces only the safe structural
+    invariant: each top-level extension key names an owner and maps to an object.
+    It deliberately does not infer meaning, authorization, or namespace aliases.
+    """
+    for namespace, payload in extensions.items():
+        if not namespace.strip():
+            raise ValueError("extension namespace must not be empty")
+        if not isinstance(payload, Mapping):
+            raise TypeError(f"extension namespace {namespace!r} must contain an object")
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,8 +105,8 @@ class Octad:
 class PacketEnvelope:
     """Non-Octad packet metadata kept separate from semantic equality.
 
-    The envelope is deliberately minimal. Carrier/audit structures remain opaque
-    until their normative contracts are reconciled; no field here grants authority.
+    Carrier/audit structures remain opaque until their normative contracts are
+    fully reconciled. Envelope metadata and extensions never grant authority.
     """
 
     octad: Octad
@@ -91,12 +117,19 @@ class PacketEnvelope:
     extensions: JSONValue = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        if not self.packet_id:
-            raise ValueError("packet_id must not be empty")
-        if not self.protocol_version:
-            raise ValueError("protocol_version must not be empty")
-        for name in ("carrier", "audit", "extensions"):
-            object.__setattr__(self, name, _freeze(getattr(self, name), path=f"$.{name}"))
+        if not isinstance(self.packet_id, str) or not self.packet_id:
+            raise ValueError("packet_id must be a non-empty string")
+        if self.protocol_version not in SUPPORTED_PROTOCOL_VERSIONS:
+            raise ValueError(f"unsupported protocol_version: {self.protocol_version!r}")
+
+        carrier = _freeze_object(self.carrier, path="$.carrier")
+        audit = _freeze_object(self.audit, path="$.audit")
+        extensions = _freeze_object(self.extensions, path="$.extensions")
+        _validate_extension_namespaces(extensions)
+
+        object.__setattr__(self, "carrier", carrier)
+        object.__setattr__(self, "audit", audit)
+        object.__setattr__(self, "extensions", extensions)
 
     def semantically_equals(self, other: object) -> bool:
         """Compare semantic Octad content only, excluding envelope metadata."""
