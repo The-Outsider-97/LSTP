@@ -1,63 +1,112 @@
 # LSTP — Lattice Semantic Transport Protocol
 
-**Pre-alpha engineering foundation; not production-ready or training-ready.**
+**Pre-alpha reference implementation work; protocol contract reconciled, implementation still incomplete.**
 
-LSTP represents semantic messages through an eight-part Octad: pragmatics (π),
-atoms (A), relations (R), context (C), confidence (κ), permissions (Π), evidence (E),
-and output (Ω). Packet/envelope identity, version, carrier, transport and audit
-metadata are separate from these eight semantic components.
+LSTP represents semantic messages through an eight-part Octad:
 
-LSTP is a semantic transport protocol, not a language model, universal ontology,
-authorization system or safety system. Permission data requests authority; a host
-must independently intersect that request with policy and runtime capabilities.
+1. pragmatics (π);
+2. atoms (A);
+3. relations (R);
+4. context (C);
+5. confidence (κ);
+6. permissions (Π);
+7. evidence (E);
+8. output (Ω).
+
+Packet identity, version, carrier, audit, and extension metadata are outside Octad semantic equality.
+
+LSTP is a semantic transport protocol. It is not a language model, authentication system, universal ontology, policy engine, or safety controller. Permission data requests authority; the consuming host independently decides whether authority exists.
 
 ## Current status
 
-The [22 September audit](docs/program/AUDIT-2026-09-22.md) found incompatible
-Whitepaper and specification contracts. The authoritative PDF describes canonical
-Octad syntax, numeric confidence and uppercase permission modes. The current EBNF
-and schema describe a competing compact notation and different field shapes.
-These conflicts remain open. The PDF has not been modified.
+The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The 4 October 2026 canonical reconciliation branch resolves that design split at the specification level.
 
-Implemented foundation:
+Canonical v0.1 now has:
 
-- Python package and installed CLI;
-- bounded UTF-8 JSON inspection with duplicate-key, Unicode and resource checks;
-- structured diagnostics that do not echo input content;
-- unit, property, adversarial and CLI tests;
-- CI engineering matrix and a separate, deliberately failing readiness gate;
-- initial inventory, conflict register, requirement candidates and program plan.
+- one eight-domain Octad shape;
+- one canonical JSON Schema;
+- one orthogonal capability-based permission model;
+- one evidence/provenance representation;
+- stable context-reference requirements;
+- one core vocabulary baseline;
+- one explicit response/outcome vocabulary;
+- one source-of-truth hierarchy for implementation and conformance.
 
-**Not implemented:** Lattice parser/compiler, canonical Octad model, semantic or
-permission validator, carrier serializer/deserializer, host runtime, context
-resolver, SLAI adapter and protocol round trips. Existing empty modules and example
-files are tracked gaps, not functioning features. No performance, security or
-interoperability superiority is claimed.
+The repository is **not yet production-ready or training-ready** because parser/compiler, semantic validation, canonical serialization, full conformance fixtures, interoperability evidence, and SLAI integration remain incomplete.
+
+Implemented engineering foundation includes:
+
+- Python package and CLI;
+- bounded UTF-8 JSON inspection with duplicate-key and resource checks;
+- immutable Octad/envelope foundation types;
+- fail-closed v0.1 envelope version handling;
+- namespaced extension isolation;
+- unit/adversarial/CLI/schema-contract tests;
+- CI engineering matrix;
+- readiness and traceability records.
 
 ## Source of truth
 
-1. [Authoritative Whitepaper PDF](docs/LSTP_Whitepaper.pdf).
-2. This README as subordinate project guidance.
-3. [Specification](spec/lstp-v0.1.md), [EBNF](spec/grammar.ebnf),
-   [schema](spec/octad_schema.json), [operators](spec/operator-table.md),
-   [permissions](spec/permissions-safety.md), [vocabulary](spec/vocabulary.md).
-4. Implementation and tests, which must implement the authority rather than redefine it.
+For v0.1 implementation and conformance:
 
-The [Markdown Whitepaper source](docs/WHITEPAPER.md) retains the same publication
-revision as the PDF. Its referenced figure source files are missing. Full
-publication reproducibility and semantic reconciliation are outstanding.
+1. [`spec/CANONICAL-v0.1.md`](spec/CANONICAL-v0.1.md) — normative semantic and behavioral contract;
+2. [`spec/octad_schema.json`](spec/octad_schema.json) — normative canonical JSON structure;
+3. [`spec/grammar.ebnf`](spec/grammar.ebnf), [`spec/operator-table.md`](spec/operator-table.md), [`spec/permissions-safety.md`](spec/permissions-safety.md), and [`spec/vocabulary.md`](spec/vocabulary.md) — normative carrier/operator/security/vocabulary profiles where consistent with 1–2;
+4. conformance fixtures/tests — executable evidence;
+5. reference implementation — must implement the contract and may not redefine it;
+6. Whitepaper — informative rationale, research framing, design history, and evaluation narrative.
 
-## Install and check the foundation
+This hierarchy deliberately replaces the earlier PDF-first development hierarchy that caused machine-readable artifacts to remain blocked behind draft prose conflicts. The Whitepaper should be revised for publication to record this governance transition; the existing PDF remains a historical design document until that revision is published.
 
-Development support target: Python 3.11–3.14; see the latest CI run for actual
-matrix outcomes. The initial local validation environment is Python 3.12 on Linux.
-Package version `0.1.0a1` is not a protocol freeze or an assertion of v0.1 conformance.
+## Canonical packet
+
+A minimal canonical packet resembles:
+
+```json
+{
+  "id": "pkt_example_001",
+  "version": "0.1",
+  "pragmatics": {"act": "request"},
+  "atoms": [],
+  "relations": [],
+  "context": {"thread_id": "thread_example", "references": []},
+  "confidence": 1.0,
+  "permissions": {"capabilities": [], "resources": []},
+  "evidence": [],
+  "output": {"format": "NL"},
+  "carrier": {},
+  "audit": {},
+  "extensions": {}
+}
+```
+
+All eight Octad domains are required in canonical JSON. Compact carriers may omit default/empty material only when their compiler can reconstruct this canonical state deterministically.
+
+## Permissions
+
+Permissions use orthogonal requested capabilities:
+
+```text
+read
+suggest
+prepare
+write
+execute
+commit
+```
+
+Convenience profiles (`RO`, `SUGGEST`, `PREVIEW`, `RW`, `EXEC`, `COMMIT`) are named bundles, **not** a numeric privilege ladder. Resource scope is represented by typed resource records rather than free-form scope strings.
+
+Effective authority remains a host-side intersection of requested capabilities, authenticated principal authority, policy, runtime capability, resources, and constraints.
+
+## Install and engineering checks
+
+Development target: Python 3.11–3.14; actual support is established only by observed CI runs.
 
 ```bash
 git clone https://github.com/The-Outsider-97/LSTP.git
 cd LSTP
 python -m venv .venv
-# POSIX activation:
 . .venv/bin/activate
 python -m pip install -e '.[dev]'
 pytest
@@ -65,18 +114,15 @@ ruff check .
 ruff format --check .
 mypy
 python -m build
-lstp --help
-lstp --version
+python tools/check_schema_contract.py
+python tools/check_readiness.py
 ```
 
-On PowerShell, activate with `.\.venv\Scripts\Activate.ps1`; the remaining Python
-commands are the same. These commands apply to a checkout containing this
-foundation increment, not the original scaffold commit.
+PowerShell activation:
 
-Production dependencies: none in this foundation. The `dev` extra includes
-JSON Schema tooling, tests, lint/types and build tools. Dependency ranges are
-bounded; exact versions for each measured run belong in its report. A reproducible
-cross-platform lock and reproducible-byte builds are not yet established.
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
 ## CLI
 
@@ -85,62 +131,23 @@ lstp json-check path/to/input.json
 python -m lstp json-check path/to/input.json
 ```
 
-Omit the path or use `-` to read stdin. Successful output is:
+`json-check` currently checks bounded JSON input only. It does **not** certify LSTP semantic conformance or authorization.
+
+Successful generic JSON inspection reports:
 
 ```json
 {"authorization_evaluated": false, "json_valid": true, "protocol_validated": false}
 ```
 
-This command only checks JSON under the documented input profile. It does not
-check Octad shape, references, versions, permissions, evidence truth or execution
-authority. It does not execute or dereference anything. Exit codes: `0` JSON
-accepted, `1` invalid/over-limit input, `2` CLI usage error, `3` input I/O failure.
-Errors are JSON diagnostics on stderr; successful results go to stdout.
-
-## Library API and input profile
-
-```python
-from lstp import JSONInputError, ResourceLimitError, loads_json
-
-data = loads_json(b'{"example": 0.125}')
-# data["example"] is Decimal("0.125"), not binary float.
-```
-
-`loads_json` accepts UTF-8 bytes or a Python string and decodes a single JSON value.
-It rejects duplicate object keys (including escaped equivalents), non-finite
-constants, invalid UTF-8, unpaired surrogate code points, BOMs, malformed syntax,
-and inputs outside its resource limits. Valid surrogate pairs and escaped control
-characters inside strings are preserved. No Unicode normalization is applied.
-Fraction/exponent tokens use `Decimal`; integers use `int`. This is not a JSON
-serializer or a frozen LSTP canonicalization/numeric profile.
-
-Default limits: 1,048,576 input bytes; 64 nested containers; 65,536 decoded
-characters per string/key; 10,000 items per collection; 50,000 total decoded
-nodes (including keys); 128 characters per numeric token. `InputLimits` allows
-positive custom limits, but depth cannot exceed 64. Input bytes/depth are checked
-before recursive decoding; collection/string/node limits are checked during or
-after decoding, with allocation bounded by the input-byte limit. These are local
-resource limits, not protocol validity rules. No wall-clock timeout is promised.
-
 ## Protocol readiness
 
-```bash
-python tools/check_readiness.py
-```
+`python tools/check_readiness.py` remains a release/training ledger. The canonical-contract split is no longer the blocker on this reconciliation branch; implementation, conformance, canonicalization, interoperability, and publication synchronization remain open.
 
-This currently exits **1** and lists unresolved blockers. It is a review ledger and
-release gate, not a conformance implementation. Engineering tests can pass while
-this gate fails; the overall workflow must not present missing protocol work as
-green. No core conformance tests are silently skipped or marked expected-failure.
-
-See [program](docs/program/PROGRAM.md), [traceability](docs/program/TRACEABILITY.md),
-[audit](docs/program/AUDIT-2026-09-22.md), and [readiness ledger](docs/program/readiness.json).
-Training data generation must wait for reconciled and explicitly versioned grammar,
-schema, vocabulary, operators and serialization behavior.
+Training data generation must wait until the readiness gate is green and versioned conformance fixtures exist.
 
 ## SLAI boundary
 
-The integration target remains:
+The requested integration layout remains:
 
 ```text
 SLAI/
@@ -149,15 +156,32 @@ SLAI/
     └── LSTP/
 ```
 
-Clone LSTP into `SLAI/model/LSTP/`; the eventual launcher belongs at the SLAI root.
-The launcher and integration remain unimplemented. LSTP core must work independently
-and must not import SLAI internals. LANTRA, the Language Agent, routing, host
-authorization, safety and model inference remain distinct responsibilities.
+LSTP SHOULD be pinned as an independent package/submodule at `SLAI/model/LSTP/`, avoiding `sys.path` manipulation. `run_lstp.py` belongs at the SLAI root.
 
-## Contributing and license
+The intended semantic flow is:
 
-Follow the source hierarchy and [program](docs/program/PROGRAM.md). Use focused
-branches and reviewable commits with tests and documented decisions. Do not silently
-alter the Whitepaper or reinterpret unknown permission/extension data.
+```text
+human natural language
+        ↓
+SLAI Language Agent / LANTRA
+        ↓
+canonical LSTP Octad
+        ↓
+validation / transport / agent routing
+```
 
-MIT License, Copyright (c) 2026 J.E. Remy. See [LICENSE](LICENSE).
+LSTP should be the semantic interchange contract rather than a second competing natural-language-understanding pass.
+
+## Project records
+
+See:
+
+- [`docs/program/AUDIT-2026-09-22.md`](docs/program/AUDIT-2026-09-22.md)
+- [`docs/program/CANONICAL-RECONCILIATION-2026-10-04.md`](docs/program/CANONICAL-RECONCILIATION-2026-10-04.md)
+- [`docs/program/DECISIONS.md`](docs/program/DECISIONS.md)
+- [`docs/program/TRACEABILITY.md`](docs/program/TRACEABILITY.md)
+- [`docs/program/readiness.json`](docs/program/readiness.json)
+
+## License
+
+MIT License, Copyright (c) 2026 J.E. Remy. See [`LICENSE`](LICENSE).
