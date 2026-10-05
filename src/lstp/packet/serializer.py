@@ -31,7 +31,6 @@ from lstp.models import (
     Delegation,
     EvidenceItem,
     JSONValue,
-    Octad,
     Output,
     PacketEnvelope,
     Permissions,
@@ -66,7 +65,11 @@ def _check_string(value: str, path: str) -> str:
     if unicodedata.normalize("NFC", value) != value:
         raise _error("unicode_not_nfc", "canonical strings must already be NFC", path)
     if any(char in _BIDI_CONTROLS for char in value):
-        raise _error("unicode_bidi_control", "bidirectional formatting controls are not canonical", path)
+        raise _error(
+            "unicode_bidi_control",
+            "bidirectional formatting controls are not canonical",
+            path,
+        )
     if any(0xD800 <= ord(char) <= 0xDFFF for char in value):
         raise _error("unicode_surrogate", "unpaired surrogate is not canonical", path)
     return value
@@ -84,11 +87,15 @@ def _decimal_text(value: int | float | Decimal, path: str) -> str:
     else:
         if isinstance(value, float):
             if not math.isfinite(value):
-                raise _error("non_finite_number", "canonical numbers must be finite", path)
+                raise _error(
+                    "non_finite_number", "canonical numbers must be finite", path
+                )
             decimal_value = Decimal(str(value))
         else:
             if not value.is_finite():
-                raise _error("non_finite_number", "canonical numbers must be finite", path)
+                raise _error(
+                    "non_finite_number", "canonical numbers must be finite", path
+                )
             decimal_value = value
         if decimal_value == 0:
             return "0"
@@ -106,7 +113,9 @@ def _decimal_text(value: int | float | Decimal, path: str) -> str:
             body = digits[:point] + "." + digits[point:]
         text = sign + body
     if len(text) > _MAX_CANONICAL_NUMBER_CHARS:
-        raise _error("number_too_large", "canonical number representation exceeds limit", path)
+        raise _error(
+            "number_too_large", "canonical number representation exceeds limit", path
+        )
     return text
 
 
@@ -126,7 +135,9 @@ def _encode(value: Any, path: str = "$") -> str:
         items: list[str] = []
         keys = list(value.keys())
         if not all(isinstance(key, str) for key in keys):
-            raise _error("non_string_key", "canonical JSON object keys must be strings", path)
+            raise _error(
+                "non_string_key", "canonical JSON object keys must be strings", path
+            )
         for key in sorted(keys, key=_utf16_sort_key):
             _check_string(key, f"{path}.<key>")
             items.append(
@@ -135,12 +146,22 @@ def _encode(value: Any, path: str = "$") -> str:
                 + _encode(value[key], f"{path}.{key}")
             )
         return "{" + ",".join(items) + "}"
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-        return "[" + ",".join(_encode(item, f"{path}[{index}]") for index, item in enumerate(value)) + "]"
-    raise _error("unsupported_value", f"unsupported canonical value type: {type(value).__name__}", path)
+    if isinstance(value, Sequence) and not isinstance(
+        value, (str, bytes, bytearray)
+    ):
+        return "[" + ",".join(
+            _encode(item, f"{path}[{index}]") for index, item in enumerate(value)
+        ) + "]"
+    raise _error(
+        "unsupported_value",
+        f"unsupported canonical value type: {type(value).__name__}",
+        path,
+    )
 
 
-def _put_optional(target: dict[str, object], key: str, value: object, default: object = None) -> None:
+def _put_optional(
+    target: dict[str, object], key: str, value: object, default: object = None
+) -> None:
     if value != default:
         target[key] = value
 
@@ -184,7 +205,10 @@ def _atom(value: Atom) -> dict[str, object]:
 
 
 def _relation(value: Relation) -> dict[str, object]:
-    data: dict[str, object] = {"type": value.type, "arguments": list(value.arguments)}
+    data: dict[str, object] = {
+        "type": value.type,
+        "arguments": list(value.arguments),
+    }
     _put_optional(data, "id", value.id)
     _put_optional(data, "confidence", value.confidence)
     if value.attributes:
@@ -314,7 +338,11 @@ def packet_to_mapping(packet: PacketEnvelope) -> dict[str, object]:
         "output": _output(packet.octad.output),
         "carrier": _thaw(packet.carrier),
         "audit": _thaw(packet.audit),
-        **({"extensions": _extensions(packet.extensions)} if packet.extensions else {}),
+        **(
+            {"extensions": _extensions(packet.extensions)}
+            if packet.extensions
+            else {}
+        ),
     }
 
 
@@ -335,15 +363,19 @@ def _strict_keys(
     *,
     path: str,
     allowed: set[str],
-    required: set[str] = frozenset(),
+    required: set[str] | frozenset[str] = frozenset(),
 ) -> Mapping[str, Any]:
     data = _expect_object(value, path)
     unknown = sorted(set(data) - allowed)
     if unknown:
-        raise _error("unknown_field", f"unknown canonical field {unknown[0]!r}", path)
-    missing = sorted(required - set(data))
+        raise _error(
+            "unknown_field", f"unknown canonical field {unknown[0]!r}", path
+        )
+    missing = sorted(set(required) - set(data))
     if missing:
-        raise _error("missing_field", f"missing required canonical field {missing[0]!r}", path)
+        raise _error(
+            "missing_field", f"missing required canonical field {missing[0]!r}", path
+        )
     return data
 
 
@@ -351,7 +383,9 @@ def _check_extensions(value: object, path: str) -> None:
     data = _expect_object(value, path)
     for namespace, payload in data.items():
         if not isinstance(namespace, str) or not namespace:
-            raise _error("extension_namespace", "extension namespace must be non-empty", path)
+            raise _error(
+                "extension_namespace", "extension namespace must be non-empty", path
+            )
         _expect_object(payload, f"{path}.{namespace}")
 
 
@@ -360,17 +394,38 @@ def _check_structure(data: object) -> Mapping[str, Any]:
         data,
         path="$",
         allowed={
-            "id", "version", "pragmatics", "atoms", "relations", "context",
-            "confidence", "permissions", "evidence", "output", "carrier", "audit",
+            "id",
+            "version",
+            "pragmatics",
+            "atoms",
+            "relations",
+            "context",
+            "confidence",
+            "permissions",
+            "evidence",
+            "output",
+            "carrier",
+            "audit",
             "extensions",
         },
         required={
-            "id", "version", "pragmatics", "atoms", "relations", "context",
-            "confidence", "permissions", "evidence", "output", "carrier", "audit",
+            "id",
+            "version",
+            "pragmatics",
+            "atoms",
+            "relations",
+            "context",
+            "confidence",
+            "permissions",
+            "evidence",
+            "output",
+            "carrier",
+            "audit",
         },
     )
     _strict_keys(
-        root["pragmatics"], path="$.pragmatics",
+        root["pragmatics"],
+        path="$.pragmatics",
         allowed={"act", "goal", "modifiers", "register", "urgency", "extensions"},
         required={"act"},
     )
@@ -379,8 +434,18 @@ def _check_structure(data: object) -> Mapping[str, Any]:
         raise _error("expected_array", "atoms must be an array", "$.atoms")
     for index, item in enumerate(atoms):
         _strict_keys(
-            item, path=f"$.atoms[{index}]",
-            allowed={"id", "kind", "value", "role", "datatype", "language", "attributes", "extensions"},
+            item,
+            path=f"$.atoms[{index}]",
+            allowed={
+                "id",
+                "kind",
+                "value",
+                "role",
+                "datatype",
+                "language",
+                "attributes",
+                "extensions",
+            },
             required={"id", "kind"},
         )
     relations = root["relations"]
@@ -388,40 +453,81 @@ def _check_structure(data: object) -> Mapping[str, Any]:
         raise _error("expected_array", "relations must be an array", "$.relations")
     for index, item in enumerate(relations):
         _strict_keys(
-            item, path=f"$.relations[{index}]",
+            item,
+            path=f"$.relations[{index}]",
             allowed={"id", "type", "arguments", "confidence", "attributes", "extensions"},
             required={"type", "arguments"},
         )
     context = _strict_keys(
-        root["context"], path="$.context",
-        allowed={"thread_id", "packet_id", "parent_id", "conversation_id", "turn", "speaker", "audience", "time", "location", "bindings", "references", "extensions"},
+        root["context"],
+        path="$.context",
+        allowed={
+            "thread_id",
+            "packet_id",
+            "parent_id",
+            "conversation_id",
+            "turn",
+            "speaker",
+            "audience",
+            "time",
+            "location",
+            "bindings",
+            "references",
+            "extensions",
+        },
         required={"thread_id", "references"},
     )
     refs = context["references"]
     if not isinstance(refs, list):
-        raise _error("expected_array", "context.references must be an array", "$.context.references")
+        raise _error(
+            "expected_array",
+            "context.references must be an array",
+            "$.context.references",
+        )
     for index, item in enumerate(refs):
         _strict_keys(
-            item, path=f"$.context.references[{index}]",
+            item,
+            path=f"$.context.references[{index}]",
             allowed={"packet_id", "depth", "agent", "label", "extensions"},
             required={"packet_id"},
         )
     permissions = _strict_keys(
-        root["permissions"], path="$.permissions",
-        allowed={"capabilities", "resources", "profile", "forbid", "require_confirmation", "require_review", "require_logging", "limits", "authorization_ref", "expires_at", "delegation", "extensions"},
+        root["permissions"],
+        path="$.permissions",
+        allowed={
+            "capabilities",
+            "resources",
+            "profile",
+            "forbid",
+            "require_confirmation",
+            "require_review",
+            "require_logging",
+            "limits",
+            "authorization_ref",
+            "expires_at",
+            "delegation",
+            "extensions",
+        },
         required={"capabilities", "resources"},
     )
     resources = permissions["resources"]
     if not isinstance(resources, list):
-        raise _error("expected_array", "permissions.resources must be an array", "$.permissions.resources")
+        raise _error(
+            "expected_array",
+            "permissions.resources must be an array",
+            "$.permissions.resources",
+        )
     for index, item in enumerate(resources):
         _strict_keys(
-            item, path=f"$.permissions.resources[{index}]",
-            allowed={"id", "kind", "atom", "extensions"}, required={"id"},
+            item,
+            path=f"$.permissions.resources[{index}]",
+            allowed={"id", "kind", "atom", "extensions"},
+            required={"id"},
         )
     if "delegation" in permissions:
         _strict_keys(
-            permissions["delegation"], path="$.permissions.delegation",
+            permissions["delegation"],
+            path="$.permissions.delegation",
             allowed={"parent_packet", "delegator", "principal", "extensions"},
         )
     evidence = root["evidence"]
@@ -429,13 +535,34 @@ def _check_structure(data: object) -> Mapping[str, Any]:
         raise _error("expected_array", "evidence must be an array", "$.evidence")
     for index, item in enumerate(evidence):
         _strict_keys(
-            item, path=f"$.evidence[{index}]",
-            allowed={"id", "source_type", "source_ref", "input_hash", "span", "supports", "description", "confidence", "extensions"},
+            item,
+            path=f"$.evidence[{index}]",
+            allowed={
+                "id",
+                "source_type",
+                "source_ref",
+                "input_hash",
+                "span",
+                "supports",
+                "description",
+                "confidence",
+                "extensions",
+            },
             required={"id", "source_type"},
         )
     _strict_keys(
-        root["output"], path="$.output",
-        allowed={"format", "schema", "channel", "target", "language", "max_bytes", "requirements", "extensions"},
+        root["output"],
+        path="$.output",
+        allowed={
+            "format",
+            "schema",
+            "channel",
+            "target",
+            "language",
+            "max_bytes",
+            "requirements",
+            "extensions",
+        },
         required={"format"},
     )
     _expect_object(root["carrier"], "$.carrier")
@@ -477,5 +604,7 @@ def canonical_loads(
         supplied = data.encode("utf-8") if isinstance(data, str) else data
         expected = canonical_dumps(packet)
         if supplied != expected:
-            raise _error("non_canonical_bytes", "input is valid LSTP but not canonical byte form")
+            raise _error(
+                "non_canonical_bytes", "input is valid LSTP but not canonical byte form"
+            )
     return packet
