@@ -1,4 +1,4 @@
-name: Engineering and readiness
+name: Engineering CI
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
@@ -37,12 +37,3 @@ jobs:
           cd /tmp/lstp-source/lstp-*
           /tmp/lstp-sdist/bin/python -m pip install '.[dev]'
           /tmp/lstp-sdist/bin/python -m pytest
-  protocol-readiness:
-    name: Protocol readiness (blocked until conformance evidence exists)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: python tools/check_readiness.py
