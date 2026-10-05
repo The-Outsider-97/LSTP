@@ -1,7 +1,7 @@
 """Canonical packet compilation, serialization, and semantic validation."""
 
+from lstp.packet.canonical import canonical_dumps, canonical_loads, packet_to_mapping
 from lstp.packet.compiler import CompilerOptions, compile_document, compile_lattice
-from lstp.packet.serializer import canonical_dumps, canonical_loads, packet_to_mapping
 from lstp.packet.validator import (
     ValidationResult,
     require_semantic_validity,
