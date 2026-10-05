@@ -76,6 +76,8 @@ class SQLiteReplayStore:
     def __init__(self, path: str | Path, *, timeout: float = 5.0) -> None:
         self.path = str(path)
         self.timeout = timeout
+        if self.path == ":memory:":
+            raise ValueError("SQLiteReplayStore requires a file-backed database")
         if timeout <= 0:
             raise ValueError("timeout must be positive")
         self._initialize()
