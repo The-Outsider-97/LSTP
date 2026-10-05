@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 
 import pytest
 
 from lstp import CanonicalizationError, canonical_dumps, canonical_loads
+from lstp.models import Atom, Context, Octad, Output, PacketEnvelope, Permissions, Pragmatics
 from lstp.packet.compiler import CompilerOptions, compile_lattice
 
 
@@ -60,3 +62,24 @@ def test_bidi_control_is_not_canonical() -> None:
     data["id"] = "safe\u202edanger"
     with pytest.raises(CanonicalizationError, match="bidirectional"):
         canonical_loads(json.dumps(data, ensure_ascii=False))
+
+
+def test_pathological_decimal_exponent_fails_before_expansion() -> None:
+    packet = PacketEnvelope(
+        Octad(
+            Pragmatics("inform"),
+            (Atom("a0", "value", value=Decimal("1e999999")),),
+            (),
+            Context("t1"),
+            1.0,
+            Permissions(),
+            (),
+            Output("NL"),
+        ),
+        "p1",
+        "0.1",
+        carrier={},
+        audit={},
+    )
+    with pytest.raises(CanonicalizationError, match="exponent"):
+        canonical_dumps(packet)
