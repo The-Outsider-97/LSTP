@@ -1,18 +1,62 @@
-"""LSTP pre-alpha tooling. No protocol conformance or execution authority implied."""
+"""LSTP v0.1 canonical protocol tooling."""
 
-from lstp.errors import Diagnostic, JSONInputError, LSTPError, ResourceLimitError
+from lstp.errors import (
+    CompilationError,
+    Diagnostic,
+    JSONInputError,
+    LSTPError,
+    LatticeSyntaxError,
+    ResourceLimitError,
+    SemanticValidationError,
+)
 from lstp.json_input import InputLimits, loads_json
-from lstp.models import Octad, PacketEnvelope
+from lstp.models import (
+    Atom,
+    Context,
+    ContextReference,
+    Delegation,
+    EvidenceItem,
+    Octad,
+    Output,
+    PacketEnvelope,
+    Permissions,
+    Pragmatics,
+    Relation,
+    Resource,
+)
+from lstp.packet.compiler import CompilerOptions, compile_lattice
+from lstp.packet.validator import ValidationResult, validate_packet
+from lstp.text.parser import parse
+from lstp.text.tokenizer import tokenize
 from lstp.version import __version__
 
 __all__ = [
+    "Atom",
+    "CompilationError",
+    "CompilerOptions",
+    "Context",
+    "ContextReference",
+    "Delegation",
     "Diagnostic",
+    "EvidenceItem",
     "InputLimits",
     "JSONInputError",
     "LSTPError",
+    "LatticeSyntaxError",
     "Octad",
+    "Output",
     "PacketEnvelope",
+    "Permissions",
+    "Pragmatics",
+    "Relation",
+    "Resource",
     "ResourceLimitError",
+    "SemanticValidationError",
+    "ValidationResult",
     "__version__",
+    "compile_lattice",
     "loads_json",
+    "parse",
+    "tokenize",
+    "validate_packet",
 ]
