@@ -96,7 +96,10 @@ class _Compiler:
         self._macro_stack: list[str] = []
 
     def _error(
-        self, code: str, message: str, expression: Expression | None = None
+        self,
+        code: str,
+        message: str,
+        expression: Expression | None = None,
     ) -> CompilationError:
         line = expression.span.line if expression is not None else None
         column = expression.span.column if expression is not None else None
@@ -116,11 +119,15 @@ class _Compiler:
             body = self.macros.get(expression.name)
             if body is None:
                 raise self._error(
-                    "unresolved_macro", f"macro {expression.name!r} is not defined", expression
+                    "unresolved_macro",
+                    f"macro {expression.name!r} is not defined",
+                    expression,
                 )
             if expression.name in self._macro_stack:
                 raise self._error(
-                    "recursive_macro", f"recursive macro {expression.name!r}", expression
+                    "recursive_macro",
+                    f"recursive macro {expression.name!r}",
+                    expression,
                 )
             self._macro_stack.append(expression.name)
             try:
@@ -135,25 +142,35 @@ class _Compiler:
             )
         if isinstance(expression, ListExpression):
             return ListExpression(
-                tuple(self._expand(item) for item in expression.items), expression.span
+                tuple(self._expand(item) for item in expression.items),
+                expression.span,
             )
         if isinstance(expression, UnaryExpression):
             return UnaryExpression(
-                expression.operator, self._expand(expression.operand), expression.span
+                expression.operator,
+                self._expand(expression.operand),
+                expression.span,
             )
         if isinstance(expression, ApproximationExpression):
-            return ApproximationExpression(self._expand(expression.operand), expression.span)
+            return ApproximationExpression(
+                self._expand(expression.operand),
+                expression.span,
+            )
         if isinstance(expression, CompositionExpression):
             return CompositionExpression(
-                tuple(self._expand(item) for item in expression.items), expression.span
+                tuple(self._expand(item) for item in expression.items),
+                expression.span,
             )
         if isinstance(expression, AlternativeExpression):
             return AlternativeExpression(
-                tuple(self._expand(item) for item in expression.items), expression.span
+                tuple(self._expand(item) for item in expression.items),
+                expression.span,
             )
         if isinstance(expression, AnnotationExpression):
             return AnnotationExpression(
-                expression.label, self._expand(expression.value), expression.span
+                expression.label,
+                self._expand(expression.value),
+                expression.span,
             )
         return expression
 
@@ -171,14 +188,20 @@ class _Compiler:
             return None
         if isinstance(expression, ListExpression):
             return [self._literal(item) for item in expression.items]
-        raise self._error("expected_literal", "expected scalar or list literal", expression)
+        raise self._error(
+            "expected_literal",
+            "expected scalar or list literal",
+            expression,
+        )
 
     def _string_list(self, expression: Expression, name: str) -> list[str]:
         value = self._literal(expression)
         values = value if isinstance(value, list) else [value]
         if not all(isinstance(item, str) for item in values):
             raise self._error(
-                "constraint_type", f"{name} must contain strings or identifiers", expression
+                "constraint_type",
+                f"{name} must contain strings or identifiers",
+                expression,
             )
         return [str(item) for item in values]
 
@@ -186,7 +209,9 @@ class _Compiler:
         value = self._literal(expression)
         if not isinstance(value, bool):
             raise self._error(
-                "constraint_type", f"{name} must be true or false", expression
+                "constraint_type",
+                f"{name} must be true or false",
+                expression,
             )
         return value
 
@@ -202,7 +227,12 @@ class _Compiler:
             if isinstance(item, ScopeValue):
                 items.append({"value": self._scope_value(item)})
             elif isinstance(item, ScopeAssignment):
-                items.append({"key": item.key, "value": self._scope_value(item.value)})
+                items.append(
+                    {
+                        "key": item.key,
+                        "value": self._scope_value(item.value),
+                    }
+                )
             elif isinstance(item, ScopeRange):
                 items.append(
                     {
@@ -212,7 +242,12 @@ class _Compiler:
                         ]
                     }
                 )
-        return {"lstp_scope": {"items": items, "joiners": list(scope.joiners)}}
+        return {
+            "lstp_scope": {
+                "items": items,
+                "joiners": list(scope.joiners),
+            }
+        }
 
     def _materialize_target(self, target: TargetReference) -> str:
         atom_id = self._next_atom()
@@ -250,7 +285,10 @@ class _Compiler:
         return relation_id
 
     def _relation_result_atom(self, relation_id: str) -> str:
-        return self._add_value_atom({"relation": relation_id}, kind="proposition")
+        return self._add_value_atom(
+            {"relation": relation_id},
+            kind="proposition",
+        )
 
     def _materialize_expression(self, expression: Expression) -> str:
         expression = self._expand(expression)
@@ -259,11 +297,18 @@ class _Compiler:
         if isinstance(expression, ContextReference):
             self._resolve_context(expression)
             return self._add_value_atom(
-                {"context_packet": self.context_refs[-1].packet_id}, kind="resource"
+                {"context_packet": self.context_refs[-1].packet_id},
+                kind="resource",
             )
         if isinstance(
             expression,
-            (Identifier, StringLiteral, NumberLiteral, BooleanLiteral, NullLiteral),
+            (
+                Identifier,
+                StringLiteral,
+                NumberLiteral,
+                BooleanLiteral,
+                NullLiteral,
+            ),
         ):
             value = self._literal(expression)
             kind = "concept" if isinstance(expression, Identifier) else "value"
@@ -279,7 +324,10 @@ class _Compiler:
                     "operation must use a core or namespaced relation",
                     expression,
                 )
-            refs = [self._materialize_expression(item) for item in expression.arguments]
+            refs = [
+                self._materialize_expression(item)
+                for item in expression.arguments
+            ]
             if not refs:
                 raise self._error(
                     "relation_requires_argument",
@@ -290,13 +338,19 @@ class _Compiler:
             return self._relation_result_atom(relation_id)
         if isinstance(expression, CompositionExpression):
             refs = [self._materialize_expression(item) for item in expression.items]
-            return self._relation_result_atom(self._add_relation("lstp.compose", refs))
+            return self._relation_result_atom(
+                self._add_relation("lstp.compose", refs)
+            )
         if isinstance(expression, AlternativeExpression):
             refs = [self._materialize_expression(item) for item in expression.items]
-            return self._relation_result_atom(self._add_relation("lstp.alternative", refs))
+            return self._relation_result_atom(
+                self._add_relation("lstp.alternative", refs)
+            )
         if isinstance(expression, UnaryExpression):
             ref = self._materialize_expression(expression.operand)
-            return self._relation_result_atom(self._add_relation("lstp.exclude", [ref]))
+            return self._relation_result_atom(
+                self._add_relation("lstp.exclude", [ref])
+            )
         if isinstance(expression, ApproximationExpression):
             ref = self._materialize_expression(expression.operand)
             return self._relation_result_atom(
@@ -308,7 +362,11 @@ class _Compiler:
             return self._relation_result_atom(
                 self._add_relation("lstp.annotation", [label, value])
             )
-        raise self._error("unsupported_expression", "expression has no canonical mapping", expression)
+        raise self._error(
+            "unsupported_expression",
+            "expression has no canonical mapping",
+            expression,
+        )
 
     def _compile_operation(self, expression: Expression, focus: str | None) -> None:
         expression = self._expand(expression)
@@ -322,7 +380,10 @@ class _Compiler:
             args: list[str] = []
             if focus is not None:
                 args.append(focus)
-            args.extend(self._materialize_expression(item) for item in expression.arguments)
+            args.extend(
+                self._materialize_expression(item)
+                for item in expression.arguments
+            )
             if not args:
                 raise self._error(
                     "relation_requires_argument",
@@ -341,25 +402,37 @@ class _Compiler:
             if entry.separator == ":":
                 label = self._add_value_atom(key, kind="concept")
                 value = self._materialize_expression(entry.value)
-                self._add_relation("lstp.constraint_annotation", [label, value])
+                self._add_relation(
+                    "lstp.constraint_annotation",
+                    [label, value],
+                )
                 continue
             if key == "capabilities":
-                self.capabilities.extend(self._string_list(entry.value, key))
+                self.capabilities.extend(
+                    self._string_list(entry.value, key)
+                )
             elif key == "resources":
                 self.resources.extend(
-                    Resource(item) for item in self._string_list(entry.value, key)
+                    Resource(item)
+                    for item in self._string_list(entry.value, key)
                 )
             elif key == "forbid":
-                self.forbid.extend(self._string_list(entry.value, key))
+                self.forbid.extend(
+                    self._string_list(entry.value, key)
+                )
             elif key == "profile":
                 value = self._literal(entry.value)
                 if not isinstance(value, str):
                     raise self._error(
-                        "constraint_type", "profile must be a string", entry.value
+                        "constraint_type",
+                        "profile must be a string",
+                        entry.value,
                     )
                 if self.profile is not None and self.profile != value:
                     raise self._error(
-                        "duplicate_profile", "conflicting permission profiles", entry.value
+                        "duplicate_profile",
+                        "conflicting permission profiles",
+                        entry.value,
                     )
                 self.profile = value
             elif key in {"confirm", "require_confirmation"}:
@@ -371,17 +444,22 @@ class _Compiler:
             elif key == "urgency":
                 value = self._literal(entry.value)
                 if isinstance(value, bool) or not isinstance(
-                    value, (int, float, Decimal)
+                    value,
+                    (int, float, Decimal),
                 ):
                     raise self._error(
-                        "constraint_type", "urgency must be numeric", entry.value
+                        "constraint_type",
+                        "urgency must be numeric",
+                        entry.value,
                     )
                 self.urgency = float(value)
             elif key == "register":
                 value = self._literal(entry.value)
                 if not isinstance(value, str):
                     raise self._error(
-                        "constraint_type", "register must be a string", entry.value
+                        "constraint_type",
+                        "register must be a string",
+                        entry.value,
                     )
                 self.register = value
             elif key == "mode":
@@ -404,13 +482,22 @@ class _Compiler:
                 "relative context reference requires a context_resolver",
                 reference,
             )
-        packet_id = self.options.context_resolver(reference.depth, reference.agent)
+        packet_id = self.options.context_resolver(
+            reference.depth,
+            reference.agent,
+        )
         if not packet_id:
             raise self._error(
-                "unresolved_context", "context reference could not be resolved", reference
+                "unresolved_context",
+                "context reference could not be resolved",
+                reference,
             )
         self.context_refs.append(
-            CanonicalContextReference(packet_id, reference.depth, reference.agent)
+            CanonicalContextReference(
+                packet_id,
+                reference.depth,
+                reference.agent,
+            )
         )
 
     def _expression_summary(self, expression: Expression) -> str:
@@ -462,7 +549,11 @@ class _Compiler:
                         )
                     source_ref = value
                 self.evidence.append(
-                    EvidenceItem(self._next_evidence(), item.name, source_ref=source_ref)
+                    EvidenceItem(
+                        self._next_evidence(),
+                        item.name,
+                        source_ref=source_ref,
+                    )
                 )
             return
         role = "assumption" if clause.keyword == "assume" else "challenge"
@@ -482,10 +573,17 @@ class _Compiler:
                 "unknown_output_format",
                 f"output format {clause.format!r} is not canonical",
             )
-        extensions = {} if clause.zoom is None else {"lstp": {"zoom": clause.zoom}}
+        extensions = (
+            {}
+            if clause.zoom is None
+            else {"lstp": {"zoom": clause.zoom}}
+        )
         candidate = Output(clause.format, extensions=extensions)
         if self.output is not None and self.output != candidate:
-            raise self._error("duplicate_output", "conflicting output clauses")
+            raise self._error(
+                "duplicate_output",
+                "conflicting output clauses",
+            )
         self.output = candidate
 
     def _compile_metadata(self, clause: MetadataClause) -> None:
@@ -499,9 +597,14 @@ class _Compiler:
                     item.value,
                 )
             value = self._literal(item.value)
-            if item.key in self.audit_metadata and self.audit_metadata[item.key] != value:
+            if (
+                item.key in self.audit_metadata
+                and self.audit_metadata[item.key] != value
+            ):
                 raise self._error(
-                    "duplicate_metadata", f"conflicting metadata key {item.key!r}", item.value
+                    "duplicate_metadata",
+                    f"conflicting metadata key {item.key!r}",
+                    item.value,
                 )
             self.audit_metadata[item.key] = value
 
@@ -510,20 +613,27 @@ class _Compiler:
             if isinstance(clause, MacroDefinition):
                 if clause.body is None:
                     raise self._error(
-                        "empty_macro", f"macro {clause.name!r} has no expression body"
+                        "empty_macro",
+                        f"macro {clause.name!r} has no expression body",
                     )
                 if clause.name in self.macros:
                     raise self._error(
-                        "duplicate_macro", f"macro {clause.name!r} is defined more than once"
+                        "duplicate_macro",
+                        f"macro {clause.name!r} is defined more than once",
                     )
                 self.macros[clause.name] = clause.body
 
     def compile(self, document: Document) -> PacketEnvelope:
         self._register_macros(document)
-        mains = [item for item in document.clauses if isinstance(item, MainClause)]
+        mains = [
+            item
+            for item in document.clauses
+            if isinstance(item, MainClause)
+        ]
         if len(mains) != 1:
             raise self._error(
-                "main_clause_cardinality", "compiler requires exactly one main clause"
+                "main_clause_cardinality",
+                "compiler requires exactly one main clause",
             )
         main = mains[0]
         act = {
@@ -539,6 +649,8 @@ class _Compiler:
             focus = self._materialize_target(main.focus)
         elif isinstance(main.focus, ContextReference):
             self._resolve_context(main.focus)
+        if main.focus_context is not None:
+            self._resolve_context(main.focus_context)
 
         if main.relation_tail is not None:
             if focus is None:
@@ -547,8 +659,14 @@ class _Compiler:
                     "relation tail requires a target focus",
                     main.relation_tail.value,
                 )
-            value = self._materialize_expression(main.relation_tail.value)
-            relation_type = "is" if main.relation_tail.separator == "=" else "lstp.annotation"
+            value = self._materialize_expression(
+                main.relation_tail.value
+            )
+            relation_type = (
+                "is"
+                if main.relation_tail.separator == "="
+                else "lstp.annotation"
+            )
             self._add_relation(relation_type, [focus, value])
 
         if main.operation is not None:
@@ -573,7 +691,8 @@ class _Compiler:
                 value = float(clause.confidence)
                 if self.confidence is not None and self.confidence != value:
                     raise self._error(
-                        "duplicate_confidence", "conflicting confidence clauses"
+                        "duplicate_confidence",
+                        "conflicting confidence clauses",
                     )
                 self.confidence = value
             elif isinstance(clause, EvidenceTopLevel):
@@ -584,11 +703,18 @@ class _Compiler:
                 ref = self._materialize_expression(clause.value)
                 self._add_relation("lstp.claim", [ref])
             elif isinstance(clause, AmbiguityClause):
-                key = self._add_value_atom(clause.key, kind="concept")
+                key = self._add_value_atom(
+                    clause.key,
+                    kind="concept",
+                )
                 alternatives = [
-                    self._materialize_expression(item) for item in clause.alternatives
+                    self._materialize_expression(item)
+                    for item in clause.alternatives
                 ]
-                self._add_relation("lstp.ambiguity", [key, *alternatives])
+                self._add_relation(
+                    "lstp.ambiguity",
+                    [key, *alternatives],
+                )
             elif isinstance(clause, ContextCommand):
                 raise self._error(
                     "runtime_context_command",
@@ -608,10 +734,15 @@ class _Compiler:
                 ),
                 tuple(self.atoms),
                 tuple(self.relations),
-                Context(self.options.thread_id, references=tuple(self.context_refs)),
-                self.options.default_confidence
-                if self.confidence is None
-                else self.confidence,
+                Context(
+                    self.options.thread_id,
+                    references=tuple(self.context_refs),
+                ),
+                (
+                    self.options.default_confidence
+                    if self.confidence is None
+                    else self.confidence
+                ),
                 Permissions(
                     tuple(self.capabilities),
                     tuple(self.resources),
@@ -632,9 +763,17 @@ class _Compiler:
         return require_semantic_validity(packet)
 
 
-def compile_document(document: Document, *, options: CompilerOptions) -> PacketEnvelope:
+def compile_document(
+    document: Document,
+    *,
+    options: CompilerOptions,
+) -> PacketEnvelope:
     return _Compiler(options).compile(document)
 
 
-def compile_lattice(source: str, *, options: CompilerOptions) -> PacketEnvelope:
+def compile_lattice(
+    source: str,
+    *,
+    options: CompilerOptions,
+) -> PacketEnvelope:
     return compile_document(parse(source), options=options)
