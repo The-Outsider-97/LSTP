@@ -50,3 +50,13 @@ class SemanticValidationError(LSTPError):
             raise ValueError("SemanticValidationError requires at least one diagnostic")
         self.diagnostics = diagnostics
         super().__init__(diagnostics[0])
+
+
+class AuthorizationError(LSTPError):
+    """Host authorization or replay protection denied an operation."""
+
+    def __init__(self, diagnostics: tuple[Diagnostic, ...]) -> None:
+        if not diagnostics:
+            raise ValueError("AuthorizationError requires at least one diagnostic")
+        self.diagnostics = diagnostics
+        super().__init__(diagnostics[0])

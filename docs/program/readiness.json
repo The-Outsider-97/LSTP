@@ -2,11 +2,11 @@
   "training_ready": false,
   "contract_reconciled": true,
   "blockers": [
-    {"id":"IMPL-001","summary":"Canonical typed model, strict Lattice tokenizer/parser and deterministic compiler mappings are implemented for the normative grammar surface. Runtime-only context commands parse but intentionally fail canonical compilation; further work is validation/hardening rather than missing parser scaffolding."},
-    {"id":"IMPL-002","summary":"Core semantic validation is implemented for identifiers, references, vocabulary, permission/profile contradictions, resource scope and evidence support; full RFC3339/BCP47 validation, delegation attenuation against authenticated parent authority and host execution-policy validation remain incomplete."},
-    {"id":"IMPL-004","summary":"Permission-aware host authorization, runtime policy enforcement and replay/idempotency hooks are not implemented."},
-    {"id":"TEST-001","summary":"Positive/negative conformance vectors, canonical byte round trips and extended Lattice tests now exist; broader normative-vector coverage, fuzz/property coverage and cross-implementation fixtures remain incomplete."},
-    {"id":"TEST-002","summary":"Hostile-input, permission-escalation, evidence-provenance, Unicode/canonicalization and unresolved-context tests exist in part; systematic adversarial coverage remains incomplete."},
+    {"id":"IMPL-001","summary":"Canonical typed model, strict Lattice tokenizer/parser and deterministic compiler mappings are implemented for the normative grammar surface. Runtime-only context commands parse but intentionally fail canonical compilation; remaining work is validation/hardening rather than parser scaffolding."},
+    {"id":"IMPL-002","summary":"Core semantic validation is implemented for identifiers, references, vocabulary, permission/profile contradictions, resource scope and evidence support. Host authorization now enforces expiry at execution time; full semantic RFC3339/BCP47 validation remains incomplete."},
+    {"id":"IMPL-004","summary":"Reference host authorization now implements exact capability/resource intersection, authenticated delegation attenuation, trusted authorization references, confirmation/review/logging gates, expiry and in-process replay/idempotency reservation. Durable/distributed replay storage and application-specific limit enforcement remain host integration work."},
+    {"id":"TEST-001","summary":"Positive/negative protocol vectors, canonical byte round trips, extended Lattice tests and host-authorization security tests exist; broader normative-vector coverage, fuzz/property coverage and cross-implementation fixtures remain incomplete."},
+    {"id":"TEST-002","summary":"Hostile-input, permission-escalation, delegation-widening, replay/action-mutation, evidence-provenance, Unicode/canonicalization and unresolved-context tests exist in part; systematic adversarial coverage remains incomplete."},
     {"id":"INTEROP-001","summary":"No independent second implementation has passed the shared conformance vectors or reproduced canonical bytes."},
     {"id":"DOC-001","summary":"Whitepaper publication revision, source figures and reproducible publication build are incomplete."},
     {"id":"SLAI-001","summary":"SLAI adapter/launcher and pinned package/submodule integration are not implemented."},
@@ -20,6 +20,10 @@
     "deterministic-lattice-compiler",
     "canonical-json-serializer-deserializer",
     "canonical-json-byte-profile",
-    "initial-conformance-vector-harness"
+    "initial-conformance-vector-harness",
+    "host-authorization-intersection",
+    "delegation-attenuation-core",
+    "expiry-enforcement",
+    "replay-idempotency-core"
   ]
 }
