@@ -29,11 +29,19 @@ def _parse_rfc3339(value: str) -> datetime:
         parsed = datetime.fromisoformat(text)
     except ValueError as exc:
         raise AuthorizationError((
-            _diag("invalid_expiry", "permissions.expires_at must be RFC 3339 date-time", "$.permissions.expires_at"),
+            _diag(
+                "invalid_expiry",
+                "permissions.expires_at must be an RFC 3339 date-time",
+                "$.permissions.expires_at",
+            ),
         )) from exc
     if parsed.tzinfo is None:
         raise AuthorizationError((
-            _diag("invalid_expiry", "permissions.expires_at must include a timezone offset", "$.permissions.expires_at"),
+            _diag(
+                "invalid_expiry",
+                "permissions.expires_at must include a timezone offset",
+                "$.permissions.expires_at",
+            ),
         ))
     return parsed.astimezone(timezone.utc)
 
@@ -55,7 +63,7 @@ class Authority:
 
 @dataclass(frozen=True, slots=True)
 class HostPolicy:
-    """Host policy/runtimes that can only narrow principal authority."""
+    """Host policy that can only narrow principal/runtime authority."""
 
     capabilities: frozenset[str] = field(default_factory=lambda: CAPABILITIES)
     resources: frozenset[str] = field(default_factory=frozenset)
@@ -73,6 +81,8 @@ class HostPolicy:
             unknown = values - CAPABILITIES
             if unknown:
                 raise ValueError(f"unknown {name} capabilities: {sorted(unknown)!r}")
+        if any(not item for item in self.resources):
+            raise ValueError("policy resource ids must be non-empty")
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,6 +92,7 @@ class OperationRequest:
     capability: str
     resource_id: str
     operation_id: str
+    action_digest: str
     confirmed: bool = False
     reviewed: bool = False
     logging_ready: bool = False
@@ -93,6 +104,8 @@ class OperationRequest:
             raise ValueError("operation resource_id must be non-empty")
         if not self.operation_id:
             raise ValueError("operation_id must be non-empty")
+        if not self.action_digest:
+            raise ValueError("action_digest must be non-empty")
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,47 +123,38 @@ class AuthorizationDecision:
 class ReplayGuard:
     """Thread-safe in-process reservation store for idempotent side effects.
 
-    A production host may replace this with durable storage. Reservation happens
-    before execution; duplicate operation ids are denied until explicitly
-    released or the process restarts.
+    Production hosts SHOULD use durable shared storage. Each operation id is
+    bound to an action digest. Any repeated id is denied; a differing digest is
+    reported as an operation-identity mutation rather than a normal replay.
     """
 
     def __init__(self) -> None:
         self._lock = Lock()
-        self._reserved: set[str] = set()
+        self._reserved: dict[str, str] = {}
 
-    def reserve(self, operation_id: str) -> bool:
-        if not operation_id:
-            raise ValueError("operation_id must be non-empty")
+    def reserve(self, operation_id: str, action_digest: str) -> str | None:
+        if not operation_id or not action_digest:
+            raise ValueError("operation_id and action_digest must be non-empty")
         with self._lock:
-            if operation_id in self._reserved:
-                return False
-            self._reserved.add(operation_id)
-            return True
+            existing = self._reserved.get(operation_id)
+            if existing is not None:
+                return existing
+            self._reserved[operation_id] = action_digest
+            return None
 
     def release(self, operation_id: str) -> None:
         with self._lock:
-            self._reserved.discard(operation_id)
+            self._reserved.pop(operation_id, None)
 
-    def contains(self, operation_id: str) -> bool:
+    def digest_for(self, operation_id: str) -> str | None:
         with self._lock:
-            return operation_id in self._reserved
+            return self._reserved.get(operation_id)
 
 
 def _requested_authority(permissions: Permissions) -> Authority:
     capabilities = frozenset(permissions.capabilities) - frozenset(permissions.forbid)
     resources = frozenset(resource.id for resource in permissions.resources)
     return Authority(capabilities, resources)
-
-
-def _intersect_resources(*sets: frozenset[str]) -> frozenset[str]:
-    constrained = [item for item in sets if item]
-    if not constrained:
-        return frozenset()
-    result = constrained[0]
-    for item in constrained[1:]:
-        result = result & item
-    return result
 
 
 def effective_authority(
@@ -160,7 +164,11 @@ def effective_authority(
     policy: HostPolicy,
     runtime: Authority,
 ) -> Authority:
-    """Compute fail-closed requested ∩ principal ∩ policy ∩ runtime authority."""
+    """Compute requested ∩ principal ∩ policy ∩ runtime authority.
+
+    Every resource set is authoritative. An empty set therefore means no
+    resource authority; it is never interpreted as a wildcard.
+    """
     require_semantic_validity(packet)
     requested = _requested_authority(packet.octad.permissions)
     capabilities = (
@@ -169,11 +177,11 @@ def effective_authority(
         & policy.capabilities
         & runtime.capabilities
     )
-    resources = _intersect_resources(
-        requested.resources,
-        principal.resources,
-        policy.resources,
-        runtime.resources,
+    resources = (
+        requested.resources
+        & principal.resources
+        & policy.resources
+        & runtime.resources
     )
     return Authority(capabilities, resources)
 
@@ -183,7 +191,7 @@ def validate_delegation(
     *,
     parent: Authority,
 ) -> tuple[Diagnostic, ...]:
-    """Verify that a delegated packet does not widen parent authority."""
+    """Verify that a delegated packet does not widen authenticated parent authority."""
     delegation = packet.octad.permissions.delegation
     if delegation is None:
         return ()
@@ -196,18 +204,11 @@ def validate_delegation(
             f"delegation requests capabilities outside parent authority: {sorted(extra_capabilities)!r}",
             "$.permissions.capabilities",
         ))
-    if parent.resources:
-        extra_resources = requested.resources - parent.resources
-        if extra_resources:
-            diagnostics.append(_diag(
-                "delegation_resource_widening",
-                "delegation requests resources outside parent authority",
-                "$.permissions.resources",
-            ))
-    elif requested.resources:
+    extra_resources = requested.resources - parent.resources
+    if extra_resources:
         diagnostics.append(_diag(
             "delegation_resource_widening",
-            "delegation requests scoped resources but parent authority has no resources",
+            "delegation requests resources outside parent authority",
             "$.permissions.resources",
         ))
     return tuple(diagnostics)
@@ -226,9 +227,9 @@ def authorize_operation(
 ) -> AuthorizationDecision:
     """Authorize one concrete operation without performing it.
 
-    The caller MUST invoke this immediately before the side effect. When a replay
-    guard is supplied, the operation id is reserved atomically only after every
-    other check succeeds.
+    Callers MUST invoke this immediately before a side effect. If a replay guard
+    is supplied, side-effect operation identity is atomically reserved only after
+    all other authorization checks succeed.
     """
     require_semantic_validity(packet)
     permissions = packet.octad.permissions
@@ -289,9 +290,24 @@ def authorize_operation(
         return AuthorizationDecision(False, tuple(diagnostics), effective.capabilities, effective.resources)
 
     if replay_guard is not None and operation.capability in _SIDE_EFFECTS:
-        if not replay_guard.reserve(operation.operation_id):
-            replay = _diag("replay_detected", "operation id has already been reserved or executed")
-            return AuthorizationDecision(False, (replay,), effective.capabilities, effective.resources)
+        existing_digest = replay_guard.reserve(operation.operation_id, operation.action_digest)
+        if existing_digest is not None:
+            if existing_digest != operation.action_digest:
+                replay = _diag(
+                    "operation_changed",
+                    "operation id was already bound to different action content",
+                )
+            else:
+                replay = _diag(
+                    "replay_detected",
+                    "operation id has already been reserved or executed",
+                )
+            return AuthorizationDecision(
+                False,
+                (replay,),
+                effective.capabilities,
+                effective.resources,
+            )
 
     return AuthorizationDecision(True, (), effective.capabilities, effective.resources)
 
