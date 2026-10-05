@@ -73,9 +73,16 @@ ScopeItem: TypeAlias = ScopeValue | ScopeAssignment | ScopeRange
 
 
 @dataclass(frozen=True, slots=True)
+class ScopeExpression:
+    items: tuple[ScopeItem, ...]
+    joiners: tuple[str, ...]
+    span: SourceSpan
+
+
+@dataclass(frozen=True, slots=True)
 class TargetReference:
     name: str
-    scope: tuple[ScopeItem, ...]
+    scope: ScopeExpression | None
     span: SourceSpan
 
 
@@ -130,7 +137,30 @@ class AnnotationExpression:
     span: SourceSpan
 
 
-Expression: TypeAlias = Identifier | StringLiteral | NumberLiteral | BooleanLiteral | NullLiteral | ContextReference | TargetReference | ListExpression | CallExpression | MacroReference | UnaryExpression | ApproximationExpression | CompositionExpression | AlternativeExpression | AnnotationExpression
+Expression: TypeAlias = (
+    Identifier
+    | StringLiteral
+    | NumberLiteral
+    | BooleanLiteral
+    | NullLiteral
+    | ContextReference
+    | TargetReference
+    | ListExpression
+    | CallExpression
+    | MacroReference
+    | UnaryExpression
+    | ApproximationExpression
+    | CompositionExpression
+    | AlternativeExpression
+    | AnnotationExpression
+)
+
+
+@dataclass(frozen=True, slots=True)
+class RelationTail:
+    separator: str
+    value: Expression
+    span: SourceSpan
 
 
 @dataclass(frozen=True, slots=True)
@@ -162,8 +192,17 @@ class EvidenceClause:
 
 
 @dataclass(frozen=True, slots=True)
+class MetadataItem:
+    key: str
+    separator: str
+    value: Expression
+    span: SourceSpan
+
+
+@dataclass(frozen=True, slots=True)
 class MetadataClause:
     context_refs: tuple[ContextReference, ...]
+    items: tuple[MetadataItem, ...]
     span: SourceSpan
 
 
@@ -172,6 +211,8 @@ class MainClause:
     force: str
     action: str
     focus: TargetReference | ContextReference | None
+    focus_context: ContextReference | None
+    relation_tail: RelationTail | None
     operation: Expression | None
     constraints: tuple[ConstraintBlock, ...]
     evidence: tuple[EvidenceClause, ...]
@@ -205,7 +246,45 @@ class EvidenceTopLevel:
     span: SourceSpan
 
 
-TopLevelClause: TypeAlias = MainClause | ConstraintTopLevel | OutputTopLevel | ConfidenceTopLevel | EvidenceTopLevel | MetadataClause
+@dataclass(frozen=True, slots=True)
+class ClaimClause:
+    value: Expression
+    span: SourceSpan
+
+
+@dataclass(frozen=True, slots=True)
+class AmbiguityClause:
+    key: str
+    alternatives: tuple[Expression, ...]
+    span: SourceSpan
+
+
+@dataclass(frozen=True, slots=True)
+class ContextCommand:
+    action: str
+    block: ConstraintBlock | None
+    span: SourceSpan
+
+
+@dataclass(frozen=True, slots=True)
+class MacroDefinition:
+    name: str
+    body: Expression | None
+    span: SourceSpan
+
+
+TopLevelClause: TypeAlias = (
+    MainClause
+    | ConstraintTopLevel
+    | OutputTopLevel
+    | ConfidenceTopLevel
+    | EvidenceTopLevel
+    | MetadataClause
+    | ClaimClause
+    | AmbiguityClause
+    | ContextCommand
+    | MacroDefinition
+)
 
 
 @dataclass(frozen=True, slots=True)

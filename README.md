@@ -1,6 +1,6 @@
 # LSTP — Lattice Semantic Transport Protocol
 
-**Pre-alpha reference implementation work; protocol contract reconciled, implementation still incomplete.**
+**Pre-alpha reference implementation; canonical v0.1 contract reconciled and core runtime now executable.**
 
 LSTP represents semantic messages through an eight-part Octad:
 
@@ -19,7 +19,7 @@ LSTP is a semantic transport protocol. It is not a language model, authenticatio
 
 ## Current status
 
-The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The 4 October 2026 canonical reconciliation branch resolves that design split at the specification level.
+The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The October canonical reconciliation resolved that design split. The reference implementation now contains an executable typed packet model, semantic validator, strict Lattice tokenizer/parser/AST/compiler, deterministic canonical JSON serializer/deserializer, and an initial versioned conformance-vector suite.
 
 Canonical v0.1 now has:
 
@@ -30,18 +30,25 @@ Canonical v0.1 now has:
 - stable context-reference requirements;
 - one core vocabulary baseline;
 - one explicit response/outcome vocabulary;
-- one source-of-truth hierarchy for implementation and conformance.
+- deterministic Lattice-to-Octad mappings for the normative grammar surface;
+- one canonical JSON byte profile;
+- positive and negative executable conformance fixtures.
 
-The repository is **not yet production-ready or training-ready** because parser/compiler, semantic validation, canonical serialization, full conformance fixtures, interoperability evidence, and SLAI integration remain incomplete.
+The repository is **not yet production-ready or training-ready**. Remaining blockers include permission-aware host authorization, delegation attenuation against authenticated parent authority, replay/idempotency integration, broader adversarial/conformance coverage, a second independent implementation, SLAI integration, Whitepaper publication synchronization, and the final release/pre-training audit.
 
-Implemented engineering foundation includes:
+Implemented engineering/runtime foundation includes:
 
 - Python package and CLI;
 - bounded UTF-8 JSON inspection with duplicate-key and resource checks;
-- immutable Octad/envelope foundation types;
-- fail-closed v0.1 envelope version handling;
+- immutable typed canonical Octad/envelope model;
+- strict v0.1 version handling;
+- semantic/reference/permission validation;
+- Lattice tokenizer, AST, parser and compiler;
+- stable resolution requirement for relative context references;
+- deterministic canonical JSON serialization/deserialization;
+- NFC and bidirectional-control canonicalization safeguards;
 - namespaced extension isolation;
-- unit/adversarial/CLI/schema-contract tests;
+- unit, adversarial, parser/compiler, canonicalization and conformance-vector tests;
 - CI engineering matrix;
 - readiness and traceability records.
 
@@ -51,12 +58,12 @@ For v0.1 implementation and conformance:
 
 1. [`spec/CANONICAL-v0.1.md`](spec/CANONICAL-v0.1.md) — normative semantic and behavioral contract;
 2. [`spec/octad_schema.json`](spec/octad_schema.json) — normative canonical JSON structure;
-3. [`spec/grammar.ebnf`](spec/grammar.ebnf), [`spec/operator-table.md`](spec/operator-table.md), [`spec/permissions-safety.md`](spec/permissions-safety.md), and [`spec/vocabulary.md`](spec/vocabulary.md) — normative carrier/operator/security/vocabulary profiles where consistent with 1–2;
-4. conformance fixtures/tests — executable evidence;
+3. [`spec/canonical-json-v0.1.md`](spec/canonical-json-v0.1.md), [`spec/grammar.ebnf`](spec/grammar.ebnf), [`spec/operator-table.md`](spec/operator-table.md), [`spec/permissions-safety.md`](spec/permissions-safety.md), and [`spec/vocabulary.md`](spec/vocabulary.md) — normative serialization/carrier/operator/security/vocabulary profiles where consistent with 1–2;
+4. [`conformance/v0.1/`](conformance/v0.1/) and tests — executable evidence;
 5. reference implementation — must implement the contract and may not redefine it;
 6. Whitepaper — informative rationale, research framing, design history, and evaluation narrative.
 
-This hierarchy deliberately replaces the earlier PDF-first development hierarchy that caused machine-readable artifacts to remain blocked behind draft prose conflicts. The Whitepaper should be revised for publication to record this governance transition; the existing PDF remains a historical design document until that revision is published.
+This hierarchy replaces the earlier PDF-first development hierarchy that caused machine-readable artifacts to remain blocked behind draft prose conflicts. The Whitepaper should be revised for publication to record this governance transition; the existing PDF remains a historical design document until that revision is published.
 
 ## Canonical packet
 
@@ -80,7 +87,38 @@ A minimal canonical packet resembles:
 }
 ```
 
-All eight Octad domains are required in canonical JSON. Compact carriers may omit default/empty material only when their compiler can reconstruct this canonical state deterministically.
+All eight Octad domains are required in canonical JSON. Compact carriers may omit default/empty material only when their compiler reconstructs canonical state deterministically.
+
+## Lattice text
+
+Lattice is an authoring/carrier surface, not a second semantic contract. The strict parser recognizes the normative grammar including target scopes/ranges, composition, alternatives, annotations, approximation, exclusion, claims, ambiguity forms, macros, metadata, context references, and context commands.
+
+Only constructs with deterministic canonical semantics are compiled into packets. Runtime-only constructs such as `ctx.push`/`ctx.pop` are parsed for inspectability but fail canonical packet compilation rather than being assigned invented semantics.
+
+Relative references such as `↑2` must resolve to stable packet IDs before canonical transport, replay, hashing, or storage.
+
+## Canonical JSON bytes
+
+`spec/canonical-json-v0.1.md` defines the v0.1 byte profile. The reference serializer uses:
+
+- UTF-8 without BOM;
+- NFC strings;
+- rejection of bidirectional formatting controls;
+- recursive UTF-16 code-unit object-key ordering;
+- no insignificant whitespace;
+- finite normalized decimal number tokens;
+- `-0` canonicalized to `0`.
+
+The profile is RFC 8785-inspired but deliberately uses an LSTP decimal-number profile instead of ECMAScript binary64 serialization.
+
+Python API:
+
+```python
+from lstp import canonical_dumps, canonical_loads
+
+encoded: bytes = canonical_dumps(packet)
+round_tripped = canonical_loads(encoded, require_canonical_bytes=True)
+```
 
 ## Permissions
 
@@ -131,7 +169,7 @@ lstp json-check path/to/input.json
 python -m lstp json-check path/to/input.json
 ```
 
-`json-check` currently checks bounded JSON input only. It does **not** certify LSTP semantic conformance or authorization.
+`json-check` checks bounded generic JSON only. It does **not** certify LSTP semantic conformance or authorization. Library-level canonical decoding and semantic validation are now implemented; CLI protocol commands are being hardened separately so generic JSON inspection remains clearly distinct from protocol certification.
 
 Successful generic JSON inspection reports:
 
@@ -139,11 +177,19 @@ Successful generic JSON inspection reports:
 {"authorization_evaluated": false, "json_valid": true, "protocol_validated": false}
 ```
 
+## Conformance vectors
+
+Versioned vectors live under [`conformance/v0.1/`](conformance/v0.1/).
+
+Positive canonical-byte fixtures must decode, validate and re-encode byte-for-byte identically. Negative fixtures must fail closed at the structural or semantic layer and must never be silently migrated into a different meaning.
+
+The vector corpus is an initial executable baseline, not yet the independent interoperability evidence required for release/training freeze.
+
 ## Protocol readiness
 
-`python tools/check_readiness.py` remains a release/training ledger. The canonical-contract split is no longer the blocker on this reconciliation branch; implementation, conformance, canonicalization, interoperability, and publication synchronization remain open.
+`python tools/check_readiness.py` remains a release/training ledger. The canonical-contract split, typed core runtime, parser/compiler scaffolding, and canonical serializer are no longer the principal blockers. Host authorization, broader conformance/adversarial evidence, independent interoperability, SLAI integration, publication synchronization, and final release validation remain open.
 
-Training data generation must wait until the readiness gate is green and versioned conformance fixtures exist.
+Training data generation must wait until the readiness gate is green and the versioned conformance suite is sufficiently complete for the freeze criteria.
 
 ## SLAI boundary
 
