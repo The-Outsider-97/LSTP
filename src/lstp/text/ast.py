@@ -211,6 +211,7 @@ class MainClause:
     force: str
     action: str
     focus: TargetReference | ContextReference | None
+    focus_context: ContextReference | None
     relation_tail: RelationTail | None
     operation: Expression | None
     constraints: tuple[ConstraintBlock, ...]
