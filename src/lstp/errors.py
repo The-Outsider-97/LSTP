@@ -38,6 +38,10 @@ class CompilationError(LSTPError):
     """Parsed Lattice cannot be mapped to canonical v0.1 without guessing."""
 
 
+class CanonicalizationError(LSTPError):
+    """Packet cannot be encoded or decoded under the canonical JSON profile."""
+
+
 class SemanticValidationError(LSTPError):
     """Canonical structure violates one or more semantic invariants."""
 
