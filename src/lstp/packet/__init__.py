@@ -7,7 +7,6 @@ from lstp.packet.authorization import (
     HostPolicy,
     OperationRequest,
     PrincipalContext,
-    ReplayGuard,
     authorize_operation,
     effective_authority,
     require_authorized_operation,
@@ -15,6 +14,7 @@ from lstp.packet.authorization import (
 )
 from lstp.packet.canonical import canonical_dumps, canonical_loads, packet_to_mapping
 from lstp.packet.compiler import CompilerOptions, compile_document, compile_lattice
+from lstp.packet.replay import ReplayGuard, ReplayStore, SQLiteReplayStore
 from lstp.packet.validator import (
     ValidationResult,
     require_semantic_validity,
@@ -31,6 +31,8 @@ __all__ = [
     "OperationRequest",
     "PrincipalContext",
     "ReplayGuard",
+    "ReplayStore",
+    "SQLiteReplayStore",
     "ValidationResult",
     "authorize_operation",
     "canonical_dumps",
