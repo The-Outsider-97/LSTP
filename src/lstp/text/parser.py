@@ -44,6 +44,7 @@ from lstp.text.ast import (
     SourceSpan,
     StringLiteral,
     TargetReference,
+    TopLevelClause,
     UnaryExpression,
 )
 from lstp.text.tokenizer import tokenize
@@ -80,7 +81,10 @@ class Parser:
         return SourceSpan(token.line, token.column)
 
     def _error(
-        self, code: str, message: str, token: Token | None = None
+        self,
+        code: str,
+        message: str,
+        token: Token | None = None,
     ) -> LatticeSyntaxError:
         token = token or self._current()
         return LatticeSyntaxError(Diagnostic(code, message, token.line, token.column))
@@ -99,8 +103,11 @@ class Parser:
         while self._match(TokenKind.NEWLINE):
             pass
 
+    def _skip_layout(self) -> None:
+        self._skip_newlines()
+
     def parse_document(self) -> Document:
-        clauses = []
+        clauses: list[TopLevelClause] = []
         self._skip_newlines()
         while self._current().kind is not TokenKind.EOF:
             clauses.append(self._parse_top_level())
@@ -114,7 +121,7 @@ class Parser:
             self._skip_newlines()
         return Document(tuple(clauses))
 
-    def _parse_top_level(self):
+    def _parse_top_level(self) -> TopLevelClause:
         token = self._current()
         if token.kind in _FORCE:
             return self._parse_main()
@@ -122,8 +129,8 @@ class Parser:
             block = self._parse_constraints()
             return ConstraintTopLevel(block, block.span)
         if token.kind is TokenKind.ARROW:
-            out = self._parse_output()
-            return OutputTopLevel(out, out.span)
+            output = self._parse_output()
+            return OutputTopLevel(output, output.span)
         if token.kind is TokenKind.PERCENT:
             span = self._span(token)
             return ConfidenceTopLevel(self._parse_confidence(), span)
@@ -131,8 +138,8 @@ class Parser:
             return self._parse_metadata()
         if token.kind is TokenKind.IDENTIFIER:
             if token.value in {"because", "assume", "challenge"}:
-                ev = self._parse_evidence()
-                return EvidenceTopLevel(ev, ev.span)
+                evidence = self._parse_evidence()
+                return EvidenceTopLevel(evidence, evidence.span)
             if token.value == "claim":
                 return self._parse_claim()
             if token.value == "ambig":
@@ -150,8 +157,11 @@ class Parser:
         force = self._advance()
         action = self._expect(TokenKind.IDENTIFIER, "expected action identifier")
         focus: TargetReference | ContextReference | None = None
+        focus_context: ContextReference | None = None
         if self._current().kind is TokenKind.AT:
             focus = self._parse_target()
+            if self._current().kind is TokenKind.CONTEXT:
+                focus_context = self._parse_context_ref()
         elif self._current().kind is TokenKind.CONTEXT:
             focus = self._parse_context_ref()
 
@@ -194,12 +204,14 @@ class Parser:
         )
         if self._current().kind not in {TokenKind.NEWLINE, TokenKind.EOF}:
             raise self._error(
-                "unexpected_clause_suffix", "unexpected token after main clause"
+                "unexpected_clause_suffix",
+                "unexpected token after main clause",
             )
         return MainClause(
             force.value,
             action.value,
             focus,
+            focus_context,
             relation_tail,
             operation,
             tuple(constraints),
@@ -218,14 +230,20 @@ class Parser:
 
     def _parse_scope(self) -> ScopeExpression:
         start = self._expect(TokenKind.LBRACKET, "expected '['")
+        self._skip_layout()
         items: list[ScopeItem] = []
         joiners: list[str] = []
         if self._match(TokenKind.RBRACKET):
             return ScopeExpression((), (), self._span(start))
         items.append(self._parse_scope_item())
-        while self._current().kind in {TokenKind.COMMA, TokenKind.PIPE}:
+        while True:
+            self._skip_layout()
+            if self._current().kind not in {TokenKind.COMMA, TokenKind.PIPE}:
+                break
             joiners.append(self._advance().value)
+            self._skip_layout()
             items.append(self._parse_scope_item())
+        self._skip_layout()
         self._expect(TokenKind.RBRACKET, "expected ']' after target scope")
         return ScopeExpression(tuple(items), tuple(joiners), self._span(start))
 
@@ -259,7 +277,11 @@ class Parser:
                 return ScopeValue(f"{sign}{token.value}{unit}", self._span(start))
             return ScopeValue(Decimal(f"{sign}{token.value}"), self._span(start))
         if sign:
-            raise self._error("signed_scope_value", "scope sign must precede a number", start)
+            raise self._error(
+                "signed_scope_value",
+                "scope sign must precede a number",
+                start,
+            )
         if start.kind is TokenKind.STRING:
             self._advance()
             return ScopeValue(start.value, self._span(start))
@@ -279,17 +301,21 @@ class Parser:
         depth = self._expect(TokenKind.NUMBER, "expected context depth")
         if "." in depth.value:
             raise self._error(
-                "context_depth_integer", "context depth must be an integer", depth
+                "context_depth_integer",
+                "context depth must be an integer",
+                depth,
             )
         agent = None
         if self._match(TokenKind.AT):
             agent = self._expect(
-                TokenKind.IDENTIFIER, "expected agent identifier"
+                TokenKind.IDENTIFIER,
+                "expected agent identifier",
             ).value
         return ContextReference(int(depth.value), agent, self._span(start))
 
     def _parse_constraints(self) -> ConstraintBlock:
         start = self._expect(TokenKind.LBRACE, "expected '{'")
+        self._skip_layout()
         entries: list[ConstraintEntry] = []
         if self._match(TokenKind.RBRACE):
             return ConstraintBlock((), self._span(start))
@@ -298,16 +324,23 @@ class Parser:
             sep = self._current()
             if sep.kind not in {TokenKind.EQUAL, TokenKind.COLON}:
                 raise self._error(
-                    "expected_constraint_separator", "expected '=' or ':'"
+                    "expected_constraint_separator",
+                    "expected '=' or ':'",
                 )
             self._advance()
             entries.append(
                 ConstraintEntry(
-                    key.value, sep.value, self._parse_expression(), self._span(key)
+                    key.value,
+                    sep.value,
+                    self._parse_expression(),
+                    self._span(key),
                 )
             )
+            self._skip_layout()
             if not self._match(TokenKind.COMMA):
                 break
+            self._skip_layout()
+        self._skip_layout()
         self._expect(TokenKind.RBRACE, "expected '}'")
         return ConstraintBlock(tuple(entries), self._span(start))
 
@@ -325,10 +358,18 @@ class Parser:
             elif marker.value.startswith("z") and marker.value[1:].isdigit():
                 value = int(marker.value[1:])
                 if not 0 <= value <= 5:
-                    raise self._error("zoom_range", "zoom must be z0..z5 or zmax", marker)
+                    raise self._error(
+                        "zoom_range",
+                        "zoom must be z0..z5 or zmax",
+                        marker,
+                    )
                 zoom = value
             else:
-                raise self._error("invalid_zoom", "expected z0..z5 or zmax", marker)
+                raise self._error(
+                    "invalid_zoom",
+                    "expected z0..z5 or zmax",
+                    marker,
+                )
         return OutputClause(token.value, zoom, self._span(start))
 
     def _parse_confidence(self) -> Decimal:
@@ -337,7 +378,9 @@ class Parser:
         value = Decimal(token.value)
         if not Decimal("0") <= value <= Decimal("1"):
             raise self._error(
-                "confidence_range", "confidence must be between 0 and 1", token
+                "confidence_range",
+                "confidence must be between 0 and 1",
+                token,
             )
         return value
 
@@ -358,7 +401,8 @@ class Parser:
                 sep = self._current()
                 if sep.kind not in {TokenKind.EQUAL, TokenKind.COLON}:
                     raise self._error(
-                        "expected_metadata_separator", "expected '=' or ':'"
+                        "expected_metadata_separator",
+                        "expected '=' or ':'",
                     )
                 self._advance()
                 items.append(
@@ -376,11 +420,17 @@ class Parser:
     def _parse_evidence(self) -> EvidenceClause:
         key = self._expect(TokenKind.IDENTIFIER, "expected evidence keyword")
         self._expect(TokenKind.LBRACKET, "expected '['")
+        self._skip_layout()
         items: list[Expression] = []
         if self._current().kind is not TokenKind.RBRACKET:
             items.append(self._parse_expression())
-            while self._match(TokenKind.COMMA):
+            while True:
+                self._skip_layout()
+                if not self._match(TokenKind.COMMA):
+                    break
+                self._skip_layout()
                 items.append(self._parse_expression())
+        self._skip_layout()
         self._expect(TokenKind.RBRACKET, "expected ']'")
         return EvidenceClause(key.value, tuple(items), self._span(key))
 
@@ -392,17 +442,33 @@ class Parser:
     def _parse_ambiguity(self) -> AmbiguityClause:
         start = self._expect(TokenKind.IDENTIFIER, "expected ambig")
         self._expect(TokenKind.LBRACE, "expected '{' after ambig")
+        self._skip_layout()
         key_token = self._current()
         if key_token.kind not in {TokenKind.IDENTIFIER, TokenKind.STRING}:
-            raise self._error("ambiguity_key", "expected ambiguity key", key_token)
+            raise self._error(
+                "ambiguity_key",
+                "expected ambiguity key",
+                key_token,
+            )
         self._advance()
         self._expect(TokenKind.COLON, "expected ':' after ambiguity key")
+        self._skip_layout()
         alternatives = [self._parse_primary()]
-        while self._match(TokenKind.PIPE):
+        while True:
+            self._skip_layout()
+            if not self._match(TokenKind.PIPE):
+                break
+            self._skip_layout()
             alternatives.append(self._parse_primary())
-        self._expect(TokenKind.RBRACE, "expected '}' after ambiguity alternatives")
+        self._skip_layout()
+        self._expect(
+            TokenKind.RBRACE,
+            "expected '}' after ambiguity alternatives",
+        )
         return AmbiguityClause(
-            key_token.value, tuple(alternatives), self._span(start)
+            key_token.value,
+            tuple(alternatives),
+            self._span(start),
         )
 
     def _parse_context_command(self) -> ContextCommand:
@@ -419,7 +485,13 @@ class Parser:
         name = self._expect(TokenKind.IDENTIFIER, "expected macro identifier")
         self._expect(TokenKind.EQUAL, "expected '=' in macro definition")
         self._expect(TokenKind.LBRACE, "expected '{' in macro definition")
-        body = None if self._current().kind is TokenKind.RBRACE else self._parse_expression()
+        self._skip_layout()
+        body = (
+            None
+            if self._current().kind is TokenKind.RBRACE
+            else self._parse_expression()
+        )
+        self._skip_layout()
         self._expect(TokenKind.RBRACE, "expected '}' in macro definition")
         return MacroDefinition(name.value, body, self._span(start))
 
@@ -431,7 +503,9 @@ class Parser:
             label = self._advance()
             self._advance()
             return AnnotationExpression(
-                label.value, self._parse_alternative(), self._span(label)
+                label.value,
+                self._parse_alternative(),
+                self._span(label),
             )
         return self._parse_alternative()
 
@@ -477,11 +551,17 @@ class Parser:
             if token.value == "null":
                 return NullLiteral(self._span(token))
             if self._match(TokenKind.LPAREN):
+                self._skip_layout()
                 args: list[Expression] = []
                 if self._current().kind is not TokenKind.RPAREN:
                     args.append(self._parse_expression())
-                    while self._match(TokenKind.COMMA):
+                    while True:
+                        self._skip_layout()
+                        if not self._match(TokenKind.COMMA):
+                            break
+                        self._skip_layout()
                         args.append(self._parse_expression())
+                self._skip_layout()
                 self._expect(TokenKind.RPAREN, "expected ')'")
                 return CallExpression(token.value, tuple(args), self._span(token))
             return Identifier(token.value, self._span(token))
@@ -493,21 +573,32 @@ class Parser:
             return NumberLiteral(Decimal(token.value), self._span(token))
         if token.kind is TokenKind.LBRACKET:
             start = self._advance()
+            self._skip_layout()
             items: list[Expression] = []
             if self._current().kind is not TokenKind.RBRACKET:
                 items.append(self._parse_expression())
-                while self._match(TokenKind.COMMA):
+                while True:
+                    self._skip_layout()
+                    if not self._match(TokenKind.COMMA):
+                        break
+                    self._skip_layout()
                     items.append(self._parse_expression())
+            self._skip_layout()
             self._expect(TokenKind.RBRACKET, "expected ']'")
             return ListExpression(tuple(items), self._span(start))
         if token.kind is TokenKind.LPAREN:
             self._advance()
+            self._skip_layout()
             value = self._parse_expression()
+            self._skip_layout()
             self._expect(TokenKind.RPAREN, "expected ')'")
             return value
         if token.kind is TokenKind.HASH:
             start = self._advance()
-            name = self._expect(TokenKind.IDENTIFIER, "expected macro identifier")
+            name = self._expect(
+                TokenKind.IDENTIFIER,
+                "expected macro identifier",
+            )
             return MacroReference(name.value, self._span(start))
         if token.kind is TokenKind.AT:
             return self._parse_target()
