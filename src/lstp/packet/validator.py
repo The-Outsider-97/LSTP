@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from lstp.errors import Diagnostic, SemanticValidationError
+from lstp.formats import is_well_formed_bcp47, parse_rfc3339
 from lstp.models import Atom, Octad, PacketEnvelope, SPECIAL_ARGUMENTS
 
 CORE_RELATIONS = frozenset({
@@ -98,6 +99,42 @@ def _validate_references(octad: Octad) -> list[Diagnostic]:
     return diagnostics
 
 
+def _validate_formats(octad: Octad) -> list[Diagnostic]:
+    diagnostics: list[Diagnostic] = []
+    if octad.context.time is not None:
+        try:
+            parse_rfc3339(octad.context.time)
+        except (TypeError, ValueError):
+            diagnostics.append(_diag(
+                "invalid_context_time",
+                "context.time must be an RFC 3339 date-time",
+                "$.context.time",
+            ))
+    if octad.permissions.expires_at is not None:
+        try:
+            parse_rfc3339(octad.permissions.expires_at)
+        except (TypeError, ValueError):
+            diagnostics.append(_diag(
+                "invalid_permission_expiry",
+                "permissions.expires_at must be an RFC 3339 date-time",
+                "$.permissions.expires_at",
+            ))
+    for index, atom in enumerate(octad.atoms):
+        if atom.language is not None and not is_well_formed_bcp47(atom.language):
+            diagnostics.append(_diag(
+                "invalid_atom_language",
+                "atom language must be a well-formed BCP 47 language tag",
+                f"$.atoms[{index}].language",
+            ))
+    if octad.output.language is not None and not is_well_formed_bcp47(octad.output.language):
+        diagnostics.append(_diag(
+            "invalid_output_language",
+            "output language must be a well-formed BCP 47 language tag",
+            "$.output.language",
+        ))
+    return diagnostics
+
+
 def _validate_permissions(octad: Octad) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
     permissions = octad.permissions
@@ -144,6 +181,7 @@ def validate_octad(octad: Octad) -> ValidationResult:
     diagnostics.extend(_duplicates(tuple(r.id for r in octad.permissions.resources), code="duplicate_resource_id", label="resource id", path="$.permissions.resources"))
     diagnostics.extend(_validate_relation_vocabulary(octad))
     diagnostics.extend(_validate_references(octad))
+    diagnostics.extend(_validate_formats(octad))
     diagnostics.extend(_validate_permissions(octad))
     return ValidationResult(tuple(diagnostics))
 
