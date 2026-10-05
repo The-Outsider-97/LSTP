@@ -1,6 +1,7 @@
 """LSTP v0.1 canonical protocol tooling."""
 
 from lstp.errors import (
+    CanonicalizationError,
     CompilationError,
     Diagnostic,
     JSONInputError,
@@ -25,6 +26,7 @@ from lstp.models import (
     Resource,
 )
 from lstp.packet.compiler import CompilerOptions, compile_lattice
+from lstp.packet.serializer import canonical_dumps, canonical_loads, packet_to_mapping
 from lstp.packet.validator import ValidationResult, validate_packet
 from lstp.text.parser import parse
 from lstp.text.tokenizer import tokenize
@@ -32,6 +34,7 @@ from lstp.version import __version__
 
 __all__ = [
     "Atom",
+    "CanonicalizationError",
     "CompilationError",
     "CompilerOptions",
     "Context",
@@ -54,8 +57,11 @@ __all__ = [
     "SemanticValidationError",
     "ValidationResult",
     "__version__",
+    "canonical_dumps",
+    "canonical_loads",
     "compile_lattice",
     "loads_json",
+    "packet_to_mapping",
     "parse",
     "tokenize",
     "validate_packet",
