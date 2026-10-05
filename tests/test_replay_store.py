@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from lstp.packet.replay import ReplayGuard, ReplayStore, SQLiteReplayStore
 
 
@@ -35,18 +37,13 @@ def test_sqlite_release_allows_explicit_retry(tmp_path) -> None:
 
 
 def test_sqlite_rejects_invalid_configuration_and_identity(tmp_path) -> None:
-    try:
+    with pytest.raises(ValueError, match="file-backed"):
+        SQLiteReplayStore(":memory:")
+    with pytest.raises(ValueError, match="timeout"):
         SQLiteReplayStore(tmp_path / "x.sqlite3", timeout=0)
-    except ValueError:
-        pass
-    else:
-        raise AssertionError("zero timeout should be rejected")
 
     store = SQLiteReplayStore(tmp_path / "y.sqlite3")
-    for operation_id, digest in (("", "sha256:a"), ("op-1", "")):
-        try:
-            store.reserve(operation_id, digest)
-        except ValueError:
-            pass
-        else:
-            raise AssertionError("empty replay identity component was accepted")
+    with pytest.raises(ValueError, match="operation_id"):
+        store.reserve("", "sha256:a")
+    with pytest.raises(ValueError, match="action_digest"):
+        store.reserve("op-1", "")
