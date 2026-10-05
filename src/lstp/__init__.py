@@ -25,8 +25,8 @@ from lstp.models import (
     Relation,
     Resource,
 )
+from lstp.packet.canonical import canonical_dumps, canonical_loads, packet_to_mapping
 from lstp.packet.compiler import CompilerOptions, compile_lattice
-from lstp.packet.serializer import canonical_dumps, canonical_loads, packet_to_mapping
 from lstp.packet.validator import ValidationResult, validate_packet
 from lstp.text.parser import parse
 from lstp.text.tokenizer import tokenize
