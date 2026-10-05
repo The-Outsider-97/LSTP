@@ -11,6 +11,7 @@ from lstp.errors import (
     ResourceLimitError,
     SemanticValidationError,
 )
+from lstp.formats import is_well_formed_bcp47, parse_rfc3339, validate_bcp47
 from lstp.json_input import InputLimits, loads_json
 from lstp.models import (
     Atom,
@@ -33,7 +34,6 @@ from lstp.packet.authorization import (
     HostPolicy,
     OperationRequest,
     PrincipalContext,
-    ReplayGuard,
     authorize_operation,
     effective_authority,
     require_authorized_operation,
@@ -41,6 +41,7 @@ from lstp.packet.authorization import (
 )
 from lstp.packet.canonical import canonical_dumps, canonical_loads, packet_to_mapping
 from lstp.packet.compiler import CompilerOptions, compile_lattice
+from lstp.packet.replay import ReplayGuard, ReplayStore, SQLiteReplayStore
 from lstp.packet.validator import ValidationResult, validate_packet
 from lstp.text.parser import parse
 from lstp.text.tokenizer import tokenize
@@ -74,8 +75,10 @@ __all__ = [
     "PrincipalContext",
     "Relation",
     "ReplayGuard",
+    "ReplayStore",
     "Resource",
     "ResourceLimitError",
+    "SQLiteReplayStore",
     "SemanticValidationError",
     "ValidationResult",
     "__version__",
@@ -84,11 +87,14 @@ __all__ = [
     "canonical_loads",
     "compile_lattice",
     "effective_authority",
+    "is_well_formed_bcp47",
     "loads_json",
     "packet_to_mapping",
     "parse",
+    "parse_rfc3339",
     "require_authorized_operation",
     "tokenize",
+    "validate_bcp47",
     "validate_delegation",
     "validate_packet",
 ]
