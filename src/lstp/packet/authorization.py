@@ -48,7 +48,7 @@ def _parse_rfc3339(value: str) -> datetime:
 
 @dataclass(frozen=True, slots=True)
 class Authority:
-    """Authority granted by a trusted host boundary."""
+    """Capabilities/resources granted by a trusted host boundary."""
 
     capabilities: frozenset[str]
     resources: frozenset[str]
@@ -62,11 +62,37 @@ class Authority:
 
 
 @dataclass(frozen=True, slots=True)
+class PrincipalContext:
+    """Authenticated principal identity and its current host authority."""
+
+    principal_id: str
+    authority: Authority
+
+    def __post_init__(self) -> None:
+        if not self.principal_id:
+            raise ValueError("principal_id must be non-empty")
+
+
+@dataclass(frozen=True, slots=True)
+class DelegationContext:
+    """Trusted parent identity and authority for one delegated packet."""
+
+    packet_id: str
+    principal_id: str
+    authority: Authority
+
+    def __post_init__(self) -> None:
+        if not self.packet_id or not self.principal_id:
+            raise ValueError("delegation packet_id and principal_id must be non-empty")
+
+
+@dataclass(frozen=True, slots=True)
 class HostPolicy:
     """Host policy that can only narrow principal/runtime authority."""
 
     capabilities: frozenset[str] = field(default_factory=lambda: CAPABILITIES)
     resources: frozenset[str] = field(default_factory=frozenset)
+    trusted_authorization_refs: frozenset[str] = field(default_factory=frozenset)
     require_confirmation_for: frozenset[str] = field(default_factory=lambda: _SIDE_EFFECTS)
     require_review_for: frozenset[str] = field(default_factory=frozenset)
     require_logging_for: frozenset[str] = field(default_factory=lambda: _SIDE_EFFECTS)
@@ -83,6 +109,8 @@ class HostPolicy:
                 raise ValueError(f"unknown {name} capabilities: {sorted(unknown)!r}")
         if any(not item for item in self.resources):
             raise ValueError("policy resource ids must be non-empty")
+        if any(not item for item in self.trusted_authorization_refs):
+            raise ValueError("trusted authorization references must be non-empty")
 
 
 @dataclass(frozen=True, slots=True)
@@ -160,26 +188,22 @@ def _requested_authority(permissions: Permissions) -> Authority:
 def effective_authority(
     packet: PacketEnvelope,
     *,
-    principal: Authority,
+    principal: PrincipalContext,
     policy: HostPolicy,
     runtime: Authority,
 ) -> Authority:
-    """Compute requested ∩ principal ∩ policy ∩ runtime authority.
-
-    Every resource set is authoritative. An empty set therefore means no
-    resource authority; it is never interpreted as a wildcard.
-    """
+    """Compute requested ∩ principal ∩ policy ∩ runtime authority."""
     require_semantic_validity(packet)
     requested = _requested_authority(packet.octad.permissions)
     capabilities = (
         requested.capabilities
-        & principal.capabilities
+        & principal.authority.capabilities
         & policy.capabilities
         & runtime.capabilities
     )
     resources = (
         requested.resources
-        & principal.resources
+        & principal.authority.resources
         & policy.resources
         & runtime.resources
     )
@@ -189,22 +213,43 @@ def effective_authority(
 def validate_delegation(
     packet: PacketEnvelope,
     *,
-    parent: Authority,
+    child: PrincipalContext,
+    parent: DelegationContext,
 ) -> tuple[Diagnostic, ...]:
-    """Verify that a delegated packet does not widen authenticated parent authority."""
+    """Verify identity binding and monotonic attenuation for delegation."""
     delegation = packet.octad.permissions.delegation
     if delegation is None:
         return ()
     requested = _requested_authority(packet.octad.permissions)
     diagnostics: list[Diagnostic] = []
-    extra_capabilities = requested.capabilities - parent.capabilities
+
+    if delegation.parent_packet is not None and delegation.parent_packet != parent.packet_id:
+        diagnostics.append(_diag(
+            "delegation_parent_mismatch",
+            "delegation parent_packet does not match authenticated parent packet",
+            "$.permissions.delegation.parent_packet",
+        ))
+    if delegation.delegator is not None and delegation.delegator != parent.principal_id:
+        diagnostics.append(_diag(
+            "delegator_mismatch",
+            "delegation delegator does not match authenticated parent principal",
+            "$.permissions.delegation.delegator",
+        ))
+    if delegation.principal is not None and delegation.principal != child.principal_id:
+        diagnostics.append(_diag(
+            "delegated_principal_mismatch",
+            "delegation principal does not match authenticated child principal",
+            "$.permissions.delegation.principal",
+        ))
+
+    extra_capabilities = requested.capabilities - parent.authority.capabilities
     if extra_capabilities:
         diagnostics.append(_diag(
             "delegation_capability_widening",
             f"delegation requests capabilities outside parent authority: {sorted(extra_capabilities)!r}",
             "$.permissions.capabilities",
         ))
-    extra_resources = requested.resources - parent.resources
+    extra_resources = requested.resources - parent.authority.resources
     if extra_resources:
         diagnostics.append(_diag(
             "delegation_resource_widening",
@@ -218,10 +263,10 @@ def authorize_operation(
     packet: PacketEnvelope,
     operation: OperationRequest,
     *,
-    principal: Authority,
+    principal: PrincipalContext,
     policy: HostPolicy,
     runtime: Authority,
-    parent_authority: Authority | None = None,
+    parent: DelegationContext | None = None,
     replay_guard: ReplayGuard | None = None,
     now: datetime | None = None,
 ) -> AuthorizationDecision:
@@ -245,15 +290,23 @@ def authorize_operation(
                 "$.permissions.expires_at",
             ))
 
+    if permissions.authorization_ref is not None:
+        if permissions.authorization_ref not in policy.trusted_authorization_refs:
+            diagnostics.append(_diag(
+                "authorization_ref_untrusted",
+                "authorization_ref is not recognized by the trusted host policy",
+                "$.permissions.authorization_ref",
+            ))
+
     if permissions.delegation is not None:
-        if parent_authority is None:
+        if parent is None:
             diagnostics.append(_diag(
                 "delegation_parent_authority_missing",
                 "delegated packet requires authenticated parent authority",
                 "$.permissions.delegation",
             ))
         else:
-            diagnostics.extend(validate_delegation(packet, parent=parent_authority))
+            diagnostics.extend(validate_delegation(packet, child=principal, parent=parent))
 
     effective = effective_authority(packet, principal=principal, policy=policy, runtime=runtime)
     if operation.capability not in effective.capabilities:
@@ -316,10 +369,10 @@ def require_authorized_operation(
     packet: PacketEnvelope,
     operation: OperationRequest,
     *,
-    principal: Authority,
+    principal: PrincipalContext,
     policy: HostPolicy,
     runtime: Authority,
-    parent_authority: Authority | None = None,
+    parent: DelegationContext | None = None,
     replay_guard: ReplayGuard | None = None,
     now: datetime | None = None,
 ) -> AuthorizationDecision:
@@ -329,7 +382,7 @@ def require_authorized_operation(
         principal=principal,
         policy=policy,
         runtime=runtime,
-        parent_authority=parent_authority,
+        parent=parent,
         replay_guard=replay_guard,
         now=now,
     )
