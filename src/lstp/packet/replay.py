@@ -90,7 +90,8 @@ class SQLiteReplayStore:
         return connection
 
     def _initialize(self) -> None:
-        with self._connect() as connection:
+        connection = self._connect()
+        try:
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS lstp_replay_reservations (
@@ -99,6 +100,8 @@ class SQLiteReplayStore:
                 )
                 """
             )
+        finally:
+            connection.close()
 
     @staticmethod
     def _validate(operation_id: str, action_digest: str | None = None) -> None:
@@ -134,19 +137,25 @@ class SQLiteReplayStore:
 
     def release(self, operation_id: str) -> None:
         self._validate(operation_id)
-        with self._connect() as connection:
+        connection = self._connect()
+        try:
             connection.execute(
                 "DELETE FROM lstp_replay_reservations WHERE operation_id = ?",
                 (operation_id,),
             )
+        finally:
+            connection.close()
 
     def digest_for(self, operation_id: str) -> str | None:
         self._validate(operation_id)
-        with self._connect() as connection:
+        connection = self._connect()
+        try:
             row = connection.execute(
                 "SELECT action_digest FROM lstp_replay_reservations WHERE operation_id = ?",
                 (operation_id,),
             ).fetchone()
+        finally:
+            connection.close()
         return None if row is None else str(row[0])
 
 
