@@ -41,6 +41,13 @@ def test_unknown_core_field_fails_closed() -> None:
         canonical_loads(json.dumps(data))
 
 
+def test_wrong_optional_type_fails_instead_of_being_coerced() -> None:
+    data = json.loads(canonical_dumps(_packet()))
+    data["permissions"]["require_confirmation"] = "false"
+    with pytest.raises(CanonicalizationError, match="boolean"):
+        canonical_loads(json.dumps(data))
+
+
 def test_non_nfc_string_is_not_canonical() -> None:
     data = json.loads(canonical_dumps(_packet()))
     data["id"] = "e\u0301"
