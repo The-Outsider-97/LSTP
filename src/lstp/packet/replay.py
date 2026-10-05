@@ -31,12 +31,7 @@ class ReplayStore(Protocol):
 
 
 class ReplayGuard:
-    """Thread-safe in-process replay store.
-
-    This implementation is process-local and is suitable for tests, single-
-    process hosts, and reference behavior. Distributed hosts should use a
-    durable shared implementation with equivalent atomic semantics.
-    """
+    """Thread-safe in-process replay store."""
 
     def __init__(self) -> None:
         self._lock = Lock()
@@ -72,9 +67,10 @@ class ReplayGuard:
 class SQLiteReplayStore:
     """Durable SQLite replay store with atomic unique-key reservation.
 
-    Each method opens a short-lived SQLite connection. `reserve()` uses an
-    immediate transaction plus a primary-key insert, providing cross-process
-    exclusion for one database file without sharing Python locks.
+    Every operation uses a short-lived connection. ``reserve`` acquires an
+    immediate write transaction before checking/inserting the primary key, so
+    competing processes sharing one database file cannot both reserve the same
+    operation id.
     """
 
     def __init__(self, path: str | Path, *, timeout: float = 5.0) -> None:
@@ -90,7 +86,7 @@ class SQLiteReplayStore:
             timeout=self.timeout,
             isolation_level=None,
         )
-        connection.execute("PRAGMA busy_timeout = ?", (int(self.timeout * 1000),))
+        connection.execute(f"PRAGMA busy_timeout = {int(self.timeout * 1000)}")
         return connection
 
     def _initialize(self) -> None:
@@ -152,3 +148,6 @@ class SQLiteReplayStore:
                 (operation_id,),
             ).fetchone()
         return None if row is None else str(row[0])
+
+
+__all__ = ["ReplayGuard", "ReplayStore", "SQLiteReplayStore"]
