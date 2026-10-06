@@ -1,16 +1,47 @@
 {
   "training_ready": false,
-  "contract_reconciled": true,
+  "contract_reconciled": false,
   "blockers": [
-    {"id":"IMPL-001","summary":"Canonical typed model, strict Lattice tokenizer/parser and deterministic compiler mappings are implemented for the normative grammar surface. Runtime-only context commands parse but intentionally fail canonical compilation; remaining work is validation/hardening rather than parser scaffolding."},
-    {"id":"IMPL-002","summary":"Core semantic validation now includes identifiers, references, vocabulary, permission/profile contradictions, resource scope, evidence support, RFC3339 context/expiry fields and structural BCP47 language tags. Remaining semantic-format work is limited to any future registry-backed profiles or additional domain-specific formats."},
-    {"id":"IMPL-004","summary":"Reference host authorization implements exact capability/resource intersection, authenticated delegation attenuation, trusted authorization references, confirmation/review/logging gates, expiry, pluggable replay-store semantics, in-process replay protection and a durable SQLite replay adapter. Distributed/shared-service replay backends and application-specific limit enforcement remain host integration work."},
-    {"id":"TEST-001","summary":"Positive/negative protocol vectors, canonical byte round trips, extended Lattice tests, semantic format tests, replay-store tests and host-authorization security tests exist; broader normative-vector coverage, fuzz/property coverage and cross-implementation fixtures remain incomplete."},
-    {"id":"TEST-002","summary":"Hostile-input, permission-escalation, delegation-widening, replay/action-mutation, evidence-provenance, Unicode/canonicalization, invalid-format and unresolved-context tests exist in part; systematic adversarial coverage remains incomplete."},
-    {"id":"INTEROP-001","summary":"No independent second implementation has passed the shared conformance vectors or reproduced canonical bytes."},
-    {"id":"DOC-001","summary":"Whitepaper publication revision, source figures and reproducible publication build are incomplete."},
-    {"id":"SLAI-001","summary":"SLAI adapter/launcher and pinned package/submodule integration are not implemented."},
-    {"id":"REL-001","summary":"Final clean release audit, migration policy, compatibility evidence and pre-training freeze are incomplete."}
+    {
+      "id": "GOV-001",
+      "summary": "The repository source-of-truth ordering introduced during October reconciliation does not match the active hardening mandate. Re-audit the current v0.1 contract, implementation, tests, and examples against docs/LSTP_Whitepaper.pdf before release or pre-training freeze."
+    },
+    {
+      "id": "IMPL-001",
+      "summary": "Canonical typed model, strict Lattice tokenizer/parser and deterministic compiler mappings are implemented for the normative grammar surface. Runtime-only context commands parse but intentionally fail canonical compilation; remaining work is validation/hardening rather than parser scaffolding."
+    },
+    {
+      "id": "IMPL-002",
+      "summary": "Core semantic validation now includes identifiers, references, vocabulary, permission/profile contradictions, resource scope, evidence support, RFC3339 context/expiry fields and structural BCP47 language tags. Remaining semantic-format work is limited to any future registry-backed profiles or additional domain-specific formats."
+    },
+    {
+      "id": "IMPL-004",
+      "summary": "Reference host authorization implements exact capability/resource intersection, authenticated delegation attenuation, trusted authorization references, confirmation/review/logging gates, expiry, pluggable replay-store semantics, in-process replay protection and a durable SQLite replay adapter. Distributed/shared-service replay backends and application-specific limit enforcement remain host integration work."
+    },
+    {
+      "id": "TEST-001",
+      "summary": "Positive/negative protocol vectors, canonical byte round trips, extended Lattice tests, semantic format tests, replay-store tests and host-authorization security tests exist; broader normative-vector coverage, fuzz/property coverage and cross-implementation fixtures remain incomplete."
+    },
+    {
+      "id": "TEST-002",
+      "summary": "Hostile-input, permission-escalation, delegation-widening, replay/action-mutation, evidence-provenance, Unicode/canonicalization, invalid-format and unresolved-context tests exist in part; systematic adversarial coverage remains incomplete."
+    },
+    {
+      "id": "INTEROP-001",
+      "summary": "No independent second implementation has passed the shared conformance vectors or reproduced canonical bytes."
+    },
+    {
+      "id": "DOC-001",
+      "summary": "Whitepaper publication revision, source figures and reproducible publication build are incomplete."
+    },
+    {
+      "id": "SLAI-001",
+      "summary": "SLAI adapter/launcher and pinned package/submodule integration are not implemented."
+    },
+    {
+      "id": "REL-001",
+      "summary": "Final clean release audit, migration policy, compatibility evidence and pre-training freeze are incomplete."
+    }
   ],
   "implemented_nonblockers": [
     "canonical-v0.1-contract",
