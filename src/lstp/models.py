@@ -466,31 +466,6 @@ class Context:
 
 
 @dataclass(frozen=True, slots=True)
-class Delegation:
-    parent_packet: str | None = None
-    delegator: str | None = None
-    principal: str | None = None
-    extensions: Mapping[str, JSONValue] = field(default_factory=dict)
-
-    def __post_init__(self) -> None:
-        if self.delegator is not None:
-            _identifier(self.delegator, path="$.permissions.delegation.delegator", qualified=True)
-        if self.principal is not None:
-            _identifier(self.principal, path="$.permissions.delegation.principal", qualified=True)
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.permissions.delegation.extensions"))
-
-    @classmethod
-    def from_mapping(cls, value: object) -> "Delegation":
-        data = _mapping(value, path="$.permissions.delegation")
-        return cls(
-            parent_packet=data.get("parent_packet") if isinstance(data.get("parent_packet"), str) else None,
-            delegator=data.get("delegator") if isinstance(data.get("delegator"), str) else None,
-            principal=data.get("principal") if isinstance(data.get("principal"), str) else None,
-            extensions=_mapping(data.get("extensions", {}), path="$.permissions.delegation.extensions"),
-        )
-
-
-@dataclass(frozen=True, slots=True)
 class Permissions:
     mode: str | None = None
     scope: tuple[str, ...] = ()
@@ -499,9 +474,6 @@ class Permissions:
     require_review: bool = False
     require_logging: bool = False
     limits: Mapping[str, JSONValue] = field(default_factory=dict)
-    authorization_ref: str | None = None
-    expires_at: str | None = None
-    delegation: Delegation | None = None
     extensions: Mapping[str, JSONValue] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -515,13 +487,6 @@ class Permissions:
             _non_empty_string(item, path=f"$.permissions.forbid[{index}]")
         if len(set(self.forbid)) != len(self.forbid):
             raise ValueError("duplicate permission forbid")
-        if self.authorization_ref is not None:
-            _non_empty_string(
-                self.authorization_ref,
-                path="$.permissions.authorization_ref",
-            )
-        if self.expires_at is not None:
-            _non_empty_string(self.expires_at, path="$.permissions.expires_at")
         object.__setattr__(
             self,
             "limits",
@@ -546,14 +511,10 @@ class Permissions:
                 "require_review",
                 "require_logging",
                 "limits",
-                "authorization_ref",
-                "expires_at",
-                "delegation",
                 "extensions",
             },
             path="$.permissions",
         )
-        delegation = data.get("delegation")
         return cls(
             mode=_optional_string(data, "mode", path="$.permissions"),
             scope=tuple(
@@ -580,21 +541,6 @@ class Permissions:
                 path="$.permissions",
             ),
             limits=_mapping(data.get("limits", {}), path="$.permissions.limits"),
-            authorization_ref=_optional_string(
-                data,
-                "authorization_ref",
-                path="$.permissions",
-            ),
-            expires_at=_optional_string(
-                data,
-                "expires_at",
-                path="$.permissions",
-            ),
-            delegation=(
-                Delegation.from_mapping(delegation)
-                if delegation is not None
-                else None
-            ),
             extensions=_mapping(
                 data.get("extensions", {}),
                 path="$.permissions.extensions",
