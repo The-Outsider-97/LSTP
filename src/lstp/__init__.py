@@ -48,6 +48,10 @@ from lstp.text.canonical import (
     compile_canonical_lattice,
     parse_canonical_lattice,
 )
+from lstp.text.canonical_serializer import (
+    canonical_lattice_document_dumps,
+    canonical_lattice_dumps,
+)
 from lstp.text.parser import parse
 from lstp.text.tokenizer import tokenize
 from lstp.version import __version__
@@ -90,6 +94,8 @@ __all__ = [
     "__version__",
     "authorize_operation",
     "canonical_dumps",
+    "canonical_lattice_document_dumps",
+    "canonical_lattice_dumps",
     "canonical_loads",
     "compile_canonical_lattice",
     "compile_lattice",
