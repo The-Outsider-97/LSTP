@@ -3,10 +3,9 @@
   Status: Normative compact-carrier profile subordinate to canonical Lattice
   Encoding: UTF-8
 
-  NOTE: This file currently defines the compact operator carrier. The Level-1
-  Whitepaper also requires canonical ordered-Octad atomic/framed/named/stream
-  packet productions. Until those are restored, this file is not the complete
-  canonical Lattice grammar.
+  NOTE: This file defines only the compact operator carrier. The separate
+  Whitepaper canonical ordered-Octad carrier is defined in spec/grammar.ebnf.
+  Neither carrier is allowed to redefine the shared Octad semantics.
 
   EBNF notation used in this file:
     = definition | alternative , concatenation [ ] optional { } repetition
