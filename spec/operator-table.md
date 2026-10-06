@@ -697,10 +697,15 @@ A conforming strict parser MUST:
 
 ---
 
-## 18. Relationship to `grammar.ebnf`
+## 18. Relationship to the grammar profiles
 
-`spec/grammar.ebnf` is authoritative for syntactic acceptance.
+`spec/compact-grammar.ebnf` is authoritative for compact-operator syntactic
+acceptance.
 
-This table is authoritative for the intended core meaning of accepted operator tokens.
+`spec/grammar.ebnf` defines the separate Whitepaper canonical ordered-Octad
+Lattice carrier.
+
+This table is authoritative for the intended core meaning of accepted compact
+operator tokens.
 
 If the grammar accepts a syntactic extension that this table does not assign core semantics, the result MUST remain an extension or unresolved AST construct until a vocabulary defines it.
