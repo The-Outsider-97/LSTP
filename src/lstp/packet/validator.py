@@ -149,14 +149,6 @@ def _validate_permissions(octad: Octad) -> list[Diagnostic]:
         )
     )
 
-    for item in sorted(set(permissions.scope) & set(permissions.forbid)):
-        diagnostics.append(
-            _diag(
-                "permission_scope_forbidden",
-                f"scope item {item!r} is both allowed and forbidden; forbid wins",
-                "$.permissions",
-            )
-        )
 
     if permissions.mode in SIDE_EFFECT_MODES and not permissions.scope:
         diagnostics.append(
