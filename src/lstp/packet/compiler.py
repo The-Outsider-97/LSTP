@@ -20,7 +20,6 @@ from lstp.models import (
     Permissions,
     Pragmatics,
     Relation,
-    Resource,
 )
 from lstp.packet.validator import CORE_RELATIONS, require_semantic_validity
 from lstp.text.ast import (
@@ -80,10 +79,9 @@ class _Compiler:
         self.relations: list[Relation] = []
         self.evidence: list[EvidenceItem] = []
         self.context_refs: list[CanonicalContextReference] = []
-        self.capabilities: list[str] = []
-        self.resources: list[Resource] = []
+        self.mode: str | None = None
+        self.scope: list[str] = []
         self.forbid: list[str] = []
-        self.profile: str | None = None
         self.confirm = False
         self.review = False
         self.logging = False
@@ -407,34 +405,37 @@ class _Compiler:
                     [label, value],
                 )
                 continue
-            if key == "capabilities":
-                self.capabilities.extend(
-                    self._string_list(entry.value, key)
-                )
-            elif key == "resources":
-                self.resources.extend(
-                    Resource(item)
-                    for item in self._string_list(entry.value, key)
-                )
-            elif key == "forbid":
-                self.forbid.extend(
-                    self._string_list(entry.value, key)
-                )
-            elif key == "profile":
+            if key == "mode":
                 value = self._literal(entry.value)
                 if not isinstance(value, str):
                     raise self._error(
                         "constraint_type",
-                        "profile must be a string",
+                        "mode must be a string or identifier",
                         entry.value,
                     )
-                if self.profile is not None and self.profile != value:
+                if value not in {"RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"}:
                     raise self._error(
-                        "duplicate_profile",
-                        "conflicting permission profiles",
+                        "unknown_permission_mode",
+                        "mode must be one of RO, SUGGEST, PREVIEW, RW, EXEC, COMMIT",
                         entry.value,
                     )
-                self.profile = value
+                if self.mode is not None and self.mode != value:
+                    raise self._error(
+                        "duplicate_permission_mode",
+                        "conflicting permission modes",
+                        entry.value,
+                    )
+                self.mode = value
+            elif key == "scope":
+                self.scope.extend(self._string_list(entry.value, key))
+            elif key == "forbid":
+                self.forbid.extend(self._string_list(entry.value, key))
+            elif key in {"capabilities", "resources", "profile"}:
+                raise self._error(
+                    "candidate_permission_field",
+                    "October candidate permission fields are not canonical; use mode/scope",
+                    entry.value,
+                )
             elif key in {"confirm", "require_confirmation"}:
                 self.confirm = self._boolean(entry.value, key)
             elif key in {"review", "require_review"}:
@@ -462,12 +463,6 @@ class _Compiler:
                         entry.value,
                     )
                 self.register = value
-            elif key == "mode":
-                raise self._error(
-                    "legacy_permission_mode",
-                    "legacy 'mode' is not canonical; use capabilities/profile",
-                    entry.value,
-                )
             else:
                 raise self._error(
                     "unknown_constraint",
@@ -636,11 +631,11 @@ class _Compiler:
                 "compiler requires exactly one main clause",
             )
         main = mains[0]
-        act = {
-            "!": "request",
-            "!!": "request",
-            "?": "question",
-            ".": "inform",
+        pragmatic_type, speech_act = {
+            "!": ("request", "command"),
+            "!!": ("request", "command"),
+            "?": ("question", "question"),
+            ".": ("inform", "statement"),
         }[main.force]
         modifiers = ("urgent",) if main.force == "!!" else ()
 
@@ -726,7 +721,8 @@ class _Compiler:
         packet = PacketEnvelope(
             Octad(
                 Pragmatics(
-                    act,
+                    pragmatic_type,
+                    speech_act=speech_act,
                     goal=main.action,
                     modifiers=modifiers,
                     register=self.register,
@@ -744,13 +740,12 @@ class _Compiler:
                     else self.confidence
                 ),
                 Permissions(
-                    tuple(self.capabilities),
-                    tuple(self.resources),
-                    self.profile,
-                    tuple(self.forbid),
-                    self.confirm,
-                    self.review,
-                    self.logging,
+                    mode=self.mode,
+                    scope=tuple(self.scope),
+                    forbid=tuple(self.forbid),
+                    require_confirmation=self.confirm,
+                    require_review=self.review,
+                    require_logging=self.logging,
                 ),
                 tuple(self.evidence),
                 self.output or Output(self.options.default_output),
