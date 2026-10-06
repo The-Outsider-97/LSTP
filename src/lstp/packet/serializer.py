@@ -36,7 +36,6 @@ from lstp.models import (
     Permissions,
     Pragmatics,
     Relation,
-    Resource,
 )
 from lstp.packet.validator import require_semantic_validity
 
@@ -179,7 +178,8 @@ def _thaw(value: JSONValue) -> object:
 
 
 def _pragmatics(value: Pragmatics) -> dict[str, object]:
-    data: dict[str, object] = {"act": value.act}
+    data: dict[str, object] = {"type": value.type}
+    _put_optional(data, "speech_act", value.speech_act)
     _put_optional(data, "goal", value.goal)
     if value.modifiers:
         data["modifiers"] = list(value.modifiers)
@@ -234,26 +234,20 @@ def _context(value: Context) -> dict[str, object]:
         "references": [_context_reference(item) for item in value.references],
     }
     _put_optional(data, "packet_id", value.packet_id)
-    _put_optional(data, "parent_id", value.parent_id)
+    _put_optional(data, "parent_packet_id", value.parent_packet_id)
     _put_optional(data, "conversation_id", value.conversation_id)
     _put_optional(data, "turn", value.turn)
     _put_optional(data, "speaker", value.speaker)
     if value.audience:
         data["audience"] = list(value.audience)
     _put_optional(data, "time", value.time)
+    _put_optional(data, "timezone", value.timezone)
+    if value.window is not None:
+        data["window"] = _thaw(value.window)
     if value.location is not None:
         data["location"] = _thaw(value.location)
     if value.bindings:
         data["bindings"] = _thaw(value.bindings)
-    if value.extensions:
-        data["extensions"] = _extensions(value.extensions)
-    return data
-
-
-def _resource(value: Resource) -> dict[str, object]:
-    data: dict[str, object] = {"id": value.id}
-    _put_optional(data, "kind", value.kind)
-    _put_optional(data, "atom", value.atom)
     if value.extensions:
         data["extensions"] = _extensions(value.extensions)
     return data
@@ -270,11 +264,10 @@ def _delegation(value: Delegation) -> dict[str, object]:
 
 
 def _permissions(value: Permissions) -> dict[str, object]:
-    data: dict[str, object] = {
-        "capabilities": list(value.capabilities),
-        "resources": [_resource(item) for item in value.resources],
-    }
-    _put_optional(data, "profile", value.profile)
+    data: dict[str, object] = {}
+    _put_optional(data, "mode", value.mode)
+    if value.scope:
+        data["scope"] = list(value.scope)
     if value.forbid:
         data["forbid"] = list(value.forbid)
     if value.require_confirmation:
