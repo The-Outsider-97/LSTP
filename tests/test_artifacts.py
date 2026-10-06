@@ -11,12 +11,19 @@ def test_schema_is_valid_json_and_meta_schema() -> None:
     Draft202012Validator.check_schema(schema)
 
 
-def test_protocol_remains_not_training_ready_for_implementation_reasons() -> None:
+def test_contract_is_reconciled_but_release_gates_remain_open() -> None:
     state = json.loads((ROOT / "docs/program/readiness.json").read_text())
+    assert state["contract_reconciled"] is True
     assert state["training_ready"] is False
     ids = {item["id"] for item in state["blockers"]}
-    assert "IMPL-001" in ids
-    assert "SPEC-002" not in ids
+    assert ids == {
+        "VERIFY-001",
+        "TEST-001",
+        "INTEROP-001",
+        "SLAI-001",
+        "DOC-001",
+        "REL-001",
+    }
 
 
 def test_identifier_patterns_reject_trailing_controls() -> None:
