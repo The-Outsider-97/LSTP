@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import TypeVar, cast
@@ -225,7 +225,7 @@ class _Parser:
             if key == "MOD":
                 return self._list(self._identifier)
             if key == "URGENCY":
-                return self._number()
+                return float(self._number())
             raise self._error(
                 "unknown_pragmatics_field",
                 f"unknown canonical pragmatics field {key!r}",
@@ -242,9 +242,9 @@ class _Parser:
                 else None
             ),
             goal=str(entries["GOAL"]) if "GOAL" in entries else None,
-            modifiers=tuple(entries.get("MOD", ())),  # type: ignore[arg-type]
+            modifiers=cast(tuple[str, ...], entries.get("MOD", ())),
             register=str(entries["REGISTER"]) if "REGISTER" in entries else None,
-            urgency=entries.get("URGENCY"),  # type: ignore[arg-type]
+            urgency=cast(float | None, entries.get("URGENCY")),
         )
 
     def _atom(self) -> Atom:
@@ -259,7 +259,7 @@ class _Parser:
             )
         self._expect("(")
         self._skip_layout()
-        value: object = None
+        value: JSONValue = None
         if self._peek() != ")":
             value = self._json_value()
         self._expect(")", layout=True)
@@ -267,7 +267,7 @@ class _Parser:
         role: str | None = None
         datatype: str | None = None
         language: str | None = None
-        attributes: object = {}
+        attributes: Mapping[str, JSONValue] = {}
         self._skip_layout()
         if self._peek() == "{":
             self.index += 1
@@ -289,12 +289,13 @@ class _Parser:
                 elif key == "LANGUAGE":
                     language = self._string_or_identifier()
                 elif key == "ATTRIBUTES":
-                    attributes = self._json_value()
-                    if not isinstance(attributes, dict):
+                    raw_attributes = self._json_value()
+                    if not isinstance(raw_attributes, dict):
                         raise self._error(
                             "expected_object",
                             "atom ATTRIBUTES requires a JSON object",
                         )
+                    attributes = cast(Mapping[str, JSONValue], raw_attributes)
                 else:
                     raise self._error(
                         "unknown_atom_metadata",
@@ -313,7 +314,7 @@ class _Parser:
             role=role,
             datatype=datatype,
             language=language,
-            attributes=attributes,  # type: ignore[arg-type]
+            attributes=attributes,
         )
 
     def _atoms(self) -> tuple[Atom, ...]:
@@ -360,8 +361,8 @@ class _Parser:
         self._expect(")", layout=True)
 
         relation_id: str | None = None
-        confidence: Decimal | None = None
-        attributes: object = {}
+        confidence: float | None = None
+        attributes: Mapping[str, JSONValue] = {}
         self._skip_layout()
         if self._peek() == "{":
             self.index += 1
@@ -379,19 +380,21 @@ class _Parser:
                 if key == "ID":
                     relation_id = self._string_or_identifier()
                 elif key == "CONFIDENCE":
-                    confidence = self._number()
-                    if confidence < 0 or confidence > 1:
+                    parsed_confidence = self._number()
+                    if parsed_confidence < 0 or parsed_confidence > 1:
                         raise self._error(
                             "confidence_range",
                             "relation CONFIDENCE must be between 0 and 1",
                         )
+                    confidence = float(parsed_confidence)
                 elif key == "ATTRIBUTES":
-                    attributes = self._json_value()
-                    if not isinstance(attributes, dict):
+                    raw_attributes = self._json_value()
+                    if not isinstance(raw_attributes, dict):
                         raise self._error(
                             "expected_object",
                             "relation ATTRIBUTES requires a JSON object",
                         )
+                    attributes = cast(Mapping[str, JSONValue], raw_attributes)
                 else:
                     raise self._error(
                         "unknown_relation_metadata",
@@ -407,8 +410,8 @@ class _Parser:
             relation_type,
             tuple(arguments),
             id=relation_id,
-            confidence=confidence,  # type: ignore[arg-type]
-            attributes=attributes,  # type: ignore[arg-type]
+            confidence=confidence,
+            attributes=attributes,
         )
 
     def _relations(self) -> tuple[Relation, ...]:
@@ -459,10 +462,11 @@ class _Parser:
         entries = self._entries(parse_value)
         if "THREAD" not in entries:
             raise self._error("missing_context_thread", "C requires THREAD")
-        references = tuple(
-            ContextReference(str(packet_id))
-            for packet_id in entries.get("REFERENCES", ())  # type: ignore[arg-type]
+        reference_ids = cast(
+            tuple[str, ...],
+            entries.get("REFERENCES", ()),
         )
+        references = tuple(ContextReference(packet_id) for packet_id in reference_ids)
         return Context(
             thread_id=str(entries["THREAD"]),
             references=references,
@@ -473,14 +477,17 @@ class _Parser:
                 if "CONVERSATION" in entries
                 else None
             ),
-            turn=entries.get("TURN"),  # type: ignore[arg-type]
+            turn=cast(int | None, entries.get("TURN")),
             speaker=str(entries["SPEAKER"]) if "SPEAKER" in entries else None,
-            audience=tuple(entries.get("AUDIENCE", ())),  # type: ignore[arg-type]
+            audience=cast(tuple[str, ...], entries.get("AUDIENCE", ())),
             time=str(entries["TIME"]) if "TIME" in entries else None,
             timezone=str(entries["TIMEZONE"]) if "TIMEZONE" in entries else None,
-            window=entries.get("WINDOW"),
-            location=entries.get("LOCATION"),
-            bindings=entries.get("BINDINGS", {}),  # type: ignore[arg-type]
+            window=cast(JSONValue, entries.get("WINDOW")),
+            location=cast(JSONValue, entries.get("LOCATION")),
+            bindings=cast(
+                Mapping[str, JSONValue],
+                entries.get("BINDINGS", {}),
+            ),
         )
 
     def _confidence(self) -> float:
@@ -521,12 +528,15 @@ class _Parser:
         entries = self._entries(parse_value)
         return Permissions(
             mode=str(entries["MODE"]) if "MODE" in entries else None,
-            scope=tuple(entries.get("SCOPE", ())),  # type: ignore[arg-type]
-            forbid=tuple(entries.get("FORBID", ())),  # type: ignore[arg-type]
+            scope=cast(tuple[str, ...], entries.get("SCOPE", ())),
+            forbid=cast(tuple[str, ...], entries.get("FORBID", ())),
             require_confirmation=bool(entries.get("REQUIRE_CONFIRM", False)),
             require_review=bool(entries.get("REQUIRE_REVIEW", False)),
             require_logging=bool(entries.get("LOG", False)),
-            limits=entries.get("LIMITS", {}),  # type: ignore[arg-type]
+            limits=cast(
+                Mapping[str, JSONValue],
+                entries.get("LIMITS", {}),
+            ),
         )
 
     def _evidence_item(self, index: int) -> EvidenceItem:
@@ -596,8 +606,11 @@ class _Parser:
             channel=str(entries["CHANNEL"]) if "CHANNEL" in entries else None,
             target=str(entries["TARGET"]) if "TARGET" in entries else None,
             language=str(entries["LANG"]) if "LANG" in entries else None,
-            max_bytes=entries.get("MAX_BYTES"),  # type: ignore[arg-type]
-            requirements=tuple(entries.get("REQUIREMENTS", ())),  # type: ignore[arg-type]
+            max_bytes=cast(int | None, entries.get("MAX_BYTES")),
+            requirements=cast(
+                tuple[str, ...],
+                entries.get("REQUIREMENTS", ()),
+            ),
         )
 
     def _octad(self) -> Octad:
