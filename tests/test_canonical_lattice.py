@@ -1,0 +1,119 @@
+from __future__ import annotations
+
+import pytest
+
+from lstp.errors import LatticeSyntaxError
+from lstp.text.canonical import parse_canonical_lattice
+
+
+WHITEPAPER_EXAMPLE = """[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)
+ |A=(a0:ENT("door"){ROLE=TARGET})
+ |R=(OPEN(a0))
+ |C=(THREAD="t1")
+ |κ=0.95
+ |Π=(MODE=EXEC,SCOPE=["door"])
+ |E=(USER("open the door"))
+ |Ω=(FORMAT=NL)]"""
+
+
+def test_exact_whitepaper_example_parses_to_ordered_octad() -> None:
+    document = parse_canonical_lattice(WHITEPAPER_EXAMPLE)
+    assert len(document.packets) == 1
+    packet = document.packets[0]
+    assert packet.label is None
+    octad = packet.octad
+    assert octad.pragmatics.type == "request"
+    assert octad.pragmatics.speech_act == "command"
+    assert octad.atoms[0].id == "a0"
+    assert octad.atoms[0].kind == "entity"
+    assert octad.atoms[0].value == "door"
+    assert octad.atoms[0].role == "TARGET"
+    assert octad.relations[0].type == "OPEN"
+    assert octad.relations[0].arguments == ("a0",)
+    assert octad.context.thread_id == "t1"
+    assert octad.confidence == 0.95
+    assert octad.permissions.mode == "EXEC"
+    assert octad.permissions.scope == ("door",)
+    assert octad.evidence[0].source_type == "user"
+    assert octad.evidence[0].source_ref == "open the door"
+    assert octad.output.format == "NL"
+
+
+def test_atomic_packet_is_unframed_octad_core() -> None:
+    source = (
+        'π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
+        'Π=()|E=()|Ω=(FORMAT=JSON)'
+    )
+    document = parse_canonical_lattice(source)
+    assert len(document.packets) == 1
+    assert document.packets[0].label is None
+    assert document.packets[0].octad.output.format == "JSON"
+
+
+def test_named_packet_label_is_carrier_metadata_not_octad_identity() -> None:
+    source = (
+        'alpha:[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
+        'Π=()|E=()|Ω=(FORMAT=NL)]'
+    )
+    document = parse_canonical_lattice(source)
+    packet = document.packets[0]
+    assert packet.label == "alpha"
+    assert packet.octad.context.packet_id is None
+
+
+def test_stream_packet_requires_named_packets_and_line_break_separator() -> None:
+    source = (
+        'one:[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
+        'Π=()|E=()|Ω=(FORMAT=NL)]\n'
+        'two:[π=(TYPE=QUESTION,SPEECH_ACT=QUESTION)|A=()|R=()|'
+        'C=(THREAD="t1")|κ=0.8|Π=(MODE=RO)|E=()|Ω=(FORMAT=NL)]'
+    )
+    document = parse_canonical_lattice(source)
+    assert [item.label for item in document.packets] == ["one", "two"]
+    assert document.packets[1].octad.pragmatics.type == "question"
+
+
+def test_canonical_segment_order_is_strict() -> None:
+    source = (
+        '[π=(TYPE=INFORM)|R=()|A=()|C=(THREAD="t1")|κ=1|'
+        'Π=()|E=()|Ω=(FORMAT=NL)]'
+    )
+    with pytest.raises(LatticeSyntaxError):
+        parse_canonical_lattice(source)
+
+
+def test_duplicate_named_field_fails_closed() -> None:
+    source = (
+        '[π=(TYPE=INFORM,TYPE=REQUEST)|A=()|R=()|C=(THREAD="t1")|κ=1|'
+        'Π=()|E=()|Ω=(FORMAT=NL)]'
+    )
+    with pytest.raises(LatticeSyntaxError, match="duplicate canonical field"):
+        parse_canonical_lattice(source)
+
+
+def test_unknown_canonical_permission_field_is_rejected() -> None:
+    source = (
+        '[π=(TYPE=REQUEST)|A=()|R=()|C=(THREAD="t1")|κ=1|'
+        'Π=(CAPABILITIES=["commit"])|E=()|Ω=(FORMAT=NL)]'
+    )
+    with pytest.raises(LatticeSyntaxError, match="unknown canonical permission field"):
+        parse_canonical_lattice(source)
+
+
+def test_context_whitepaper_fields_parse_without_aliases() -> None:
+    source = (
+        '[π=(TYPE=INFORM)|A=()|R=()|'
+        'C=(THREAD="t1",PARENT="p0",TIMEZONE="Europe/Amsterdam",'
+        'WINDOW={"turns":4})|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'
+    )
+    context = parse_canonical_lattice(source).packets[0].octad.context
+    assert context.parent_packet_id == "p0"
+    assert context.timezone == "Europe/Amsterdam"
+    assert context.window["turns"] == 4
+
+
+def test_compact_syntax_is_not_accepted_by_canonical_parser() -> None:
+    with pytest.raises(LatticeSyntaxError):
+        parse_canonical_lattice(
+            '!open @door {mode=COMMIT, scope=["door"]} -> NL %0.95'
+        )
