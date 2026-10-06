@@ -1,0 +1,1 @@
+{"audit":{},"atoms":[],"carrier":{},"confidence":1,"context":{"references":[],"thread_id":"t1"},"evidence":[],"id":"p1","output":{"format":"NL"},"permissions":{"forbid":["urn:example:resource"],"mode":"COMMIT","scope":["urn:example:resource"]},"pragmatics":{"type":"request","speech_act":"command"},"relations":[],"version":"0.1"}
