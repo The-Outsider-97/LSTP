@@ -13,7 +13,6 @@ from lstp.models import (
     PacketEnvelope,
     Permissions,
     Pragmatics,
-    Resource,
 )
 from lstp.packet.authorization import (
     Authority,
@@ -33,8 +32,8 @@ OTHER_RESOURCE = "urn:test:document:2"
 
 def _packet(
     *,
-    capabilities: tuple[str, ...] = ("commit",),
-    resources: tuple[str, ...] = (RESOURCE,),
+    mode: str = "COMMIT",
+    scope: tuple[str, ...] = (RESOURCE,),
     confirmation: bool = False,
     review: bool = False,
     logging: bool = False,
@@ -50,8 +49,8 @@ def _packet(
             Context("thread-1"),
             1.0,
             Permissions(
-                capabilities=capabilities,
-                resources=tuple(Resource(item) for item in resources),
+                mode=mode,
+                scope=scope,
                 require_confirmation=confirmation,
                 require_review=review,
                 require_logging=logging,
@@ -106,7 +105,7 @@ def _operation(
 
 
 def test_effective_authority_is_exact_four_way_intersection() -> None:
-    packet = _packet(capabilities=("read", "commit"))
+    packet = _packet(mode="COMMIT")
     effective = effective_authority(
         packet,
         principal=_principal("read", "commit"),
