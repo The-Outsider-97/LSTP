@@ -185,3 +185,39 @@ conformance suite.
 
 Production hardening may continue only where it is protocol-neutral. New core
 semantic features should not be added until the authority conflict is closed.
+
+
+## Phase B implementation status — 6 October 2026
+
+The Whitepaper semantic repair has now been implemented as a candidate across the
+schema, typed model, canonical serializer/decoder, semantic validator, compact
+Lattice compiler, host authorization boundary, tests, conformance vectors, and
+Level-3 permission/vocabulary documentation.
+
+Implemented repairs:
+
+- **GOV-PRAG:** canonical pragmatics now uses required `type` and distinct
+  optional `speech_act`; the October `act` field fails closed.
+- **GOV-PERM:** canonical packet permissions now use the six Whitepaper modes,
+  explicit `scope`, subtractive `forbid`, limits and
+  confirmation/review/logging constraints. `capabilities`, `resources`, and
+  `profile` are no longer canonical packet fields.
+- **Host enforcement:** the six wire modes are translated deterministically into
+  concrete capabilities only at the authorization boundary; principal, policy,
+  runtime and resource intersections remain intact.
+- **GOV-CTX:** canonical context now restores `parent_packet_id`, `timezone`,
+  and `window` while retaining stable packet-reference resolution.
+- October candidate semantic fields are rejected rather than silently aliased or
+  migrated by the canonical decoder/model boundary.
+
+Still open:
+
+- **GOV-GRAM:** the canonical ordered-Octad atomic/framed/named/stream Lattice
+  grammar remains to be restored. The current parser/compiler covers the compact
+  operator carrier only.
+- **GOV-EXT:** final core-vs-extension/revision status for
+  `authorization_ref`, `expires_at`, and delegation metadata remains open.
+- **PHASEB-VERIFY:** the repaired candidate requires successful engineering and
+  conformance evidence before these repairs are treated as merged/verified.
+
+Accordingly, `contract_reconciled` and `training_ready` remain false.
