@@ -38,13 +38,16 @@ jobs:
           /tmp/lstp-sdist/bin/python -m pip install '.[dev]'
           /tmp/lstp-sdist/bin/python -m pytest
 
-  protocol-readiness:
-    name: Protocol readiness
+  release-preflight:
+    name: Release preflight / Python 3.12 + Node 22
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - run: python -m pip install -e '.[dev]'
-      - run: python tools/check_readiness.py
+      - run: python tools/run_release_checks.py
