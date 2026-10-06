@@ -217,8 +217,9 @@ Still open:
   operator carrier only.
 - **GOV-EXT:** final core-vs-extension/revision status for
   `authorization_ref`, `expires_at`, and delegation metadata remains open.
-- **PHASEB-VERIFY:** the repaired candidate requires successful engineering and
-  conformance evidence before these repairs are treated as merged/verified.
+- **PHASEB-VERIFY:** the repair is merged via PR #12, but successful executable
+  engineering/conformance evidence is still missing because GitHub Actions fails
+  before any workflow step executes.
 
 Accordingly, `contract_reconciled` and `training_ready` remain false.
 
