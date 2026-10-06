@@ -111,7 +111,11 @@ LSTP now has two explicit Lattice carrier profiles with one semantic Octad:
 The canonical carrier parser is exposed as:
 
 ```python
-from lstp import parse_canonical_lattice
+from lstp import (
+    canonical_lattice_dumps,
+    compile_canonical_lattice,
+    parse_canonical_lattice,
+)
 
 document = parse_canonical_lattice(
     '[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)'
@@ -129,6 +133,12 @@ Compact Lattice continues to use `parse()` / `compile_lattice()`. Compact
 syntax is not silently accepted as canonical ordered-Octad syntax, and packet
 labels in named canonical streams remain carrier labels rather than becoming
 envelope IDs.
+
+For the governed canonical surface, `canonical_lattice_dumps(octad)` emits one
+deterministic framed representation and `compile_canonical_lattice()` validates
+the result back into typed semantics. The encoder fails closed rather than
+dropping fields whose canonical Lattice syntax is not yet governed, including
+the provisional GOV-EXT permission fields and richer evidence metadata.
 
 Relative compact references such as `↑2` must still resolve to stable packet
 IDs before canonical transport, replay, hashing, or storage.
