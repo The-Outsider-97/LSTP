@@ -25,7 +25,7 @@ def test_octad_preserves_canonical_field_order() -> None:
 
 
 def test_typed_model_rejects_october_candidate_pragmatics_mapping() -> None:
-    with pytest.raises(TypeError, match="pragmatics.type"):
+    with pytest.raises(ValueError, match="unknown field at \\$\\.pragmatics"):
         Pragmatics.from_mapping({"act": "question"})
 
 
