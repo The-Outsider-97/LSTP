@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..", "..");
-const VECTOR = path.join(ROOT, "conformance", "v0.1", "positive", "minimal.json");
+const VECTOR_DIR = path.join(ROOT, "conformance", "v0.1", "positive");
 
 const BIDI = /[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/u;
 const REQUIRED_TOP = [
@@ -121,27 +121,46 @@ function validateFrozenShape(packet) {
   assert(typeof packet.context?.thread_id === "string", "missing context.thread_id");
   assert(Array.isArray(packet.context?.references), "context.references must be array");
   assert(packet.confidence >= 0 && packet.confidence <= 1, "invalid confidence");
+  assert(Array.isArray(packet.atoms), "atoms must be array");
+  assert(Array.isArray(packet.relations), "relations must be array");
+  assert(Array.isArray(packet.evidence), "evidence must be array");
   assert(typeof packet.output?.format === "string", "missing output.format");
 
+  const modes = new Set(["RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"]);
+  if (Object.hasOwn(packet.permissions ?? {}, "mode")) {
+    assert(modes.has(packet.permissions.mode), "unknown permission mode");
+  }
   for (const key of Object.keys(packet.permissions ?? {})) {
     assert(PERMISSION_ALLOWED.has(key), `non-core permission field ${key}`);
   }
 }
 
-const raw = fs.readFileSync(VECTOR);
-const text = raw.toString("utf8");
-assert(!text.startsWith("\ufeff"), "canonical vector must not contain BOM");
-const parsed = JSON.parse(text);
-validateFrozenShape(parsed);
+const vectorNames = fs
+  .readdirSync(VECTOR_DIR)
+  .filter((name) => name.endsWith(".json"))
+  .sort();
+assert(vectorNames.length >= 2, "independent verifier requires multiple vectors");
 
-const reproduced = Buffer.from(encode(parsed), "utf8");
-assert(
-  Buffer.compare(raw, reproduced) === 0,
-  "independent canonical bytes do not match shared vector",
-);
+let totalBytes = 0;
+let firstPacket = null;
+for (const name of vectorNames) {
+  const vector = path.join(VECTOR_DIR, name);
+  const raw = fs.readFileSync(vector);
+  const text = raw.toString("utf8");
+  assert(!text.startsWith("\ufeff"), `${name}: canonical vector must not contain BOM`);
+  const parsed = JSON.parse(text);
+  validateFrozenShape(parsed);
+  const reproduced = Buffer.from(encode(parsed), "utf8");
+  assert(
+    Buffer.compare(raw, reproduced) === 0,
+    `${name}: independent canonical bytes do not match shared vector`,
+  );
+  totalBytes += raw.length;
+  firstPacket ??= parsed;
+}
 
 // Independent negative check for the resolved GOV-EXT boundary.
-const injected = structuredClone(parsed);
+const injected = structuredClone(firstPacket);
 injected.permissions.authorization_ref = "host-controlled";
 let rejected = false;
 try {
@@ -154,8 +173,8 @@ assert(rejected, "host-only permission field was accepted as canonical v0.1");
 process.stdout.write(
   JSON.stringify({
     implementation: "independent-js-v0.1",
-    vector: "conformance/v0.1/positive/minimal.json",
-    canonical_bytes: raw.length,
+    vectors: vectorNames,
+    canonical_bytes: totalBytes,
     gov_ext_rejected: true,
     status: "passed",
   }) + "\n",
