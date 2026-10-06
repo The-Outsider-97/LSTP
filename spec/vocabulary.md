@@ -16,22 +16,29 @@ robotics.move
 
 Unknown namespaced values MAY be preserved but MUST NOT be assigned invented semantics by a core consumer.
 
-## 2. Pragmatic acts
+## 2. Pragmatic type and speech-act identifiers
 
-Canonical `pragmatics.act` values:
+The Whitepaper canonical field is `pragmatics.type`, with an optional distinct
+`pragmatics.speech_act`. The two fields MUST NOT be collapsed into one
+`act` value.
 
-| Act | Meaning |
-|---|---|
-| `assert` | state a proposition as asserted content |
-| `request` | request that an operation, artifact, or response be produced |
-| `question` | request information or clarification |
-| `inform` | provide information without primarily asserting a disputed proposition |
-| `correct` | replace or challenge an earlier semantic interpretation/content |
-| `acknowledge` | acknowledge receipt, state, or prior action |
-| `refuse` | explicitly decline a request or requested action |
-| `respond` | direct protocol response to an earlier packet/request |
+The following type identifiers are recommended for interoperable core traffic:
 
-These acts do not imply execution authority.
+- `assert`
+- `request`
+- `question`
+- `inform`
+- `correct`
+- `acknowledge`
+- `refuse`
+- `respond`
+
+The compact reference compiler additionally uses speech-act identifiers
+`command`, `question`, and `statement` for directive, interrogative, and
+declarative prefixes respectively.
+
+These identifiers describe communication semantics only. They do not imply
+execution authority.
 
 ## 3. Atom kinds
 
@@ -91,22 +98,9 @@ Protocol responses use the same Octad. Standard outcome relation types are:
 
 An outcome SHOULD reference the originating request/relation when possible.
 
-## 7. Permission capabilities
+## 7. Permission modes
 
-Core requested capabilities:
-
-- `read`
-- `suggest`
-- `prepare`
-- `write`
-- `execute`
-- `commit`
-
-Normative safety behavior is defined by `spec/permissions-safety.md`.
-
-## 8. Permission profiles
-
-Named profiles:
+Canonical requested authority is represented by one of the six Whitepaper modes:
 
 - `RO`
 - `SUGGEST`
@@ -115,7 +109,22 @@ Named profiles:
 - `EXEC`
 - `COMMIT`
 
-Profiles are named bundles, not a privilege ordering.
+Their conceptual order is:
+
+```text
+RO <= SUGGEST <= PREVIEW <= RW <= EXEC <= COMMIT
+```
+
+Scope and forbids remain independent; a stronger mode never widens scope.
+
+## 8. Host-internal authorization capabilities
+
+The reference host translates the wire mode into internal capabilities
+`read`, `suggest`, `prepare`, `write`, `execute`, and `commit` for
+authorization intersection. These are implementation vocabulary, not canonical
+packet fields.
+
+Normative safety behavior is defined by `spec/permissions-safety.md`.
 
 ## 9. Evidence source types
 
@@ -154,6 +163,6 @@ An extension MUST NOT override a core semantic value. A namespaced vocabulary va
 
 ## 12. Reserved growth rule
 
-Adding a new core act, atom kind, capability, evidence source type, output format, or special relation argument is a protocol change and requires versioned conformance updates.
+Adding a new core pragmatic type, permission mode, atom kind, evidence source type, output format, or special relation argument is a protocol change and requires versioned conformance updates.
 
 Adding a domain-specific namespaced relation or goal does not change core v0.1, provided it does not reinterpret a core identifier or permission rule.
