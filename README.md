@@ -137,8 +137,8 @@ envelope IDs.
 For the governed canonical surface, `canonical_lattice_dumps(octad)` emits one
 deterministic framed representation and `compile_canonical_lattice()` validates
 the result back into typed semantics. The encoder fails closed rather than
-dropping fields whose canonical Lattice syntax is not yet governed, including
-the provisional GOV-EXT permission fields and richer evidence metadata.
+dropping fields whose canonical Lattice syntax is not governed, including richer
+evidence metadata.
 
 Relative compact references such as `↑2` must still resolve to stable packet
 IDs before canonical transport, replay, hashing, or storage.
@@ -187,9 +187,10 @@ capabilities, packet scope after forbids, authenticated principal authority,
 host policy, and runtime capability. Empty scope is never a wildcard.
 
 Delegation, expiry, trusted authorization references, and replay protection are
-implemented as host-security hardening. Their final core-vs-extension/revision
-status remains open under GOV-EXT and therefore is not part of the training
-freeze yet.
+host-security hardening, not canonical v0.1 packet fields. The reference API
+accepts expiry/reference/delegation through trusted `HostAuthorizationContext`
+metadata supplied alongside the packet. Canonical JSON rejects those fields when
+placed inside `permissions`.
 
 Action-capable hosts can use the reference authorization API together with any
 `ReplayStore` implementation. `ReplayGuard` is process-local;
@@ -202,7 +203,6 @@ reservation semantics.
 Fields declared by the canonical contract now receive semantic format validation:
 
 - `context.time` — RFC 3339 date-time;
-- `permissions.expires_at` — RFC 3339 date-time;
 - `atoms[].language` — structurally well-formed BCP 47 language tag;
 - `output.language` — structurally well-formed BCP 47 language tag.
 
