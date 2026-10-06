@@ -30,7 +30,7 @@ evidence by itself.
 | WP-6.3 | Typed relations and resolvable arguments | schema relations | typed Relation model plus semantic reference validation | Substantially aligned |
 | WP-6.4 | Required thread_id and context links | Whitepaper §6.4/7.5; schema | thread_id/reference resolution plus parent_packet_id/timezone/window implemented and round-trip covered | Phase B implemented; PHASEB-VERIFY pending |
 | WP-6.5 | Numeric confidence [0,1] | schema confidence | bounded packet/relation confidence validation implemented | Aligned |
-| WP-6.6 | Modes/scope/forbids/limits/confirm/review/log | permissions; schema | Extension data cannot mutate Octad.permissions; no authorization runtime | D-011/D-015; SPEC-003 blocks |
+| WP-6.6 | Modes/scope/forbids/limits/confirm/review/log | Whitepaper §§6.6,10; permission profile; schema | six-mode mode/scope wire model implemented; forbids are preserved and narrow authority; unknown forbid expressions fail closed at action authorization; confirmation/review/logging retained | Phase B implemented; GOV-EXT and PHASEB-VERIFY remain |
 | WP-6.7 | Evidence constructors/provenance | candidate evidence schema/model | typed evidence source constructors and support-reference validation implemented | Source vocabulary aligned; exact canonical shape remains under audit |
 | WP-6.8 | Output format and constraints | schema output | typed output model plus BCP47/max-bytes validation | Substantially aligned |
 | WP-6.9 | References, permission preservation, extensions | spec semantic validation | Extension namespace structural checks only | D-007/D-011/D-015; partial |
