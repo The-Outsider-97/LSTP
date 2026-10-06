@@ -22,6 +22,7 @@ from lstp.models import (
     Pragmatics,
     Relation,
 )
+from lstp.packet.validator import validate_octad
 
 _T = TypeVar("_T")
 _IDENTIFIER_RE = re.compile(
@@ -625,8 +626,18 @@ def parse_canonical_lattice(source: str) -> CanonicalLatticeDocument:
     return _Parser(source).parse()
 
 
+def compile_canonical_lattice(source: str) -> CanonicalLatticeDocument:
+    """Parse and semantically validate canonical ordered-Octad Lattice."""
+
+    document = parse_canonical_lattice(source)
+    for packet in document.packets:
+        validate_octad(packet.octad).raise_for_errors()
+    return document
+
+
 __all__ = [
     "CanonicalLatticeDocument",
     "CanonicalLatticePacket",
+    "compile_canonical_lattice",
     "parse_canonical_lattice",
 ]
