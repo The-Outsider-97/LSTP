@@ -41,3 +41,70 @@ Whitepaper-first.
 | Context fields | Includes parent packet, timezone and window concepts | Uses parent_id; timezone/window absent | PARTIAL CONFLICT |
 | Host authorization | Requested permission intersected with host authority | Stronger principal/policy/runtime/resource intersection | COMPATIBLE HOST HARDENING |
 | Replay storage | Host-side operational concern | ReplayStore, ReplayGuard, SQLite adapter | COMPATIBLE HOST HARDENING |
+
+
+## Blocking conflicts
+
+### GOV-PRAG — canonical pragmatics changed
+
+Whitepaper section 6.1 requires a pragmatic `type` and permits a separate
+speech act, modifiers, goal, register and urgency. Section 7.3 names canonical
+Lattice entries including `TYPE` and `SPEECH_ACT`.
+
+The current canonical contract instead requires `act` and has no core
+`speech_act` field.
+
+This is not a spelling-only difference. The Whitepaper treats TYPE and
+SPEECH_ACT as distinct semantic entries. Any migration from the October
+candidate representation must therefore be explicit and may be lossy.
+
+Freeze consequence: training data must not be generated against the current
+act-only shape as though it were authoritative v0.1.
+
+### GOV-PERM — canonical permission protocol was replaced
+
+Whitepaper sections 6.6 and 10 define requested authority using six modes:
+RO, SUGGEST, PREVIEW, RW, EXEC and COMMIT. They are conceptually ordered by
+increasing operational authority while scope remains independent.
+
+The October reconciliation replaced this wire representation with orthogonal
+capability arrays and explicitly declared the six profile names non-ordered.
+
+The capability-intersection engine is useful host-security machinery, but it is
+not the same canonical wire protocol.
+
+Resolution direction: retain the authorization engine internally where safe,
+but derive concrete host capabilities from Whitepaper mode, scope and forbids
+under one documented mapping.
+
+### GOV-GRAM — canonical Lattice packet grammar was dropped
+
+Whitepaper section 7 defines canonical Lattice as an ordered Octad text form and
+explicitly identifies atomic, framed, named and streamed packet forms.
+
+The current `spec/grammar.ebnf` instead defines the compact directive/operator
+surface and contains no canonical Octad packet productions.
+
+Compact syntax remains useful, but under the Whitepaper it must be a separate
+carrier/profile compiled deterministically into canonical semantics.
+
+Resolution direction: restore the canonical ordered-Octad grammar and preserve
+the compact grammar as a separately named profile.
+
+### GOV-CTX — context field drift
+
+The Whitepaper names packet relationship/context concepts including parent
+packet identity, timezone and window. The current canonical artifacts use
+`parent_id` and omit timezone/window.
+
+The exact Level-1 field names and semantics must be restored or explicitly
+revised; aliases must not hide the conflict.
+
+### GOV-EXT — additive security fields promoted into core
+
+The implementation added authorization references, expiry, delegation metadata
+and typed resource structures. These are defensible security features, but the
+Whitepaper does not establish all of them as core v0.1 permission fields.
+
+They may remain host mechanisms, namespaced extensions or a future revision.
+They must not silently redefine Level-1 v0.1.
