@@ -210,7 +210,7 @@ BCP 47 validation is grammar-level and does not claim IANA registry membership f
 
 ## Install and engineering checks
 
-Development target: Python 3.11–3.14; actual support is established only by observed CI runs.
+Development target: Python 3.11–3.14; actual support is established only by observed executable runs.
 
 ```bash
 git clone https://github.com/The-Outsider-97/LSTP.git
@@ -218,14 +218,18 @@ cd LSTP
 python -m venv .venv
 . .venv/bin/activate
 python -m pip install -e '.[dev]'
-pytest
-ruff check .
-ruff format --check .
-mypy
-python -m build
-python tools/check_schema_contract.py
-python tools/check_readiness.py
+
+# Engineering/pre-training preflight. May pass before final sign-off.
+python tools/run_release_checks.py
+
+# Final gate. This is expected to fail while readiness blockers remain.
+python tools/run_release_checks.py --final
 ```
+
+The engineering runner executes the schema drift gate, Ruff, formatter check,
+strict mypy, pytest, package build, clean wheel/sdist smoke checks, and the
+independent JavaScript interoperability verifier. The final mode additionally
+requires the readiness ledger itself to be clear.
 
 PowerShell activation:
 
