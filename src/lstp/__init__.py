@@ -45,6 +45,7 @@ from lstp.packet.validator import ValidationResult, validate_packet
 from lstp.text.canonical import (
     CanonicalLatticeDocument,
     CanonicalLatticePacket,
+    compile_canonical_lattice,
     parse_canonical_lattice,
 )
 from lstp.text.parser import parse
@@ -90,6 +91,7 @@ __all__ = [
     "authorize_operation",
     "canonical_dumps",
     "canonical_loads",
+    "compile_canonical_lattice",
     "compile_lattice",
     "effective_authority",
     "is_well_formed_bcp47",
