@@ -67,7 +67,7 @@ atoms_segment = "A", horizontal_space_opt, "=", horizontal_space_opt,
   layout_space_opt, ")" ;
 
 atom = atom_id, horizontal_space_opt, ":", horizontal_space_opt,
-  atom_kind, "(", layout_space_opt, [ json_scalar ], layout_space_opt, ")",
+  atom_kind, "(", layout_space_opt, [ json_value ], layout_space_opt, ")",
   [ atom_metadata ] ;
 
 atom_kind =
