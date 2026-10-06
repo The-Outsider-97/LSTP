@@ -9,7 +9,7 @@ from lstp.errors import AuthorizationError, Diagnostic
 from lstp.formats import parse_rfc3339
 from lstp.models import CAPABILITIES, PacketEnvelope, Permissions
 from lstp.packet.replay import ReplayGuard, ReplayStore
-from lstp.packet.validator import require_semantic_validity
+from lstp.packet.validator import MODE_CAPABILITIES, require_semantic_validity
 
 _SIDE_EFFECTS = frozenset({"write", "execute", "commit"})
 
@@ -125,8 +125,18 @@ class AuthorizationDecision:
 
 
 def _requested_authority(permissions: Permissions) -> Authority:
-    capabilities = frozenset(permissions.capabilities) - frozenset(permissions.forbid)
-    resources = frozenset(resource.id for resource in permissions.resources)
+    """Translate Whitepaper wire semantics into host-internal authority.
+
+    The packet transports one requested permission mode plus explicit scope.
+    Concrete capabilities exist only at the host boundary. Forbid removes
+    exact scope entries; it never grants or widens authority.
+    """
+    capabilities = (
+        frozenset()
+        if permissions.mode is None
+        else MODE_CAPABILITIES[permissions.mode]
+    )
+    resources = frozenset(permissions.scope) - frozenset(permissions.forbid)
     return Authority(capabilities, resources)
 
 
@@ -192,14 +202,14 @@ def validate_delegation(
         diagnostics.append(_diag(
             "delegation_capability_widening",
             f"delegation requests capabilities outside parent authority: {sorted(extra_capabilities)!r}",
-            "$.permissions.capabilities",
+            "$.permissions.mode",
         ))
     extra_resources = requested.resources - parent.authority.resources
     if extra_resources:
         diagnostics.append(_diag(
             "delegation_resource_widening",
             "delegation requests resources outside parent authority",
-            "$.permissions.resources",
+            "$.permissions.scope",
         ))
     return tuple(diagnostics)
 
@@ -263,13 +273,13 @@ def authorize_operation(
         diagnostics.append(_diag(
             "capability_denied",
             f"operation capability {operation.capability!r} is not effectively authorized",
-            "$.permissions.capabilities",
+            "$.permissions.mode",
         ))
     if operation.resource_id not in effective.resources:
         diagnostics.append(_diag(
             "resource_denied",
             "operation resource is outside effective scope",
-            "$.permissions.resources",
+            "$.permissions.scope",
         ))
 
     confirmation_required = (
