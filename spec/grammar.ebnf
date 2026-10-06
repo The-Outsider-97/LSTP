@@ -19,9 +19,12 @@
   remain outside the Octad.
 *)
 
-lstp_document = horizontal_space_opt,
+lstp_document = bom_opt, horizontal_space_opt,
   ( stream_packet | named_packet | framed_packet | atomic_packet ),
   horizontal_space_opt ;
+
+bom_opt = [ utf8_bom ] ;
+utf8_bom = ? U+FEFF ? ;
 
 atomic_packet = octad_core ;
 framed_packet = "[", layout_space_opt, octad_core, layout_space_opt, "]" ;
