@@ -42,6 +42,11 @@ from lstp.packet.canonical import canonical_dumps, canonical_loads, packet_to_ma
 from lstp.packet.compiler import CompilerOptions, compile_lattice
 from lstp.packet.replay import ReplayGuard, ReplayStore, SQLiteReplayStore
 from lstp.packet.validator import ValidationResult, validate_packet
+from lstp.text.canonical import (
+    CanonicalLatticeDocument,
+    CanonicalLatticePacket,
+    parse_canonical_lattice,
+)
 from lstp.text.parser import parse
 from lstp.text.tokenizer import tokenize
 from lstp.version import __version__
@@ -51,6 +56,8 @@ __all__ = [
     "Authority",
     "AuthorizationDecision",
     "AuthorizationError",
+    "CanonicalLatticeDocument",
+    "CanonicalLatticePacket",
     "CanonicalizationError",
     "CompilationError",
     "CompilerOptions",
@@ -89,6 +96,7 @@ __all__ = [
     "loads_json",
     "packet_to_mapping",
     "parse",
+    "parse_canonical_lattice",
     "parse_rfc3339",
     "require_authorized_operation",
     "tokenize",
