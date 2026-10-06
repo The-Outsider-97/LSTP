@@ -1,6 +1,6 @@
 # LSTP — Lattice Semantic Transport Protocol
 
-**Pre-alpha reference implementation; canonical v0.1 contract reconciled and core runtime now executable.**
+**Pre-alpha reference implementation; core runtime is executable, but v0.1 authority/conformance is under renewed Whitepaper-first audit.**
 
 LSTP represents semantic messages through an eight-part Octad:
 
@@ -62,16 +62,14 @@ Implemented engineering/runtime foundation includes:
 
 ## Source of truth
 
-For v0.1 implementation and conformance:
+The active production-hardening mandate defines this hierarchy:
 
-1. [`spec/CANONICAL-v0.1.md`](spec/CANONICAL-v0.1.md) — normative semantic and behavioral contract;
-2. [`spec/octad_schema.json`](spec/octad_schema.json) — normative canonical JSON structure;
-3. [`spec/canonical-json-v0.1.md`](spec/canonical-json-v0.1.md), [`spec/grammar.ebnf`](spec/grammar.ebnf), [`spec/operator-table.md`](spec/operator-table.md), [`spec/permissions-safety.md`](spec/permissions-safety.md), and [`spec/vocabulary.md`](spec/vocabulary.md) — normative serialization/carrier/operator/security/vocabulary profiles where consistent with 1–2;
-4. [`conformance/v0.1/`](conformance/v0.1/) and tests — executable evidence;
-5. reference implementation — must implement the contract and may not redefine it;
-6. Whitepaper — informative rationale, research framing, design history, and evaluation narrative.
+1. [`docs/LSTP_Whitepaper.pdf`](docs/LSTP_Whitepaper.pdf) — Level 1 authoritative conceptual and protocol reference;
+2. this root README — Level 2 project guidance;
+3. [`spec/`](spec/) — Level 3 normative technical artifacts, including `CANONICAL-v0.1.md`, schema, grammar, serialization, permission, operator, and vocabulary profiles;
+4. [`src/lstp/`](src/lstp/) — Level 4 reference implementation.
 
-This hierarchy replaces the earlier PDF-first development hierarchy that caused machine-readable artifacts to remain blocked behind draft prose conflicts. The Whitepaper should be revised for publication to record this governance transition; the existing PDF remains a historical design document until that revision is published.
+Executable tests and conformance vectors provide evidence but do not override a higher-authority source. The October reconciliation introduced a conflicting spec-first hierarchy. Until that governance conflict and any resulting semantic differences are re-audited against the Whitepaper, the current implementation is an engineering candidate rather than a frozen v0.1 authority.
 
 ## Canonical packet
 
