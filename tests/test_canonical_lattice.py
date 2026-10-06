@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from lstp.errors import LatticeSyntaxError, SemanticValidationError
 from lstp.text.canonical import compile_canonical_lattice, parse_canonical_lattice
+
+
+ROOT = Path(__file__).resolve().parents[1] / "conformance" / "v0.1" / "lattice" / "canonical"
 
 
 WHITEPAPER_EXAMPLE = """[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)
@@ -190,4 +195,20 @@ def test_named_packet_rejects_line_break_before_frame() -> None:
         'Π=()|E=()|Ω=(FORMAT=NL)]'
     )
     with pytest.raises(LatticeSyntaxError, match="must use label"):
+        parse_canonical_lattice(source)
+
+
+def test_versioned_positive_canonical_lattice_fixture_compiles() -> None:
+    source = (ROOT / "positive" / "whitepaper-style.lstp").read_text(
+        encoding="utf-8"
+    )
+    document = compile_canonical_lattice(source)
+    assert document.packets[0].octad.context.thread_id == "finance-review"
+
+
+def test_versioned_negative_canonical_lattice_fixture_fails_parse() -> None:
+    source = (ROOT / "negative" / "wrong-segment-order.lstp").read_text(
+        encoding="utf-8"
+    )
+    with pytest.raises(LatticeSyntaxError):
         parse_canonical_lattice(source)
