@@ -7,7 +7,7 @@ from lstp.models import Atom, Context, Octad, Output, PacketEnvelope, Permission
 
 def make_octad() -> Octad:
     return Octad(
-        pragmatics=Pragmatics(act="question"),
+        pragmatics=Pragmatics(type="question", speech_act="question"),
         atoms=(Atom(id="a0", kind="concept", value="mars"),),
         relations=(),
         context=Context(thread_id="t-1"),
@@ -24,9 +24,15 @@ def test_octad_preserves_canonical_field_order() -> None:
     )
 
 
-def test_typed_model_rejects_legacy_pragmatics_value() -> None:
-    with pytest.raises(ValueError, match="unknown pragmatics act"):
-        Pragmatics(act="QUERY")
+def test_typed_model_rejects_october_candidate_pragmatics_mapping() -> None:
+    with pytest.raises(TypeError, match="pragmatics.type"):
+        Pragmatics.from_mapping({"act": "question"})
+
+
+def test_pragmatics_preserves_type_and_speech_act_separately() -> None:
+    pragmatics = Pragmatics(type="request", speech_act="command")
+    assert pragmatics.type == "request"
+    assert pragmatics.speech_act == "command"
 
 
 def test_envelope_metadata_is_not_semantic_equality() -> None:
@@ -45,19 +51,20 @@ def test_envelope_rejects_unknown_protocol_version() -> None:
 def test_from_mapping_builds_typed_packet() -> None:
     packet = PacketEnvelope.from_mapping({
         "id": "p-1", "version": "0.1",
-        "pragmatics": {"act": "question"},
+        "pragmatics": {"type": "question", "speech_act": "question"},
         "atoms": [{"id": "a0", "kind": "concept", "value": "mars"}],
         "relations": [], "context": {"thread_id": "t-1", "references": []},
-        "confidence": 0.9, "permissions": {"capabilities": [], "resources": []},
+        "confidence": 0.9, "permissions": {},
         "evidence": [], "output": {"format": "JSON"}, "carrier": {}, "audit": {},
     })
     assert packet.octad.atoms[0].id == "a0"
-    assert packet.octad.permissions.capabilities == ()
+    assert packet.octad.permissions.mode is None
+    assert packet.octad.permissions.scope == ()
 
 
-def test_permission_model_rejects_unknown_capability() -> None:
-    with pytest.raises(ValueError, match="unknown capability"):
-        Permissions(capabilities=("admin",))
+def test_permission_model_rejects_unknown_mode() -> None:
+    with pytest.raises(ValueError, match="unknown permission mode"):
+        Permissions(mode="ADMIN")
 
 
 def test_extension_payload_must_be_namespaced_object() -> None:
