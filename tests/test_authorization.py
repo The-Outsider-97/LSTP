@@ -7,7 +7,6 @@ import pytest
 from lstp.errors import AuthorizationError
 from lstp.models import (
     Context,
-    Delegation,
     Octad,
     Output,
     PacketEnvelope,
@@ -17,6 +16,8 @@ from lstp.models import (
 from lstp.packet.authorization import (
     Authority,
     DelegationContext,
+    HostAuthorizationContext,
+    HostDelegationBinding,
     HostPolicy,
     OperationRequest,
     PrincipalContext,
@@ -37,9 +38,6 @@ def _packet(
     confirmation: bool = False,
     review: bool = False,
     logging: bool = False,
-    expires_at: str | None = None,
-    authorization_ref: str | None = None,
-    delegation: Delegation | None = None,
 ) -> PacketEnvelope:
     return PacketEnvelope(
         Octad(
@@ -54,9 +52,6 @@ def _packet(
                 require_confirmation=confirmation,
                 require_review=review,
                 require_logging=logging,
-                authorization_ref=authorization_ref,
-                expires_at=expires_at,
-                delegation=delegation,
             ),
             (),
             Output("NONE"),
@@ -261,13 +256,16 @@ def test_packet_and_host_confirmation_review_logging_constraints_accumulate() ->
 
 
 def test_expired_permission_request_fails_closed() -> None:
-    packet = _packet(expires_at="2026-10-05T12:00:00Z")
+    packet = _packet()
     decision = authorize_operation(
         packet,
         _operation(),
         principal=_principal("commit"),
         policy=_policy("commit"),
         runtime=_authority("commit"),
+        authorization_context=HostAuthorizationContext(
+            expires_at="2026-10-05T12:00:00Z"
+        ),
         now=datetime(2026, 10, 5, 12, 0, tzinfo=timezone.utc),
     )
     assert decision.allowed is False
@@ -275,13 +273,15 @@ def test_expired_permission_request_fails_closed() -> None:
 
 
 def test_invalid_or_untrusted_authorization_reference_fails_closed() -> None:
-    packet = _packet(authorization_ref="auth-123")
+    packet = _packet()
+    context = HostAuthorizationContext(authorization_ref="auth-123")
     denied = authorize_operation(
         packet,
         _operation(),
         principal=_principal("commit"),
         policy=_policy("commit"),
         runtime=_authority("commit"),
+        authorization_context=context,
     )
     assert "authorization_ref_untrusted" in {item.code for item in denied.diagnostics}
 
@@ -298,13 +298,15 @@ def test_invalid_or_untrusted_authorization_reference_fails_closed() -> None:
         principal=_principal("commit"),
         policy=policy,
         runtime=_authority("commit"),
+        authorization_context=context,
     )
     assert allowed.allowed is True
 
 
 def test_delegation_requires_authenticated_parent_and_attenuation() -> None:
-    packet = _packet(
-        delegation=Delegation(
+    packet = _packet()
+    context = HostAuthorizationContext(
+        delegation=HostDelegationBinding(
             parent_packet="parent-1",
             delegator="agent.parent",
             principal="agent.child",
@@ -316,6 +318,7 @@ def test_delegation_requires_authenticated_parent_and_attenuation() -> None:
         principal=_principal("commit"),
         policy=_policy("commit"),
         runtime=_authority("commit"),
+        authorization_context=context,
     )
     assert "delegation_parent_authority_missing" in {
         item.code for item in no_parent.diagnostics
@@ -333,13 +336,15 @@ def test_delegation_requires_authenticated_parent_and_attenuation() -> None:
         policy=_policy("commit"),
         runtime=_authority("commit"),
         parent=narrowed_parent,
+        authorization_context=context,
     )
     assert "delegation_capability_widening" in {item.code for item in widened.diagnostics}
 
 
 def test_delegation_identity_mismatch_is_rejected() -> None:
-    packet = _packet(
-        delegation=Delegation(
+    packet = _packet()
+    context = HostAuthorizationContext(
+        delegation=HostDelegationBinding(
             parent_packet="parent-1",
             delegator="agent.parent",
             principal="agent.child",
@@ -357,6 +362,7 @@ def test_delegation_identity_mismatch_is_rejected() -> None:
         policy=_policy("commit"),
         runtime=_authority("commit"),
         parent=wrong_parent,
+        authorization_context=context,
     )
     codes = {item.code for item in decision.diagnostics}
     assert "delegation_parent_mismatch" in codes
