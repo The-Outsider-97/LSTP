@@ -6,7 +6,12 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from lstp import CanonicalizationError, LatticeSyntaxError, SemanticValidationError, canonical_loads
+from lstp import (
+    CanonicalizationError,
+    LatticeSyntaxError,
+    SemanticValidationError,
+    canonical_loads,
+)
 from lstp.packet.compiler import CompilerOptions, compile_lattice
 from lstp.text.canonical import parse_canonical_lattice
 
