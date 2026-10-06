@@ -18,10 +18,8 @@ JSONNumber: TypeAlias = int | float | Decimal
 JSONValue: TypeAlias = None | bool | JSONNumber | str | tuple["JSONValue", ...] | Mapping[str, "JSONValue"]
 
 SUPPORTED_PROTOCOL_VERSIONS = frozenset({"0.1"})
-CORE_PRAGMATIC_TYPES = frozenset({"assert", "request", "question", "inform", "correct", "acknowledge", "refuse", "respond"})
 ATOM_KINDS = frozenset({"entity", "concept", "value", "event", "time", "location", "resource", "proposition", "unknown"})
 SPECIAL_ARGUMENTS = frozenset({"SELF", "NOW", "USER", "SYSTEM"})
-CAPABILITIES = frozenset({"read", "suggest", "prepare", "write", "execute", "commit"})
 PERMISSION_MODES = frozenset({"RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"})
 EVIDENCE_SOURCE_TYPES = frozenset({"user", "sensor", "model", "tool", "retrieved", "inferred"})
 OUTPUT_FORMATS = frozenset({"NL", "LATTICE", "JSON", "YAML", "TABLE", "CODE", "FILE", "NONE"})
@@ -395,32 +393,6 @@ class Context:
                 data.get("extensions", {}),
                 path="$.context.extensions",
             ),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class Resource:
-    id: str
-    kind: str | None = None
-    atom: str | None = None
-    extensions: Mapping[str, JSONValue] = field(default_factory=dict)
-
-    def __post_init__(self) -> None:
-        _non_empty_string(self.id, path="$.permissions.resources[].id")
-        if self.kind is not None:
-            _identifier(self.kind, path="$.permissions.resources[].kind", qualified=True)
-        if self.atom is not None and not _ATOM_ID_RE.fullmatch(self.atom):
-            raise ValueError(f"invalid resource atom reference: {self.atom!r}")
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.permissions.resources[].extensions"))
-
-    @classmethod
-    def from_mapping(cls, value: object) -> "Resource":
-        data = _mapping(value, path="$.permissions.resources[]")
-        return cls(
-            id=_non_empty_string(data.get("id"), path="$.permissions.resources[].id"),
-            kind=data.get("kind") if isinstance(data.get("kind"), str) else None,
-            atom=data.get("atom") if isinstance(data.get("atom"), str) else None,
-            extensions=_mapping(data.get("extensions", {}), path="$.permissions.resources[].extensions"),
         )
 
 
