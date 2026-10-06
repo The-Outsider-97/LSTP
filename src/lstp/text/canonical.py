@@ -346,7 +346,7 @@ class _Parser:
                 break
             self.index += 1
         self._expect(")", layout=True)
-        return Relation(relation_type.lower(), tuple(arguments))
+        return Relation(relation_type, tuple(arguments))
 
     def _relations(self) -> tuple[Relation, ...]:
         self._expect("R", layout=True)
