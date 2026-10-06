@@ -238,10 +238,15 @@ Implemented:
   as a separate profile;
 - `parse_canonical_lattice()` parses canonical packets directly into typed
   Octads while preserving named-packet labels only as carrier metadata;
+- `compile_canonical_lattice()` adds semantic validation, while
+  `canonical_lattice_dumps()` provides deterministic encoding for the governed
+  surface and fails closed on syntax that has not been normatively assigned;
 - the exact Whitepaper example is covered by executable parser tests;
 - canonical field order, duplicate fields, obsolete October permission fields,
-  stream separators, and compact/canonical profile separation have negative
-  regression coverage.
+  stream separators, compact/canonical profile separation, and unrepresentable
+  carrier fields have negative regression coverage;
+- the governed canonical surface has typed Octad -> canonical Lattice -> typed
+  Octad semantic round-trip coverage.
 
 Phase C deliberately does not invent envelope identifiers from Lattice packet
 labels, does not assign undocumented atom-constructor aliases, and does not
