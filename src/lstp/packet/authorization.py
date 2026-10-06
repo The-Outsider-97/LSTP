@@ -137,7 +137,9 @@ def _requested_authority(permissions: Permissions) -> Authority:
         if permissions.mode is None
         else MODE_CAPABILITIES[permissions.mode]
     )
-    resources = frozenset(permissions.scope) - frozenset(permissions.forbid)
+    forbidden = frozenset(permissions.forbid)
+    capabilities = capabilities - (forbidden & CAPABILITIES)
+    resources = frozenset(permissions.scope) - forbidden
     return Authority(capabilities, resources)
 
 
@@ -235,6 +237,17 @@ def authorize_operation(
     require_semantic_validity(packet)
     permissions = packet.octad.permissions
     diagnostics: list[Diagnostic] = []
+
+    recognized_forbids = CAPABILITIES | frozenset(permissions.scope)
+    unresolved_forbids = sorted(set(permissions.forbid) - recognized_forbids)
+    if unresolved_forbids:
+        diagnostics.append(
+            _diag(
+                "unresolved_permission_forbid",
+                "host cannot safely interpret one or more permission forbids",
+                "$.permissions.forbid",
+            )
+        )
 
     if permissions.expires_at is not None:
         expiry = parse_rfc3339(permissions.expires_at)
