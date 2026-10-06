@@ -15,15 +15,7 @@ CORE_RELATIONS = frozenset({
     "outcome.needs_confirmation", "outcome.needs_context",
 })
 
-PROFILE_CAPABILITIES: dict[str, frozenset[str] | None] = {
-    "RO": frozenset({"read"}),
-    "SUGGEST": frozenset({"read", "suggest"}),
-    "PREVIEW": frozenset({"read", "suggest", "prepare"}),
-    "RW": frozenset({"read", "write"}),
-    "EXEC": frozenset({"read", "execute"}),
-    "COMMIT": None,
-}
-SIDE_EFFECT_CAPABILITIES = frozenset({"write", "execute", "commit"})
+SIDE_EFFECT_MODES = frozenset({"RW", "EXEC", "COMMIT"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,13 +69,6 @@ def _validate_references(octad: Octad) -> list[Diagnostic]:
                     f"relation argument references missing atom {argument!r}",
                     f"$.relations[{index}].arguments[{arg_index}]",
                 ))
-    for index, resource in enumerate(octad.permissions.resources):
-        if resource.atom is not None and resource.atom not in atoms_by_id:
-            diagnostics.append(_diag(
-                "unresolved_resource_atom",
-                f"permission resource references missing atom {resource.atom!r}",
-                f"$.permissions.resources[{index}].atom",
-            ))
     for evidence_index, evidence in enumerate(octad.evidence):
         for support_index, support in enumerate(evidence.supports):
             path = f"$.evidence[{evidence_index}].supports[{support_index}]"
@@ -138,38 +123,48 @@ def _validate_formats(octad: Octad) -> list[Diagnostic]:
 def _validate_permissions(octad: Octad) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
     permissions = octad.permissions
-    requested = set(permissions.capabilities)
-    forbidden = set(permissions.forbid)
-    for capability in sorted(requested & forbidden):
-        diagnostics.append(_diag(
-            "permission_contradiction",
-            f"capability {capability!r} is both requested and forbidden",
-            "$.permissions",
-        ))
-    if permissions.profile is not None:
-        allowed = PROFILE_CAPABILITIES[permissions.profile]
-        if allowed is not None:
-            incompatible = requested - allowed
-            if incompatible:
-                diagnostics.append(_diag(
-                    "profile_capability_mismatch",
-                    f"profile {permissions.profile!r} is incompatible with capabilities {sorted(incompatible)!r}",
-                    "$.permissions.profile",
-                ))
-    if requested & SIDE_EFFECT_CAPABILITIES and not permissions.resources:
-        diagnostics.append(_diag(
-            "missing_resource_scope",
-            "write, execute, or commit requests require explicit resource scope",
-            "$.permissions.resources",
-        ))
+
+    diagnostics.extend(
+        _duplicates(
+            permissions.scope,
+            code="duplicate_permission_scope",
+            label="permission scope",
+            path="$.permissions.scope",
+        )
+    )
+    diagnostics.extend(
+        _duplicates(
+            permissions.forbid,
+            code="duplicate_permission_forbid",
+            label="permission forbid",
+            path="$.permissions.forbid",
+        )
+    )
+
+
+    if permissions.mode in SIDE_EFFECT_MODES and not permissions.scope:
+        diagnostics.append(
+            _diag(
+                "missing_permission_scope",
+                "side-effect-capable permission modes require explicit scope",
+                "$.permissions.scope",
+            )
+        )
+
     if permissions.delegation is not None:
         delegation = permissions.delegation
-        if delegation.parent_packet is None and delegation.delegator is None and delegation.principal is None:
-            diagnostics.append(_diag(
-                "empty_delegation",
-                "delegation metadata must identify at least one delegation link",
-                "$.permissions.delegation",
-            ))
+        if (
+            delegation.parent_packet is None
+            and delegation.delegator is None
+            and delegation.principal is None
+        ):
+            diagnostics.append(
+                _diag(
+                    "empty_delegation",
+                    "delegation metadata must identify at least one delegation link",
+                    "$.permissions.delegation",
+                )
+            )
     return diagnostics
 
 
@@ -178,7 +173,6 @@ def validate_octad(octad: Octad) -> ValidationResult:
     diagnostics.extend(_duplicates(tuple(atom.id for atom in octad.atoms), code="duplicate_atom_id", label="atom id", path="$.atoms"))
     diagnostics.extend(_duplicates(tuple(r.id for r in octad.relations if r.id is not None), code="duplicate_relation_id", label="relation id", path="$.relations"))
     diagnostics.extend(_duplicates(tuple(e.id for e in octad.evidence), code="duplicate_evidence_id", label="evidence id", path="$.evidence"))
-    diagnostics.extend(_duplicates(tuple(r.id for r in octad.permissions.resources), code="duplicate_resource_id", label="resource id", path="$.permissions.resources"))
     diagnostics.extend(_validate_relation_vocabulary(octad))
     diagnostics.extend(_validate_references(octad))
     diagnostics.extend(_validate_formats(octad))

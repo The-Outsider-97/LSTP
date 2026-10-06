@@ -13,7 +13,6 @@ from lstp.models import (
     PacketEnvelope,
     Permissions,
     Pragmatics,
-    Resource,
 )
 from lstp.packet.authorization import (
     Authority,
@@ -33,8 +32,8 @@ OTHER_RESOURCE = "urn:test:document:2"
 
 def _packet(
     *,
-    capabilities: tuple[str, ...] = ("commit",),
-    resources: tuple[str, ...] = (RESOURCE,),
+    mode: str = "COMMIT",
+    scope: tuple[str, ...] = (RESOURCE,),
     confirmation: bool = False,
     review: bool = False,
     logging: bool = False,
@@ -50,8 +49,8 @@ def _packet(
             Context("thread-1"),
             1.0,
             Permissions(
-                capabilities=capabilities,
-                resources=tuple(Resource(item) for item in resources),
+                mode=mode,
+                scope=scope,
                 require_confirmation=confirmation,
                 require_review=review,
                 require_logging=logging,
@@ -106,7 +105,7 @@ def _operation(
 
 
 def test_effective_authority_is_exact_four_way_intersection() -> None:
-    packet = _packet(capabilities=("read", "commit"))
+    packet = _packet(mode="COMMIT")
     effective = effective_authority(
         packet,
         principal=_principal("read", "commit"),
@@ -115,6 +114,97 @@ def test_effective_authority_is_exact_four_way_intersection() -> None:
     )
     assert effective.capabilities == frozenset({"commit"})
     assert effective.resources == frozenset({RESOURCE})
+
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [
+        ("RO", {"read"}),
+        ("SUGGEST", {"read", "suggest"}),
+        ("PREVIEW", {"read", "suggest", "prepare"}),
+        ("RW", {"read", "suggest", "prepare", "write"}),
+        ("EXEC", {"read", "suggest", "prepare", "write", "execute"}),
+        (
+            "COMMIT",
+            {"read", "suggest", "prepare", "write", "execute", "commit"},
+        ),
+    ],
+)
+def test_whitepaper_mode_maps_monotonically_to_host_capabilities(
+    mode: str,
+    expected: set[str],
+) -> None:
+    all_capabilities = ("read", "suggest", "prepare", "write", "execute", "commit")
+    effective = effective_authority(
+        _packet(mode=mode),
+        principal=_principal(*all_capabilities),
+        policy=_policy(*all_capabilities),
+        runtime=_authority(*all_capabilities),
+    )
+    assert effective.capabilities == frozenset(expected)
+
+
+def test_forbid_removes_exact_scope_before_host_intersection() -> None:
+    packet = PacketEnvelope(
+        Octad(
+            Pragmatics("request", speech_act="command", goal="test.commit"),
+            (),
+            (),
+            Context("thread-1"),
+            1.0,
+            Permissions(
+                mode="COMMIT",
+                scope=(RESOURCE,),
+                forbid=(RESOURCE,),
+            ),
+            (),
+            Output("NONE"),
+        ),
+        "packet-1",
+        "0.1",
+    )
+    decision = authorize_operation(
+        packet,
+        _operation(),
+        principal=_principal("commit"),
+        policy=_policy("commit"),
+        runtime=_authority("commit"),
+    )
+    assert decision.allowed is False
+    assert "resource_denied" in {item.code for item in decision.diagnostics}
+
+def test_unresolved_forbid_expression_fails_closed() -> None:
+    packet = _packet()
+    packet = PacketEnvelope(
+        Octad(
+            packet.octad.pragmatics,
+            packet.octad.atoms,
+            packet.octad.relations,
+            packet.octad.context,
+            packet.octad.confidence,
+            Permissions(
+                mode="COMMIT",
+                scope=(RESOURCE,),
+                forbid=("external-write",),
+            ),
+            packet.octad.evidence,
+            packet.octad.output,
+        ),
+        packet.packet_id,
+        packet.protocol_version,
+    )
+    decision = authorize_operation(
+        packet,
+        _operation(),
+        principal=_principal("commit"),
+        policy=_policy("commit"),
+        runtime=_authority("commit"),
+    )
+    assert decision.allowed is False
+    assert "unresolved_permission_forbid" in {
+        item.code for item in decision.diagnostics
+    }
 
 
 def test_empty_trusted_resource_scope_is_never_wildcard() -> None:

@@ -49,12 +49,12 @@ A canonical packet has the following top-level structure:
 {
   "id": "pkt_example_001",
   "version": "0.1",
-  "pragmatics": {"act": "request", "urgency": 0.25},
-  "atoms": {},
+  "pragmatics": {"type": "request", "speech_act": "command", "urgency": 0.25},
+  "atoms": [],
   "relations": [],
   "context": {"thread_id": "thread_example", "references": []},
   "confidence": 1.0,
-  "permissions": {"capabilities": [], "resources": []},
+  "permissions": {"mode": "PREVIEW", "scope": ["urn:example:document:1"]},
   "evidence": [],
   "output": {"format": "NL"},
   "carrier": {},
@@ -87,29 +87,21 @@ A v0.1 consumer MUST reject or explicitly route unsupported versions. It MUST NO
 
 ## 5. Pragmatics (`π`)
 
-`pragmatics` describes the communicative function of the packet.
+`pragmatics` describes how the message is to be understood as a communicative act.
 
-Canonical fields:
+Canonical fields are:
 
-- `act` — REQUIRED core communicative act;
+- `type` — REQUIRED pragmatic/message type identifier;
+- `speech_act` — OPTIONAL explicit speech-act identifier;
 - `goal` — OPTIONAL application/domain goal identifier;
-- `modifiers` — OPTIONAL set of additional pragmatic labels;
+- `modifiers` — OPTIONAL ordered set of additional pragmatic labels;
 - `register` — OPTIONAL register/style identifier;
 - `urgency` — OPTIONAL number in `[0,1]`;
 - `extensions` — OPTIONAL namespaced data.
 
-Core `act` values are defined in `spec/vocabulary.md` and include at least:
-
-- `assert`
-- `request`
-- `question`
-- `inform`
-- `correct`
-- `acknowledge`
-- `refuse`
-- `respond`
-
-The old subordinate fields `intent`, `action`, `force`, and `tone` are not canonical aliases. A migration tool MAY translate them only under an explicit non-conformance migration profile and MUST surface any lossy mapping.
+`type` and `speech_act` are separate semantic dimensions. Implementations MUST
+NOT collapse them into one `act` field. Compact carriers MAY derive both fields
+only through an explicit deterministic mapping.
 
 Urgency affects priority semantics only. It MUST NOT increase execution authority.
 
@@ -185,21 +177,27 @@ Core relation identifiers are defined in `spec/vocabulary.md`. Domain-specific r
 
 Optional fields are:
 
-- `packet_id` — semantic reference to another packet where needed;
-- `parent_id`;
+- `packet_id` — semantic reference to the current/related packet where needed;
+- `parent_packet_id` — parent packet relationship;
 - `conversation_id`;
 - `turn` — non-negative integer;
 - `speaker`;
 - `audience` — array of identifiers;
 - `time` — RFC 3339 date-time;
+- `timezone` — explicit timezone identifier/descriptor when supplied;
+- `window` — structured temporal/context window;
 - `location` — structured or symbolic application value;
 - `bindings` — application bindings;
 - `references` — stable context references;
 - `extensions`.
 
-A canonical context reference MUST contain a stable `packet_id`. It MAY also preserve authoring metadata such as `depth` or `agent`.
+A canonical context reference MUST contain a stable `packet_id`. It MAY also
+preserve authoring metadata such as depth or agent namespace.
 
-Relative Lattice syntax such as `↑2` is authoring sugar. Before a packet is serialized as canonical JSON for storage, replay, signing, hashing, or inter-agent transport, the reference MUST be resolved to a stable packet identifier or compilation MUST fail with an unresolved-context diagnostic.
+Relative Lattice syntax such as `↑2` is authoring sugar. Before a packet is
+serialized for canonical storage, replay, hashing, signing, or inter-agent
+transport, the reference MUST resolve to a stable packet identifier or
+compilation MUST fail.
 
 Context MUST NOT implicitly grant or strengthen permissions.
 
@@ -217,49 +215,59 @@ Canonical serialization rules for numeric bytes are specified separately from se
 
 Permissions represent **requested authority**, never authority itself.
 
-The canonical representation uses orthogonal capabilities and constraints rather than a total privilege ladder.
+The Whitepaper wire representation is mode/scope based.
 
-Canonical fields:
+Canonical Whitepaper fields are:
 
-- `capabilities` — REQUIRED set drawn from the core capability vocabulary;
-- `resources` — REQUIRED array of typed resource identifiers/references;
-- `profile` — OPTIONAL convenience profile;
-- `forbid` — OPTIONAL set of explicitly forbidden capabilities;
+- `mode` — one of `RO`, `SUGGEST`, `PREVIEW`, `RW`, `EXEC`, `COMMIT`;
+- `scope` — OPTIONAL explicit resource/target identifiers;
+- `forbid` — OPTIONAL explicit exclusions that narrow scope;
 - `require_confirmation` — OPTIONAL boolean;
 - `require_review` — OPTIONAL boolean;
 - `require_logging` — OPTIONAL boolean;
-- `limits` — OPTIONAL object for bounded cost/time/count constraints;
-- `authorization_ref` — OPTIONAL opaque host authorization reference;
-- `expires_at` — OPTIONAL RFC 3339 date-time;
-- `delegation` — OPTIONAL attenuation metadata;
+- `limits` — OPTIONAL cost/time/count or application constraints;
 - `extensions` — OPTIONAL namespaced data.
 
-Core capabilities are:
+Structurally, an empty permission object is valid for non-action packets.
+Semantically, a side-effect-capable request MUST identify an appropriate mode
+and explicit scope. `forbid` is always subtractive. The reference host can
+enforce exact scope IDs and internal capability names directly; any other forbid
+expression remains inspectable and causes fail-closed action authorization until
+a host-specific policy defines its meaning.
 
-- `read`
-- `suggest`
-- `prepare`
-- `write`
-- `execute`
-- `commit`
-
-`forbid` always narrows the request. No capability name implies another unless a profile explicitly expands to a capability set.
-
-Convenience profiles are defined in `spec/permissions-safety.md`. Core profiles include `RO`, `SUGGEST`, `PREVIEW`, `RW`, `EXEC`, and `COMMIT`, but profiles are **named bundles**, not ordered privilege levels. Implementations MUST NOT compare them numerically.
-
-A packet requesting side effects without the required explicit capability MUST fail closed at the action-capable host boundary.
-
-Effective authority is always computed by the host from at least:
+The Whitepaper conceptual order is:
 
 ```text
-requested LSTP capabilities
-INTERSECT host policy
-INTERSECT authenticated principal authority
-INTERSECT runtime capability
-INTERSECT current resource scope
+RO <= SUGGEST <= PREVIEW <= RW <= EXEC <= COMMIT
 ```
 
-LSTP does not authenticate principals and does not provide a bearer capability token.
+This expresses increasing operational authority. It does not widen scope,
+remove forbids, bypass limits, or satisfy confirmation/review/logging
+requirements.
+
+The reference host maps the six wire modes to concrete internal capabilities:
+
+| Wire mode | Host-internal capabilities |
+|---|---|
+| `RO` | read |
+| `SUGGEST` | read, suggest |
+| `PREVIEW` | read, suggest, prepare |
+| `RW` | read, suggest, prepare, write |
+| `EXEC` | read, suggest, prepare, write, execute |
+| `COMMIT` | read, suggest, prepare, write, execute, commit |
+
+Those capabilities are a host implementation mechanism. They are **not**
+additional canonical packet fields.
+
+Effective authority is computed at the host boundary from the requested mode,
+requested scope, forbids, authenticated principal authority, host policy, and
+runtime capability. A packet never authenticates itself and never acts as a
+bearer capability.
+
+The current engineering candidate also carries `authorization_ref`,
+`expires_at`, and `delegation` fields for host-security hardening. Their
+final core-vs-extension/revision status remains governed by GOV-EXT and MUST be
+resolved before v0.1 training/release freeze.
 
 ## 11. Evidence (`E`)
 

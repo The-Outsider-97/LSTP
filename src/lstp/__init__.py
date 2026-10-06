@@ -25,7 +25,6 @@ from lstp.models import (
     Permissions,
     Pragmatics,
     Relation,
-    Resource,
 )
 from lstp.packet.authorization import (
     Authority,
@@ -76,7 +75,6 @@ __all__ = [
     "Relation",
     "ReplayGuard",
     "ReplayStore",
-    "Resource",
     "ResourceLimitError",
     "SQLiteReplayStore",
     "SemanticValidationError",

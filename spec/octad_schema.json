@@ -3,188 +3,521 @@
   "$id": "urn:lstp:schema:octad:0.1",
   "title": "LSTP v0.1 Canonical Packet",
   "type": "object",
-  "required": ["id","version","pragmatics","atoms","relations","context","confidence","permissions","evidence","output","carrier","audit"],
+  "required": [
+    "id",
+    "version",
+    "pragmatics",
+    "atoms",
+    "relations",
+    "context",
+    "confidence",
+    "permissions",
+    "evidence",
+    "output",
+    "carrier",
+    "audit"
+  ],
   "properties": {
-    "id": {"$ref":"#/$defs/nonEmptyString"},
-    "version": {"const":"0.1"},
-    "pragmatics": {"$ref":"#/$defs/pragmatics"},
-    "atoms": {"$ref":"#/$defs/atoms"},
-    "relations": {"$ref":"#/$defs/relations"},
-    "context": {"$ref":"#/$defs/context"},
-    "confidence": {"$ref":"#/$defs/confidence"},
-    "permissions": {"$ref":"#/$defs/permissions"},
-    "evidence": {"$ref":"#/$defs/evidence"},
-    "output": {"$ref":"#/$defs/output"},
-    "carrier": {"type":"object"},
-    "audit": {"type":"object"},
-    "extensions": {"$ref":"#/$defs/extensions"}
+    "id": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "version": {
+      "const": "0.1"
+    },
+    "pragmatics": {
+      "$ref": "#/$defs/pragmatics"
+    },
+    "atoms": {
+      "$ref": "#/$defs/atoms"
+    },
+    "relations": {
+      "$ref": "#/$defs/relations"
+    },
+    "context": {
+      "$ref": "#/$defs/context"
+    },
+    "confidence": {
+      "$ref": "#/$defs/confidence"
+    },
+    "permissions": {
+      "$ref": "#/$defs/permissions"
+    },
+    "evidence": {
+      "$ref": "#/$defs/evidence"
+    },
+    "output": {
+      "$ref": "#/$defs/output"
+    },
+    "carrier": {
+      "type": "object"
+    },
+    "audit": {
+      "type": "object"
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    }
   },
   "additionalProperties": false,
   "$defs": {
-    "nonEmptyString": {"type":"string","minLength":1,"maxLength":4096},
-    "identifier": {"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*$","maxLength":128},
-    "qualifiedIdentifier": {"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(?:\\.[A-Za-z_][A-Za-z0-9_-]*)*$","maxLength":256},
-    "atomId": {"type":"string","pattern":"^a(?:0|[1-9][0-9]*)$","maxLength":64},
-    "relationId": {"type":"string","pattern":"^r(?:0|[1-9][0-9]*)$","maxLength":64},
-    "evidenceId": {"type":"string","pattern":"^e(?:0|[1-9][0-9]*)$","maxLength":64},
-    "confidence": {"type":"number","minimum":0,"maximum":1},
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
+      "maxLength": 128
+    },
+    "qualifiedIdentifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(?:\\.[A-Za-z_][A-Za-z0-9_-]*)*$",
+      "maxLength": 256
+    },
+    "atomId": {
+      "type": "string",
+      "pattern": "^a(?:0|[1-9][0-9]*)$",
+      "maxLength": 64
+    },
+    "relationId": {
+      "type": "string",
+      "pattern": "^r(?:0|[1-9][0-9]*)$",
+      "maxLength": 64
+    },
+    "evidenceId": {
+      "type": "string",
+      "pattern": "^e(?:0|[1-9][0-9]*)$",
+      "maxLength": 64
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
     "extensions": {
-      "type":"object",
-      "propertyNames":{"pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,127}$"},
-      "additionalProperties":{"type":"object"}
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
     },
     "pragmatics": {
-      "type":"object",
-      "required":["act"],
+      "type": "object",
+      "required": [
+        "type"
+      ],
       "properties": {
-        "act":{"enum":["assert","request","question","inform","correct","acknowledge","refuse","respond"]},
-        "goal":{"$ref":"#/$defs/qualifiedIdentifier"},
-        "modifiers":{"type":"array","items":{"$ref":"#/$defs/qualifiedIdentifier"},"uniqueItems":true},
-        "register":{"$ref":"#/$defs/qualifiedIdentifier"},
-        "urgency":{"$ref":"#/$defs/confidence"},
-        "extensions":{"$ref":"#/$defs/extensions"}
+        "type": {
+          "$ref": "#/$defs/qualifiedIdentifier"
+        },
+        "speech_act": {
+          "$ref": "#/$defs/qualifiedIdentifier"
+        },
+        "goal": {
+          "$ref": "#/$defs/qualifiedIdentifier"
+        },
+        "modifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/qualifiedIdentifier"
+          },
+          "uniqueItems": true
+        },
+        "register": {
+          "$ref": "#/$defs/qualifiedIdentifier"
+        },
+        "urgency": {
+          "$ref": "#/$defs/confidence"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
       },
-      "additionalProperties":false
+      "additionalProperties": false
     },
     "atom": {
-      "type":"object",
-      "required":["id","kind"],
+      "type": "object",
+      "required": [
+        "id",
+        "kind"
+      ],
       "properties": {
-        "id":{"$ref":"#/$defs/atomId"},
-        "kind":{"enum":["entity","concept","value","event","time","location","resource","proposition","unknown"]},
-        "value":true,
-        "role":{"$ref":"#/$defs/qualifiedIdentifier"},
-        "datatype":{"type":"string","minLength":1,"maxLength":256},
-        "language":{"type":"string","minLength":1,"maxLength":64},
-        "attributes":{"type":"object"},
-        "extensions":{"$ref":"#/$defs/extensions"}
+        "id": {
+          "$ref": "#/$defs/atomId"
+        },
+        "kind": {
+          "enum": [
+            "entity",
+            "concept",
+            "value",
+            "event",
+            "time",
+            "location",
+            "resource",
+            "proposition",
+            "unknown"
+          ]
+        },
+        "value": true,
+        "role": {
+          "$ref": "#/$defs/qualifiedIdentifier"
+        },
+        "datatype": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "attributes": {
+          "type": "object"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
       },
-      "additionalProperties":false
+      "additionalProperties": false
     },
-    "atoms": {"type":"array","items":{"$ref":"#/$defs/atom"}},
+    "atoms": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/atom"
+      }
+    },
     "relationArgument": {
-      "oneOf":[
-        {"$ref":"#/$defs/atomId"},
-        {"enum":["SELF","NOW","USER","SYSTEM"]}
+      "oneOf": [
+        {
+          "$ref": "#/$defs/atomId"
+        },
+        {
+          "enum": [
+            "SELF",
+            "NOW",
+            "USER",
+            "SYSTEM"
+          ]
+        }
       ]
     },
     "relation": {
-      "type":"object",
-      "required":["type","arguments"],
+      "type": "object",
+      "required": [
+        "type",
+        "arguments"
+      ],
       "properties": {
-        "id":{"$ref":"#/$defs/relationId"},
-        "type":{"$ref":"#/$defs/qualifiedIdentifier"},
-        "arguments":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/relationArgument"}},
-        "confidence":{"$ref":"#/$defs/confidence"},
-        "attributes":{"type":"object"},
-        "extensions":{"$ref":"#/$defs/extensions"}
+        "id": {
+          "$ref": "#/$defs/relationId"
+        },
+        "type": {
+          "$ref": "#/$defs/qualifiedIdentifier"
+        },
+        "arguments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/relationArgument"
+          }
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        },
+        "attributes": {
+          "type": "object"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
       },
-      "additionalProperties":false
+      "additionalProperties": false
     },
-    "relations": {"type":"array","items":{"$ref":"#/$defs/relation"}},
+    "relations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relation"
+      }
+    },
     "contextReference": {
-      "type":"object",
-      "required":["packet_id"],
+      "type": "object",
+      "required": [
+        "packet_id"
+      ],
       "properties": {
-        "packet_id":{"$ref":"#/$defs/nonEmptyString"},
-        "depth":{"type":"integer","minimum":0},
-        "agent":{"$ref":"#/$defs/identifier"},
-        "label":{"$ref":"#/$defs/nonEmptyString"},
-        "extensions":{"$ref":"#/$defs/extensions"}
+        "packet_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "agent": {
+          "$ref": "#/$defs/identifier"
+        },
+        "label": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
       },
-      "additionalProperties":false
+      "additionalProperties": false
     },
     "context": {
-      "type":"object",
-      "required":["thread_id","references"],
+      "type": "object",
+      "required": [
+        "thread_id",
+        "references"
+      ],
       "properties": {
-        "thread_id":{"$ref":"#/$defs/nonEmptyString"},
-        "packet_id":{"$ref":"#/$defs/nonEmptyString"},
-        "parent_id":{"$ref":"#/$defs/nonEmptyString"},
-        "conversation_id":{"$ref":"#/$defs/nonEmptyString"},
-        "turn":{"type":"integer","minimum":0},
-        "speaker":{"$ref":"#/$defs/qualifiedIdentifier"},
-        "audience":{"type":"array","items":{"$ref":"#/$defs/qualifiedIdentifier"},"uniqueItems":true},
-        "time":{"type":"string","format":"date-time"},
-        "location":true,
-        "bindings":{"type":"object"},
-        "references":{"type":"array","items":{"$ref":"#/$defs/contextReference"}},
-        "extensions":{"$ref":"#/$defs/extensions"}
+        "thread_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "packet_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "parent_packet_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "conversation_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "speaker": {
+          "$ref": "#/$defs/qualifiedIdentifier"
+        },
+        "audience": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/qualifiedIdentifier"
+          },
+          "uniqueItems": true
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timezone": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "window": true,
+        "location": true,
+        "bindings": {
+          "type": "object"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/contextReference"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
       },
-      "additionalProperties":false
-    },
-    "capability": {"enum":["read","suggest","prepare","write","execute","commit"]},
-    "resource": {
-      "type":"object",
-      "required":["id"],
-      "properties": {
-        "id":{"type":"string","minLength":1,"maxLength":1024},
-        "kind":{"$ref":"#/$defs/qualifiedIdentifier"},
-        "atom":{"$ref":"#/$defs/atomId"},
-        "extensions":{"$ref":"#/$defs/extensions"}
-      },
-      "additionalProperties":false
+      "additionalProperties": false
     },
     "delegation": {
-      "type":"object",
+      "type": "object",
       "properties": {
-        "parent_packet":{"$ref":"#/$defs/nonEmptyString"},
-        "delegator":{"$ref":"#/$defs/qualifiedIdentifier"},
-        "principal":{"$ref":"#/$defs/qualifiedIdentifier"},
-        "extensions":{"$ref":"#/$defs/extensions"}
+        "parent_packet": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "delegator": {
+          "$ref": "#/$defs/qualifiedIdentifier"
+        },
+        "principal": {
+          "$ref": "#/$defs/qualifiedIdentifier"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
       },
-      "additionalProperties":false
+      "additionalProperties": false
     },
     "permissions": {
-      "type":"object",
-      "required":["capabilities","resources"],
+      "type": "object",
       "properties": {
-        "capabilities":{"type":"array","items":{"$ref":"#/$defs/capability"},"uniqueItems":true},
-        "resources":{"type":"array","items":{"$ref":"#/$defs/resource"}},
-        "profile":{"enum":["RO","SUGGEST","PREVIEW","RW","EXEC","COMMIT"]},
-        "forbid":{"type":"array","items":{"$ref":"#/$defs/capability"},"uniqueItems":true},
-        "require_confirmation":{"type":"boolean"},
-        "require_review":{"type":"boolean"},
-        "require_logging":{"type":"boolean"},
-        "limits":{"type":"object"},
-        "authorization_ref":{"type":"string","minLength":1,"maxLength":1024},
-        "expires_at":{"type":"string","format":"date-time"},
-        "delegation":{"$ref":"#/$defs/delegation"},
-        "extensions":{"$ref":"#/$defs/extensions"}
+        "mode": {
+          "$ref": "#/$defs/permissionMode"
+        },
+        "scope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "uniqueItems": true
+        },
+        "forbid": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "uniqueItems": true
+        },
+        "require_confirmation": {
+          "type": "boolean"
+        },
+        "require_review": {
+          "type": "boolean"
+        },
+        "require_logging": {
+          "type": "boolean"
+        },
+        "limits": {
+          "type": "object"
+        },
+        "authorization_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "delegation": {
+          "$ref": "#/$defs/delegation"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
       },
-      "additionalProperties":false
+      "additionalProperties": false
     },
     "evidenceItem": {
-      "type":"object",
-      "required":["id","source_type"],
+      "type": "object",
+      "required": [
+        "id",
+        "source_type"
+      ],
       "properties": {
-        "id":{"$ref":"#/$defs/evidenceId"},
-        "source_type":{"enum":["user","sensor","model","tool","retrieved","inferred"]},
-        "source_ref":{"type":"string","minLength":1,"maxLength":4096},
-        "input_hash":{"type":"string","minLength":1,"maxLength":512},
-        "span":true,
-        "supports":{"type":"array","items":{"type":"string","pattern":"^(?:r(?:0|[1-9][0-9]*)|a(?:0|[1-9][0-9]*))$"},"uniqueItems":true},
-        "description":{"type":"string","maxLength":8192},
-        "confidence":{"$ref":"#/$defs/confidence"},
-        "extensions":{"$ref":"#/$defs/extensions"}
+        "id": {
+          "$ref": "#/$defs/evidenceId"
+        },
+        "source_type": {
+          "enum": [
+            "user",
+            "sensor",
+            "model",
+            "tool",
+            "retrieved",
+            "inferred"
+          ]
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "input_hash": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "span": true,
+        "supports": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(?:r(?:0|[1-9][0-9]*)|a(?:0|[1-9][0-9]*))$"
+          },
+          "uniqueItems": true
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
       },
-      "additionalProperties":false
+      "additionalProperties": false
     },
-    "evidence": {"type":"array","items":{"$ref":"#/$defs/evidenceItem"}},
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidenceItem"
+      }
+    },
     "output": {
-      "type":"object",
-      "required":["format"],
+      "type": "object",
+      "required": [
+        "format"
+      ],
       "properties": {
-        "format":{"enum":["NL","LATTICE","JSON","YAML","TABLE","CODE","FILE","NONE"]},
-        "schema":{"type":"string","minLength":1,"maxLength":1024},
-        "channel":{"$ref":"#/$defs/qualifiedIdentifier"},
-        "target":{"type":"string","minLength":1,"maxLength":1024},
-        "language":{"type":"string","minLength":1,"maxLength":64},
-        "max_bytes":{"type":"integer","minimum":1},
-        "requirements":{"type":"array","items":{"type":"string","minLength":1,"maxLength":4096}},
-        "extensions":{"$ref":"#/$defs/extensions"}
+        "format": {
+          "enum": [
+            "NL",
+            "LATTICE",
+            "JSON",
+            "YAML",
+            "TABLE",
+            "CODE",
+            "FILE",
+            "NONE"
+          ]
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "channel": {
+          "$ref": "#/$defs/qualifiedIdentifier"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
       },
-      "additionalProperties":false
+      "additionalProperties": false
+    },
+    "permissionMode": {
+      "enum": [
+        "RO",
+        "SUGGEST",
+        "PREVIEW",
+        "RW",
+        "EXEC",
+        "COMMIT"
+      ]
     }
   }
 }

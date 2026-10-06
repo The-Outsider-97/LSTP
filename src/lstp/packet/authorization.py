@@ -7,10 +7,23 @@ from datetime import datetime, timezone
 
 from lstp.errors import AuthorizationError, Diagnostic
 from lstp.formats import parse_rfc3339
-from lstp.models import CAPABILITIES, PacketEnvelope, Permissions
+from lstp.models import PERMISSION_MODES, PacketEnvelope, Permissions
 from lstp.packet.replay import ReplayGuard, ReplayStore
 from lstp.packet.validator import require_semantic_validity
 
+MODE_CAPABILITIES: dict[str, frozenset[str]] = {
+    "RO": frozenset({"read"}),
+    "SUGGEST": frozenset({"read", "suggest"}),
+    "PREVIEW": frozenset({"read", "suggest", "prepare"}),
+    "RW": frozenset({"read", "suggest", "prepare", "write"}),
+    "EXEC": frozenset({"read", "suggest", "prepare", "write", "execute"}),
+    "COMMIT": frozenset(
+        {"read", "suggest", "prepare", "write", "execute", "commit"}
+    ),
+}
+if frozenset(MODE_CAPABILITIES) != PERMISSION_MODES:
+    raise RuntimeError("host mode-capability mapping is incomplete")
+CAPABILITIES = frozenset().union(*MODE_CAPABILITIES.values())
 _SIDE_EFFECTS = frozenset({"write", "execute", "commit"})
 
 
@@ -125,8 +138,21 @@ class AuthorizationDecision:
 
 
 def _requested_authority(permissions: Permissions) -> Authority:
-    capabilities = frozenset(permissions.capabilities) - frozenset(permissions.forbid)
-    resources = frozenset(resource.id for resource in permissions.resources)
+    """Translate Whitepaper wire semantics into host-internal authority.
+
+    The packet transports one requested permission mode plus explicit scope.
+    Concrete capabilities exist only at the host boundary. Understood forbids
+    subtract exact capabilities or scope entries; unresolved forbid expressions
+    are rejected by action authorization rather than guessed.
+    """
+    capabilities = (
+        frozenset()
+        if permissions.mode is None
+        else MODE_CAPABILITIES[permissions.mode]
+    )
+    forbidden = frozenset(permissions.forbid)
+    capabilities = capabilities - (forbidden & CAPABILITIES)
+    resources = frozenset(permissions.scope) - forbidden
     return Authority(capabilities, resources)
 
 
@@ -192,14 +218,14 @@ def validate_delegation(
         diagnostics.append(_diag(
             "delegation_capability_widening",
             f"delegation requests capabilities outside parent authority: {sorted(extra_capabilities)!r}",
-            "$.permissions.capabilities",
+            "$.permissions.mode",
         ))
     extra_resources = requested.resources - parent.authority.resources
     if extra_resources:
         diagnostics.append(_diag(
             "delegation_resource_widening",
             "delegation requests resources outside parent authority",
-            "$.permissions.resources",
+            "$.permissions.scope",
         ))
     return tuple(diagnostics)
 
@@ -224,6 +250,17 @@ def authorize_operation(
     require_semantic_validity(packet)
     permissions = packet.octad.permissions
     diagnostics: list[Diagnostic] = []
+
+    recognized_forbids = CAPABILITIES | frozenset(permissions.scope)
+    unresolved_forbids = sorted(set(permissions.forbid) - recognized_forbids)
+    if unresolved_forbids:
+        diagnostics.append(
+            _diag(
+                "unresolved_permission_forbid",
+                "host cannot safely interpret one or more permission forbids",
+                "$.permissions.forbid",
+            )
+        )
 
     if permissions.expires_at is not None:
         expiry = parse_rfc3339(permissions.expires_at)
@@ -263,13 +300,13 @@ def authorize_operation(
         diagnostics.append(_diag(
             "capability_denied",
             f"operation capability {operation.capability!r} is not effectively authorized",
-            "$.permissions.capabilities",
+            "$.permissions.mode",
         ))
     if operation.resource_id not in effective.resources:
         diagnostics.append(_diag(
             "resource_denied",
             "operation resource is outside effective scope",
-            "$.permissions.resources",
+            "$.permissions.scope",
         ))
 
     confirmation_required = (

@@ -3,24 +3,16 @@
   "contract_reconciled": false,
   "blockers": [
     {
-      "id": "GOV-PRAG",
-      "summary": "Whitepaper canonical pragmatics requires type and permits a distinct speech_act; current schema/runtime instead require act and omit core speech_act. The canonical field model and migration semantics must be reconciled Whitepaper-first."
-    },
-    {
-      "id": "GOV-PERM",
-      "summary": "Whitepaper v0.1 defines ordered requested permission modes RO/SUGGEST/PREVIEW/RW/EXEC/COMMIT plus scope/forbids/limits/confirmation/review/logging. Current candidate wire model replaced this with capability/resource arrays and non-ordered profiles. Host capability intersection may be retained internally, but the wire contract must be restored or the Whitepaper explicitly revised."
+      "id": "PHASEB-VERIFY",
+      "summary": "Whitepaper-aligned pragmatics, mode/scope permissions, context fields, canonical JSON decoding, compact compiler mapping, and host mode-to-capability authorization are implemented on the Phase B candidate branch. Closure requires successful engineering/conformance checks and merge evidence."
     },
     {
       "id": "GOV-GRAM",
       "summary": "Whitepaper canonical Lattice includes ordered Octad atomic/framed/named/stream forms. Current grammar defines only the compact operator carrier. Canonical grammar and compact-to-canonical mapping are incomplete."
     },
     {
-      "id": "GOV-CTX",
-      "summary": "Whitepaper context surface includes parent packet identity plus timezone/window concepts; current candidate field names/shape differ. Exact Whitepaper field semantics must be reconciled without silent aliases."
-    },
-    {
       "id": "GOV-EXT",
-      "summary": "Authorization references, expiry, delegation metadata and typed resource/capability structures are useful implementation/security additions but are not all established as Whitepaper v0.1 core fields. Their core-vs-extension/revision status must be resolved."
+      "summary": "Authorization references, expiry and delegation metadata are useful host-security additions but are not all established as Whitepaper v0.1 core fields. Their core-vs-extension/host-profile/later-revision status must be resolved before the training/release freeze."
     },
     {
       "id": "TEST-001",
@@ -61,6 +53,11 @@
     "expiry-enforcement-host-profile",
     "replay-idempotency-core",
     "pluggable-replay-store",
-    "sqlite-replay-store"
+    "sqlite-replay-store",
+    "whitepaper-pragmatics-type-speech-act-model",
+    "whitepaper-permission-mode-scope-wire-model",
+    "host-mode-to-capability-adapter",
+    "whitepaper-context-parent-timezone-window-fields",
+    "fail-closed-october-candidate-field-rejection"
   ]
 }

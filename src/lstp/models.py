@@ -18,11 +18,9 @@ JSONNumber: TypeAlias = int | float | Decimal
 JSONValue: TypeAlias = None | bool | JSONNumber | str | tuple["JSONValue", ...] | Mapping[str, "JSONValue"]
 
 SUPPORTED_PROTOCOL_VERSIONS = frozenset({"0.1"})
-CORE_ACTS = frozenset({"assert", "request", "question", "inform", "correct", "acknowledge", "refuse", "respond"})
 ATOM_KINDS = frozenset({"entity", "concept", "value", "event", "time", "location", "resource", "proposition", "unknown"})
 SPECIAL_ARGUMENTS = frozenset({"SELF", "NOW", "USER", "SYSTEM"})
-CAPABILITIES = frozenset({"read", "suggest", "prepare", "write", "execute", "commit"})
-PERMISSION_PROFILES = frozenset({"RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"})
+PERMISSION_MODES = frozenset({"RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"})
 EVIDENCE_SOURCE_TYPES = frozenset({"user", "sensor", "model", "tool", "retrieved", "inferred"})
 OUTPUT_FORMATS = frozenset({"NL", "LATTICE", "JSON", "YAML", "TABLE", "CODE", "FILE", "NONE"})
 
@@ -117,9 +115,63 @@ def _sequence(value: object, *, path: str) -> list[Any]:
     return list(value)
 
 
+def _reject_unknown_keys(
+    data: Mapping[str, Any],
+    *,
+    allowed: set[str],
+    path: str,
+) -> None:
+    unknown = sorted(set(data) - allowed)
+    if unknown:
+        raise ValueError(f"unknown field at {path}: {unknown[0]!r}")
+
+
+def _optional_string(
+    data: Mapping[str, Any],
+    key: str,
+    *,
+    path: str,
+) -> str | None:
+    if key not in data or data[key] is None:
+        return None
+    return _non_empty_string(data[key], path=f"{path}.{key}")
+
+
+def _optional_bool(
+    data: Mapping[str, Any],
+    key: str,
+    *,
+    path: str,
+    default: bool = False,
+) -> bool:
+    if key not in data:
+        return default
+    value = data[key]
+    if not isinstance(value, bool):
+        raise TypeError(f"expected boolean at {path}.{key}")
+    return value
+
+
+def _optional_non_negative_int(
+    data: Mapping[str, Any],
+    key: str,
+    *,
+    path: str,
+) -> int | None:
+    if key not in data or data[key] is None:
+        return None
+    value = data[key]
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TypeError(f"expected integer at {path}.{key}")
+    if value < 0:
+        raise ValueError(f"value at {path}.{key} must be non-negative")
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class Pragmatics:
-    act: str
+    type: str
+    speech_act: str | None = None
     goal: str | None = None
     modifiers: tuple[str, ...] = ()
     register: str | None = None
@@ -127,8 +179,9 @@ class Pragmatics:
     extensions: Mapping[str, JSONValue] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        if self.act not in CORE_ACTS:
-            raise ValueError(f"unknown pragmatics act: {self.act!r}")
+        _identifier(self.type, path="$.pragmatics.type", qualified=True)
+        if self.speech_act is not None:
+            _identifier(self.speech_act, path="$.pragmatics.speech_act", qualified=True)
         if self.goal is not None:
             _identifier(self.goal, path="$.pragmatics.goal", qualified=True)
         for index, modifier in enumerate(self.modifiers):
@@ -138,19 +191,65 @@ class Pragmatics:
         if self.register is not None:
             _identifier(self.register, path="$.pragmatics.register", qualified=True)
         if self.urgency is not None:
-            object.__setattr__(self, "urgency", _bounded_confidence(self.urgency, path="$.pragmatics.urgency"))
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.pragmatics.extensions"))
+            object.__setattr__(
+                self,
+                "urgency",
+                _bounded_confidence(self.urgency, path="$.pragmatics.urgency"),
+            )
+        object.__setattr__(
+            self,
+            "extensions",
+            _freeze_extensions(self.extensions, path="$.pragmatics.extensions"),
+        )
 
     @classmethod
     def from_mapping(cls, value: object) -> "Pragmatics":
         data = _mapping(value, path="$.pragmatics")
+        _reject_unknown_keys(
+            data,
+            allowed={
+                "type",
+                "speech_act",
+                "goal",
+                "modifiers",
+                "register",
+                "urgency",
+                "extensions",
+            },
+            path="$.pragmatics",
+        )
         return cls(
-            act=_non_empty_string(data.get("act"), path="$.pragmatics.act"),
-            goal=data.get("goal") if isinstance(data.get("goal"), str) else None,
-            modifiers=tuple(_non_empty_string(x, path="$.pragmatics.modifiers[]") for x in _sequence(data.get("modifiers", []), path="$.pragmatics.modifiers")),
-            register=data.get("register") if isinstance(data.get("register"), str) else None,
-            urgency=None if data.get("urgency") is None else _bounded_confidence(data["urgency"], path="$.pragmatics.urgency"),
-            extensions=_mapping(data.get("extensions", {}), path="$.pragmatics.extensions"),
+            type=_non_empty_string(data.get("type"), path="$.pragmatics.type"),
+            speech_act=_optional_string(
+                data,
+                "speech_act",
+                path="$.pragmatics",
+            ),
+            goal=_optional_string(data, "goal", path="$.pragmatics"),
+            modifiers=tuple(
+                _non_empty_string(x, path="$.pragmatics.modifiers[]")
+                for x in _sequence(
+                    data.get("modifiers", []),
+                    path="$.pragmatics.modifiers",
+                )
+            ),
+            register=_optional_string(
+                data,
+                "register",
+                path="$.pragmatics",
+            ),
+            urgency=(
+                None
+                if data.get("urgency") is None
+                else _bounded_confidence(
+                    data["urgency"],
+                    path="$.pragmatics.urgency",
+                )
+            ),
+            extensions=_mapping(
+                data.get("extensions", {}),
+                path="$.pragmatics.extensions",
+            ),
         )
 
 
@@ -263,68 +362,106 @@ class Context:
     thread_id: str
     references: tuple[ContextReference, ...] = ()
     packet_id: str | None = None
-    parent_id: str | None = None
+    parent_packet_id: str | None = None
     conversation_id: str | None = None
     turn: int | None = None
     speaker: str | None = None
     audience: tuple[str, ...] = ()
     time: str | None = None
+    timezone: str | None = None
+    window: JSONValue = None
     location: JSONValue = None
     bindings: Mapping[str, JSONValue] = field(default_factory=dict)
     extensions: Mapping[str, JSONValue] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         _non_empty_string(self.thread_id, path="$.context.thread_id")
+        for name, value in (
+            ("packet_id", self.packet_id),
+            ("parent_packet_id", self.parent_packet_id),
+            ("conversation_id", self.conversation_id),
+            ("timezone", self.timezone),
+        ):
+            if value is not None:
+                _non_empty_string(value, path=f"$.context.{name}")
         if self.turn is not None and (isinstance(self.turn, bool) or self.turn < 0):
             raise ValueError("context turn must be a non-negative integer")
         if self.speaker is not None:
             _identifier(self.speaker, path="$.context.speaker", qualified=True)
+        object.__setattr__(self, "window", _freeze(self.window, path="$.context.window"))
         object.__setattr__(self, "location", _freeze(self.location, path="$.context.location"))
-        object.__setattr__(self, "bindings", _freeze_object(self.bindings, path="$.context.bindings"))
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.context.extensions"))
+        object.__setattr__(
+            self,
+            "bindings",
+            _freeze_object(self.bindings, path="$.context.bindings"),
+        )
+        object.__setattr__(
+            self,
+            "extensions",
+            _freeze_extensions(self.extensions, path="$.context.extensions"),
+        )
 
     @classmethod
     def from_mapping(cls, value: object) -> "Context":
         data = _mapping(value, path="$.context")
+        _reject_unknown_keys(
+            data,
+            allowed={
+                "thread_id",
+                "references",
+                "packet_id",
+                "parent_packet_id",
+                "conversation_id",
+                "turn",
+                "speaker",
+                "audience",
+                "time",
+                "timezone",
+                "window",
+                "location",
+                "bindings",
+                "extensions",
+            },
+            path="$.context",
+        )
         return cls(
             thread_id=_non_empty_string(data.get("thread_id"), path="$.context.thread_id"),
-            references=tuple(ContextReference.from_mapping(x) for x in _sequence(data.get("references"), path="$.context.references")),
-            packet_id=data.get("packet_id") if isinstance(data.get("packet_id"), str) else None,
-            parent_id=data.get("parent_id") if isinstance(data.get("parent_id"), str) else None,
-            conversation_id=data.get("conversation_id") if isinstance(data.get("conversation_id"), str) else None,
-            turn=data.get("turn") if isinstance(data.get("turn"), int) and not isinstance(data.get("turn"), bool) else None,
-            speaker=data.get("speaker") if isinstance(data.get("speaker"), str) else None,
-            audience=tuple(_non_empty_string(x, path="$.context.audience[]") for x in _sequence(data.get("audience", []), path="$.context.audience")),
-            time=data.get("time") if isinstance(data.get("time"), str) else None,
+            references=tuple(
+                ContextReference.from_mapping(x)
+                for x in _sequence(
+                    data.get("references"),
+                    path="$.context.references",
+                )
+            ),
+            packet_id=_optional_string(data, "packet_id", path="$.context"),
+            parent_packet_id=_optional_string(
+                data,
+                "parent_packet_id",
+                path="$.context",
+            ),
+            conversation_id=_optional_string(
+                data,
+                "conversation_id",
+                path="$.context",
+            ),
+            turn=_optional_non_negative_int(data, "turn", path="$.context"),
+            speaker=_optional_string(data, "speaker", path="$.context"),
+            audience=tuple(
+                _non_empty_string(x, path="$.context.audience[]")
+                for x in _sequence(
+                    data.get("audience", []),
+                    path="$.context.audience",
+                )
+            ),
+            time=_optional_string(data, "time", path="$.context"),
+            timezone=_optional_string(data, "timezone", path="$.context"),
+            window=data.get("window"),
             location=data.get("location"),
             bindings=_mapping(data.get("bindings", {}), path="$.context.bindings"),
-            extensions=_mapping(data.get("extensions", {}), path="$.context.extensions"),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class Resource:
-    id: str
-    kind: str | None = None
-    atom: str | None = None
-    extensions: Mapping[str, JSONValue] = field(default_factory=dict)
-
-    def __post_init__(self) -> None:
-        _non_empty_string(self.id, path="$.permissions.resources[].id")
-        if self.kind is not None:
-            _identifier(self.kind, path="$.permissions.resources[].kind", qualified=True)
-        if self.atom is not None and not _ATOM_ID_RE.fullmatch(self.atom):
-            raise ValueError(f"invalid resource atom reference: {self.atom!r}")
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.permissions.resources[].extensions"))
-
-    @classmethod
-    def from_mapping(cls, value: object) -> "Resource":
-        data = _mapping(value, path="$.permissions.resources[]")
-        return cls(
-            id=_non_empty_string(data.get("id"), path="$.permissions.resources[].id"),
-            kind=data.get("kind") if isinstance(data.get("kind"), str) else None,
-            atom=data.get("atom") if isinstance(data.get("atom"), str) else None,
-            extensions=_mapping(data.get("extensions", {}), path="$.permissions.resources[].extensions"),
+            extensions=_mapping(
+                data.get("extensions", {}),
+                path="$.context.extensions",
+            ),
         )
 
 
@@ -355,9 +492,8 @@ class Delegation:
 
 @dataclass(frozen=True, slots=True)
 class Permissions:
-    capabilities: tuple[str, ...] = ()
-    resources: tuple[Resource, ...] = ()
-    profile: str | None = None
+    mode: str | None = None
+    scope: tuple[str, ...] = ()
     forbid: tuple[str, ...] = ()
     require_confirmation: bool = False
     require_review: bool = False
@@ -369,36 +505,100 @@ class Permissions:
     extensions: Mapping[str, JSONValue] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        for capability in self.capabilities:
-            if capability not in CAPABILITIES:
-                raise ValueError(f"unknown capability: {capability!r}")
-        if len(set(self.capabilities)) != len(self.capabilities):
-            raise ValueError("duplicate permission capability")
-        if self.profile is not None and self.profile not in PERMISSION_PROFILES:
-            raise ValueError(f"unknown permission profile: {self.profile!r}")
-        for capability in self.forbid:
-            if capability not in CAPABILITIES:
-                raise ValueError(f"unknown forbidden capability: {capability!r}")
-        object.__setattr__(self, "limits", _freeze_object(self.limits, path="$.permissions.limits"))
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.permissions.extensions"))
+        if self.mode is not None and self.mode not in PERMISSION_MODES:
+            raise ValueError(f"unknown permission mode: {self.mode!r}")
+        for index, item in enumerate(self.scope):
+            _non_empty_string(item, path=f"$.permissions.scope[{index}]")
+        if len(set(self.scope)) != len(self.scope):
+            raise ValueError("duplicate permission scope")
+        for index, item in enumerate(self.forbid):
+            _non_empty_string(item, path=f"$.permissions.forbid[{index}]")
+        if len(set(self.forbid)) != len(self.forbid):
+            raise ValueError("duplicate permission forbid")
+        if self.authorization_ref is not None:
+            _non_empty_string(
+                self.authorization_ref,
+                path="$.permissions.authorization_ref",
+            )
+        if self.expires_at is not None:
+            _non_empty_string(self.expires_at, path="$.permissions.expires_at")
+        object.__setattr__(
+            self,
+            "limits",
+            _freeze_object(self.limits, path="$.permissions.limits"),
+        )
+        object.__setattr__(
+            self,
+            "extensions",
+            _freeze_extensions(self.extensions, path="$.permissions.extensions"),
+        )
 
     @classmethod
     def from_mapping(cls, value: object) -> "Permissions":
         data = _mapping(value, path="$.permissions")
+        _reject_unknown_keys(
+            data,
+            allowed={
+                "mode",
+                "scope",
+                "forbid",
+                "require_confirmation",
+                "require_review",
+                "require_logging",
+                "limits",
+                "authorization_ref",
+                "expires_at",
+                "delegation",
+                "extensions",
+            },
+            path="$.permissions",
+        )
         delegation = data.get("delegation")
         return cls(
-            capabilities=tuple(_non_empty_string(x, path="$.permissions.capabilities[]") for x in _sequence(data.get("capabilities"), path="$.permissions.capabilities")),
-            resources=tuple(Resource.from_mapping(x) for x in _sequence(data.get("resources"), path="$.permissions.resources")),
-            profile=data.get("profile") if isinstance(data.get("profile"), str) else None,
-            forbid=tuple(_non_empty_string(x, path="$.permissions.forbid[]") for x in _sequence(data.get("forbid", []), path="$.permissions.forbid")),
-            require_confirmation=bool(data.get("require_confirmation", False)),
-            require_review=bool(data.get("require_review", False)),
-            require_logging=bool(data.get("require_logging", False)),
+            mode=_optional_string(data, "mode", path="$.permissions"),
+            scope=tuple(
+                _non_empty_string(x, path="$.permissions.scope[]")
+                for x in _sequence(data.get("scope", []), path="$.permissions.scope")
+            ),
+            forbid=tuple(
+                _non_empty_string(x, path="$.permissions.forbid[]")
+                for x in _sequence(data.get("forbid", []), path="$.permissions.forbid")
+            ),
+            require_confirmation=_optional_bool(
+                data,
+                "require_confirmation",
+                path="$.permissions",
+            ),
+            require_review=_optional_bool(
+                data,
+                "require_review",
+                path="$.permissions",
+            ),
+            require_logging=_optional_bool(
+                data,
+                "require_logging",
+                path="$.permissions",
+            ),
             limits=_mapping(data.get("limits", {}), path="$.permissions.limits"),
-            authorization_ref=data.get("authorization_ref") if isinstance(data.get("authorization_ref"), str) else None,
-            expires_at=data.get("expires_at") if isinstance(data.get("expires_at"), str) else None,
-            delegation=Delegation.from_mapping(delegation) if delegation is not None else None,
-            extensions=_mapping(data.get("extensions", {}), path="$.permissions.extensions"),
+            authorization_ref=_optional_string(
+                data,
+                "authorization_ref",
+                path="$.permissions",
+            ),
+            expires_at=_optional_string(
+                data,
+                "expires_at",
+                path="$.permissions",
+            ),
+            delegation=(
+                Delegation.from_mapping(delegation)
+                if delegation is not None
+                else None
+            ),
+            extensions=_mapping(
+                data.get("extensions", {}),
+                path="$.permissions.extensions",
+            ),
         )
 
 
