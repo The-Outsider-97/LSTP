@@ -3,59 +3,62 @@
   "contract_reconciled": false,
   "blockers": [
     {
-      "id": "GOV-001",
-      "summary": "The repository source-of-truth ordering introduced during October reconciliation does not match the active hardening mandate. Re-audit the current v0.1 contract, implementation, tests, and examples against docs/LSTP_Whitepaper.pdf before release or pre-training freeze."
+      "id": "GOV-PRAG",
+      "summary": "Whitepaper canonical pragmatics requires type and permits a distinct speech_act; current schema/runtime instead require act and omit core speech_act. The canonical field model and migration semantics must be reconciled Whitepaper-first."
     },
     {
-      "id": "IMPL-001",
-      "summary": "Canonical typed model, strict Lattice tokenizer/parser and deterministic compiler mappings are implemented for the normative grammar surface. Runtime-only context commands parse but intentionally fail canonical compilation; remaining work is validation/hardening rather than parser scaffolding."
+      "id": "GOV-PERM",
+      "summary": "Whitepaper v0.1 defines ordered requested permission modes RO/SUGGEST/PREVIEW/RW/EXEC/COMMIT plus scope/forbids/limits/confirmation/review/logging. Current candidate wire model replaced this with capability/resource arrays and non-ordered profiles. Host capability intersection may be retained internally, but the wire contract must be restored or the Whitepaper explicitly revised."
     },
     {
-      "id": "IMPL-002",
-      "summary": "Core semantic validation now includes identifiers, references, vocabulary, permission/profile contradictions, resource scope, evidence support, RFC3339 context/expiry fields and structural BCP47 language tags. Remaining semantic-format work is limited to any future registry-backed profiles or additional domain-specific formats."
+      "id": "GOV-GRAM",
+      "summary": "Whitepaper canonical Lattice includes ordered Octad atomic/framed/named/stream forms. Current grammar defines only the compact operator carrier. Canonical grammar and compact-to-canonical mapping are incomplete."
     },
     {
-      "id": "IMPL-004",
-      "summary": "Reference host authorization implements exact capability/resource intersection, authenticated delegation attenuation, trusted authorization references, confirmation/review/logging gates, expiry, pluggable replay-store semantics, in-process replay protection and a durable SQLite replay adapter. Distributed/shared-service replay backends and application-specific limit enforcement remain host integration work."
+      "id": "GOV-CTX",
+      "summary": "Whitepaper context surface includes parent packet identity plus timezone/window concepts; current candidate field names/shape differ. Exact Whitepaper field semantics must be reconciled without silent aliases."
+    },
+    {
+      "id": "GOV-EXT",
+      "summary": "Authorization references, expiry, delegation metadata and typed resource/capability structures are useful implementation/security additions but are not all established as Whitepaper v0.1 core fields. Their core-vs-extension/revision status must be resolved."
     },
     {
       "id": "TEST-001",
-      "summary": "Positive/negative protocol vectors, canonical byte round trips, extended Lattice tests, semantic format tests, replay-store tests and host-authorization security tests exist; broader normative-vector coverage, fuzz/property coverage and cross-implementation fixtures remain incomplete."
+      "summary": "Existing parser/compiler/canonicalization/authorization/replay tests are substantial, but the conformance corpus must be rebuilt/expanded against the restored Whitepaper-first contract, including canonical packet forms and migration vectors."
     },
     {
       "id": "TEST-002",
-      "summary": "Hostile-input, permission-escalation, delegation-widening, replay/action-mutation, evidence-provenance, Unicode/canonicalization, invalid-format and unresolved-context tests exist in part; systematic adversarial coverage remains incomplete."
+      "summary": "Systematic adversarial/property/fuzz coverage remains incomplete after the contract repair, especially permission preservation, compact-to-canonical equivalence, malformed canonical Lattice and migration ambiguity."
     },
     {
       "id": "INTEROP-001",
-      "summary": "No independent second implementation has passed the shared conformance vectors or reproduced canonical bytes."
+      "summary": "No independent second implementation has passed the Whitepaper-reconciled shared vectors or reproduced canonical bytes/semantics."
     },
     {
       "id": "DOC-001",
-      "summary": "Whitepaper publication revision, source figures and reproducible publication build are incomplete."
+      "summary": "Whitepaper publication synchronization, source figures and reproducible publication build remain incomplete; the current PDF remains Level 1 during reconciliation."
     },
     {
       "id": "SLAI-001",
-      "summary": "SLAI adapter/launcher and pinned package/submodule integration are not implemented."
+      "summary": "SLAI adapter/launcher and pinned package/submodule integration are not implemented against a frozen Whitepaper-reconciled contract."
     },
     {
       "id": "REL-001",
-      "summary": "Final clean release audit, migration policy, compatibility evidence and pre-training freeze are incomplete."
+      "summary": "Final clean CI evidence, migration policy, compatibility evidence, release audit and pre-training freeze are incomplete."
     }
   ],
   "implemented_nonblockers": [
-    "canonical-v0.1-contract",
-    "typed-canonical-model",
-    "semantic-validator-core",
+    "typed-engineering-model-candidate",
+    "semantic-validator-infrastructure",
     "semantic-rfc3339-bcp47-validation",
-    "lattice-tokenizer-parser-ast",
-    "deterministic-lattice-compiler",
-    "canonical-json-serializer-deserializer",
+    "compact-lattice-tokenizer-parser-ast",
+    "compact-lattice-compiler-candidate",
+    "canonical-json-serializer-deserializer-infrastructure",
     "canonical-json-byte-profile",
     "initial-conformance-vector-harness",
     "host-authorization-intersection",
-    "delegation-attenuation-core",
-    "expiry-enforcement",
+    "delegation-attenuation-host-profile",
+    "expiry-enforcement-host-profile",
     "replay-idempotency-core",
     "pluggable-replay-store",
     "sqlite-replay-store"
