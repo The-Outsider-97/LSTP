@@ -61,6 +61,15 @@ def _venv_script(directory: Path, name: str) -> Path:
     return directory / "bin" / name
 
 
+def _safe_extract_sdist(archive: tarfile.TarFile, destination: Path) -> None:
+    root = destination.resolve()
+    for member in archive.getmembers():
+        candidate = (destination / member.name).resolve()
+        if root != candidate and root not in candidate.parents:
+            raise SystemExit("source distribution contains path traversal")
+    archive.extractall(destination)
+
+
 def _clean_distribution_smoke(results: list[CheckResult]) -> None:
     dist = ROOT / "dist"
     wheels = sorted(dist.glob("*.whl"))
@@ -87,13 +96,18 @@ def _clean_distribution_smoke(results: list[CheckResult]) -> None:
         source_root = temp / "source"
         source_root.mkdir()
         with tarfile.open(sdists[0], "r:gz") as archive:
-            archive.extractall(source_root, filter="data")
+            _safe_extract_sdist(archive, source_root)
         extracted = [path for path in source_root.iterdir() if path.is_dir()]
         if len(extracted) != 1:
             raise SystemExit("source distribution must contain one top-level directory")
 
         sdist_env = temp / "sdist-env"
-        results.append(_run("create sdist venv", _python("-m", "venv", str(sdist_env))))
+        results.append(
+            _run(
+                "create sdist venv",
+                _python("-m", "venv", "--system-site-packages", str(sdist_env)),
+            )
+        )
         sdist_python = _venv_python(sdist_env)
         results.append(
             _run(
@@ -104,6 +118,7 @@ def _clean_distribution_smoke(results: list[CheckResult]) -> None:
                     "pip",
                     "install",
                     "--no-deps",
+                    "--no-build-isolation",
                     str(sdists[0]),
                 ],
                 cwd=temp,
@@ -149,6 +164,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     results.append(_run("mypy", _python("-m", "mypy")))
     results.append(_run("pytest", _python("-m", "pytest")))
+
+    dist = ROOT / "dist"
+    if dist.exists():
+        shutil.rmtree(dist)
     results.append(_run("build", _python("-m", "build")))
 
     node = shutil.which("node")
