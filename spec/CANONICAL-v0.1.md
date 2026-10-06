@@ -1,6 +1,6 @@
 # LSTP v0.1 Canonical Contract
 
-Status: implementation candidate under Whitepaper-first reconciliation.
+Status: Whitepaper-reconciled v0.1 contract; executable verification and release freeze remain pending.
 
 This document records the October 2026 implementation candidate. It is not higher authority than the Level-1 Whitepaper. Where this file conflicts with `docs/LSTP_Whitepaper.pdf`, the Whitepaper governs until the conflict is explicitly reconciled and the project readiness gate records that decision.
 
@@ -258,6 +258,12 @@ The reference host maps the six wire modes to concrete internal capabilities:
 
 Those capabilities are a host implementation mechanism. They are **not**
 additional canonical packet fields.
+
+
+Host-only security metadata such as authorization references, expiry, delegation
+identity bindings, and replay state are not canonical v0.1 Octad fields.
+Canonical decoders MUST reject them when injected into `permissions`. A trusted
+host MAY supply them separately to its authorization boundary.
 
 Effective authority is computed at the host boundary from the requested mode,
 requested scope, forbids, authenticated principal authority, host policy, and
