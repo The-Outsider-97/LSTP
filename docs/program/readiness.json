@@ -12,7 +12,7 @@
     },
     {
       "id": "GOV-EXT",
-      "summary": "Authorization references, expiry, delegation metadata and typed resource/capability structures are useful implementation/security additions but are not all established as Whitepaper v0.1 core fields. Their core-vs-extension/revision status must be resolved."
+      "summary": "Authorization references, expiry and delegation metadata are useful host-security additions but are not all established as Whitepaper v0.1 core fields. Their core-vs-extension/host-profile/later-revision status must be resolved before the training/release freeze."
     },
     {
       "id": "TEST-001",
