@@ -259,8 +259,9 @@ structural or semantic layer.
 Canonical Lattice fixtures live under
 `conformance/v0.1/lattice/canonical/` and are executed through
 `parse_canonical_lattice()` / `compile_canonical_lattice()`. The initial
-corpus includes a semantically valid Whitepaper-style packet and strict
-segment-order rejection.
+corpus includes a semantically valid Whitepaper-style packet, strict
+segment-order rejection, and JSON-backed vectors that prove canonical Lattice
+encoding fails closed for currently ungoverned GOV-EXT and rich-evidence fields.
 
 The vector corpus is still an initial baseline, not yet the independent
 interoperability evidence required for release/training freeze.
