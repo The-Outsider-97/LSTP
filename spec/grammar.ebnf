@@ -86,7 +86,8 @@ atom_metadata = "{", layout_space_opt,
 atom_metadata_entry =
     "ROLE", assign, identifier_value
   | "DATATYPE", assign, string_or_identifier
-  | "LANGUAGE", assign, string_or_identifier ;
+  | "LANGUAGE", assign, string_or_identifier
+  | "ATTRIBUTES", assign, json_object ;
 
 atom_id = "a", unsigned_integer ;
 
@@ -99,7 +100,17 @@ relations_segment = "R", horizontal_space_opt, "=", horizontal_space_opt,
 
 relation = qualified_identifier, "(", layout_space_opt,
   relation_argument, { layout_space_opt, ",", layout_space_opt, relation_argument },
-  layout_space_opt, ")" ;
+  layout_space_opt, ")", [ relation_metadata ] ;
+
+relation_metadata = "{", layout_space_opt,
+  relation_metadata_entry,
+  { layout_space_opt, ",", layout_space_opt, relation_metadata_entry },
+  layout_space_opt, "}" ;
+
+relation_metadata_entry =
+    "ID", assign, string_or_identifier
+  | "CONFIDENCE", assign, confidence_number
+  | "ATTRIBUTES", assign, json_object ;
 
 relation_argument = atom_id | special_argument ;
 special_argument = "SELF" | "NOW" | "USER" | "SYSTEM" ;
