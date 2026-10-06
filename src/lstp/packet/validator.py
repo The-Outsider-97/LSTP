@@ -95,15 +95,6 @@ def _validate_formats(octad: Octad) -> list[Diagnostic]:
                 "context.time must be an RFC 3339 date-time",
                 "$.context.time",
             ))
-    if octad.permissions.expires_at is not None:
-        try:
-            parse_rfc3339(octad.permissions.expires_at)
-        except (TypeError, ValueError):
-            diagnostics.append(_diag(
-                "invalid_permission_expiry",
-                "permissions.expires_at must be an RFC 3339 date-time",
-                "$.permissions.expires_at",
-            ))
     for index, atom in enumerate(octad.atoms):
         if atom.language is not None and not is_well_formed_bcp47(atom.language):
             diagnostics.append(_diag(
@@ -151,20 +142,6 @@ def _validate_permissions(octad: Octad) -> list[Diagnostic]:
             )
         )
 
-    if permissions.delegation is not None:
-        delegation = permissions.delegation
-        if (
-            delegation.parent_packet is None
-            and delegation.delegator is None
-            and delegation.principal is None
-        ):
-            diagnostics.append(
-                _diag(
-                    "empty_delegation",
-                    "delegation metadata must identify at least one delegation link",
-                    "$.permissions.delegation",
-                )
-            )
     return diagnostics
 
 
@@ -187,13 +164,6 @@ def validate_packet(packet: PacketEnvelope) -> ValidationResult:
             "packet_context_identity_mismatch",
             "context.packet_id must match envelope id when it identifies the current packet",
             "$.context.packet_id",
-        ))
-    delegation = packet.octad.permissions.delegation
-    if delegation is not None and delegation.parent_packet == packet.packet_id:
-        diagnostics.append(_diag(
-            "self_delegation",
-            "delegation parent_packet must not equal the current packet id",
-            "$.permissions.delegation.parent_packet",
         ))
     return ValidationResult(tuple(diagnostics))
 
