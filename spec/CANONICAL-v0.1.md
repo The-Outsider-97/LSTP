@@ -230,8 +230,10 @@ Canonical Whitepaper fields are:
 
 Structurally, an empty permission object is valid for non-action packets.
 Semantically, a side-effect-capable request MUST identify an appropriate mode
-and explicit scope. Core validation treats `forbid` as subtractive; an exact
-scope item present in both `scope` and `forbid` is denied.
+and explicit scope. `forbid` is always subtractive. The reference host can
+enforce exact scope IDs and internal capability names directly; any other forbid
+expression remains inspectable and causes fail-closed action authorization until
+a host-specific policy defines its meaning.
 
 The Whitepaper conceptual order is:
 
