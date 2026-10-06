@@ -8,7 +8,7 @@
     },
     {
       "id": "PHASEC-VERIFY",
-      "summary": "Whitepaper canonical ordered-Octad Lattice grammar, atomic/framed/named/stream forms, separate compact grammar profile, canonical parser/compiler, and initial canonical-Lattice fixtures are implemented in PR #13. Closure requires executable engineering/conformance evidence and merge evidence."
+      "summary": "Whitepaper canonical ordered-Octad Lattice grammar, atomic/framed/named/stream forms, separate compact grammar profile, canonical parser/compiler/encoder, semantic round-trip tests, and initial canonical-Lattice fixtures are implemented in PR #13. Closure still requires executable engineering/conformance evidence and merge evidence."
     },
     {
       "id": "GOV-EXT",
@@ -16,7 +16,7 @@
     },
     {
       "id": "TEST-001",
-      "summary": "Canonical JSON and canonical-Lattice positive/negative conformance fixtures now exist and execute through tests, but the corpus still needs broader production coverage, migration vectors, and complete carrier round-trip cases before freeze."
+      "summary": "Canonical JSON and canonical-Lattice positive/negative fixtures now exist, and the governed canonical Lattice surface has typed encode/parse semantic round-trip tests. The corpus still needs broader production coverage, migration vectors, unsupported-field vectors, and independent carrier interoperability before freeze."
     },
     {
       "id": "TEST-002",
@@ -63,6 +63,8 @@
     "canonical-lattice-atomic-framed-named-stream",
     "canonical-lattice-parser",
     "separate-compact-lattice-grammar-profile",
-    "canonical-lattice-conformance-fixtures"
+    "canonical-lattice-conformance-fixtures",
+    "canonical-lattice-fail-closed-encoder",
+    "canonical-lattice-semantic-roundtrip"
   ]
 }
