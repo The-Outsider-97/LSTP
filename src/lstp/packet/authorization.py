@@ -7,10 +7,22 @@ from datetime import datetime, timezone
 
 from lstp.errors import AuthorizationError, Diagnostic
 from lstp.formats import parse_rfc3339
-from lstp.models import PacketEnvelope, Permissions
+from lstp.models import PERMISSION_MODES, PacketEnvelope, Permissions
 from lstp.packet.replay import ReplayGuard, ReplayStore
-from lstp.packet.validator import MODE_CAPABILITIES, require_semantic_validity
+from lstp.packet.validator import require_semantic_validity
 
+MODE_CAPABILITIES: dict[str, frozenset[str]] = {
+    "RO": frozenset({"read"}),
+    "SUGGEST": frozenset({"read", "suggest"}),
+    "PREVIEW": frozenset({"read", "suggest", "prepare"}),
+    "RW": frozenset({"read", "suggest", "prepare", "write"}),
+    "EXEC": frozenset({"read", "suggest", "prepare", "write", "execute"}),
+    "COMMIT": frozenset(
+        {"read", "suggest", "prepare", "write", "execute", "commit"}
+    ),
+}
+if frozenset(MODE_CAPABILITIES) != PERMISSION_MODES:
+    raise RuntimeError("host mode-capability mapping is incomplete")
 CAPABILITIES = frozenset().union(*MODE_CAPABILITIES.values())
 _SIDE_EFFECTS = frozenset({"write", "execute", "commit"})
 
