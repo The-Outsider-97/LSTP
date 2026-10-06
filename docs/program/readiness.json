@@ -16,7 +16,7 @@
     },
     {
       "id": "TEST-001",
-      "summary": "Existing parser/compiler/canonicalization/authorization/replay tests are substantial, but the conformance corpus must be rebuilt/expanded against the restored Whitepaper-first contract, including canonical packet forms and migration vectors."
+      "summary": "Canonical JSON and canonical-Lattice positive/negative conformance fixtures now exist and execute through tests, but the corpus still needs broader production coverage, migration vectors, and complete carrier round-trip cases before freeze."
     },
     {
       "id": "TEST-002",
@@ -62,6 +62,7 @@
     "canonical-lattice-ordered-octad-grammar",
     "canonical-lattice-atomic-framed-named-stream",
     "canonical-lattice-parser",
-    "separate-compact-lattice-grammar-profile"
+    "separate-compact-lattice-grammar-profile",
+    "canonical-lattice-conformance-fixtures"
   ]
 }
