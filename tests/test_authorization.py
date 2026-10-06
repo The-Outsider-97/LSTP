@@ -417,3 +417,13 @@ def test_require_authorized_operation_raises_stable_error() -> None:
             runtime=_authority("commit"),
         )
     assert caught.value.diagnostics[0].code == "capability_denied"
+
+
+def test_host_authorization_context_rejects_invalid_expiry() -> None:
+    with pytest.raises(ValueError):
+        HostAuthorizationContext(expires_at="2026-10-06T12:00:00")
+
+
+def test_host_delegation_binding_requires_identity_link() -> None:
+    with pytest.raises(ValueError, match="at least one link"):
+        HostDelegationBinding()
