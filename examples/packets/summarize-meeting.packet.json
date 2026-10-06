@@ -1,1 +1,37 @@
-
+{
+  "id": "example-summarize-meeting",
+  "version": "0.1",
+  "pragmatics": {
+    "type": "request",
+    "speech_act": "command",
+    "goal": "summarize"
+  },
+  "atoms": [
+    {
+      "id": "a0",
+      "kind": "resource",
+      "value": "meeting"
+    }
+  ],
+  "relations": [],
+  "context": {
+    "thread_id": "example-thread",
+    "references": []
+  },
+  "confidence": 1.0,
+  "permissions": {},
+  "evidence": [
+    {
+      "id": "e0",
+      "source_type": "user",
+      "source_ref": "urn:meeting:notes"
+    }
+  ],
+  "output": {
+    "format": "NL"
+  },
+  "carrier": {
+    "source": "lattice_text"
+  },
+  "audit": {}
+}
