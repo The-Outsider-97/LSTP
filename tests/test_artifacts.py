@@ -35,7 +35,9 @@ def test_identifier_patterns_reject_trailing_controls() -> None:
         ("relationId", "r0"),
         ("evidenceId", "e0"),
     ]:
-        validator = Draft202012Validator({"$defs": schema["$defs"], "$ref": f"#/$defs/{definition}"})
+        validator = Draft202012Validator(
+            {"$defs": schema["$defs"], "$ref": f"#/$defs/{definition}"}
+        )
         assert validator.is_valid(valid)
         for suffix in ["\n", "\r", "\t", "\0"]:
             assert not validator.is_valid(valid + suffix)
@@ -43,6 +45,8 @@ def test_identifier_patterns_reject_trailing_controls() -> None:
 
 def test_extension_namespace_rejects_trailing_newline() -> None:
     schema = json.loads((ROOT / "spec/octad_schema.json").read_text())
-    validator = Draft202012Validator({"$defs": schema["$defs"], "$ref": "#/$defs/extensions"})
+    validator = Draft202012Validator(
+        {"$defs": schema["$defs"], "$ref": "#/$defs/extensions"}
+    )
     assert validator.is_valid({"slai": {}})
     assert not validator.is_valid({"slai\n": {}})
