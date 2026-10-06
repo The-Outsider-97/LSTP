@@ -16,7 +16,7 @@
     },
     {
       "id": "TEST-001",
-      "summary": "Canonical JSON and canonical-Lattice positive/negative fixtures now exist, and the governed canonical Lattice surface has typed encode/parse semantic round-trip tests. The corpus still needs broader production coverage, migration vectors, unsupported-field vectors, and independent carrier interoperability before freeze."
+      "summary": "Canonical JSON and canonical-Lattice positive/negative fixtures now exist; the governed canonical Lattice surface has typed semantic round-trip tests and initial versioned unrepresentable-field vectors for GOV-EXT/rich evidence. Broader production, migration, mutation, and interoperability coverage remains required before freeze."
     },
     {
       "id": "TEST-002",
@@ -65,6 +65,7 @@
     "separate-compact-lattice-grammar-profile",
     "canonical-lattice-conformance-fixtures",
     "canonical-lattice-fail-closed-encoder",
-    "canonical-lattice-semantic-roundtrip"
+    "canonical-lattice-semantic-roundtrip",
+    "canonical-lattice-unrepresentable-vectors"
   ]
 }
