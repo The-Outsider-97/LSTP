@@ -19,18 +19,18 @@ LSTP is a semantic transport protocol. It is not a language model, authenticatio
 
 ## Current status
 
-The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The October canonical reconciliation resolved that design split. The reference implementation now contains an executable typed packet model, semantic validator, strict Lattice tokenizer/parser/AST/compiler, deterministic canonical JSON serializer/deserializer, permission-aware host authorization, delegation attenuation, replay/idempotency protection, and an initial versioned conformance-vector suite.
+The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The 6 October Whitepaper-first audit restored the mandated authority order and identified semantic drift introduced by the October spec-first reconciliation. The typed model, schema, canonical JSON path, semantic validator, compact Lattice compiler, and host authorization boundary are now being repaired against the Whitepaper rather than treating the candidate implementation as protocol law.
 
 Canonical v0.1 now has:
 
 - one eight-domain Octad shape;
 - one canonical JSON Schema;
-- one orthogonal capability-based permission model;
+- one Whitepaper mode/scope permission wire model, with concrete capabilities kept internal to host authorization;
 - one evidence/provenance representation;
 - stable context-reference requirements;
 - one core vocabulary baseline;
 - one explicit response/outcome vocabulary;
-- deterministic Lattice-to-Octad mappings for the normative grammar surface;
+- deterministic compact-Lattice-to-Octad mappings for the currently implemented compact carrier surface;
 - one canonical JSON byte profile;
 - semantic RFC 3339 and structural BCP 47 validation;
 - one host-authorization intersection model;
@@ -71,7 +71,7 @@ The active production-hardening mandate defines this hierarchy:
 
 Executable tests and conformance vectors provide evidence but do not override a higher-authority source. The October reconciliation introduced a conflicting spec-first hierarchy. Until that governance conflict and any resulting semantic differences are re-audited against the Whitepaper, the current implementation is an engineering candidate rather than a frozen v0.1 authority.
 
-The current field-by-field reconciliation record is [`docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`](docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md). It identifies the active blockers GOV-PRAG, GOV-PERM, GOV-GRAM, GOV-CTX, and GOV-EXT.
+The current field-by-field reconciliation record is [`docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`](docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md). Phase B repairs GOV-PRAG, GOV-PERM, and GOV-CTX in the implementation candidate; GOV-GRAM and GOV-EXT remain active until the canonical Lattice grammar and extension/security-field status are resolved and tested.
 
 ## Canonical packet
 
@@ -81,12 +81,12 @@ A minimal canonical packet resembles:
 {
   "id": "pkt_example_001",
   "version": "0.1",
-  "pragmatics": {"act": "request"},
+  "pragmatics": {"type": "request", "speech_act": "command"},
   "atoms": [],
   "relations": [],
   "context": {"thread_id": "thread_example", "references": []},
   "confidence": 1.0,
-  "permissions": {"capabilities": [], "resources": []},
+  "permissions": {"mode": "PREVIEW", "scope": ["urn:example:document:1"]},
   "evidence": [],
   "output": {"format": "NL"},
   "carrier": {},
@@ -130,22 +130,34 @@ round_tripped = canonical_loads(encoded, require_canonical_bytes=True)
 
 ## Permissions and host authorization
 
-Permissions use orthogonal requested capabilities:
+Canonical packet permissions use the Whitepaper wire model:
 
 ```text
-read
-suggest
-prepare
-write
-execute
-commit
+RO <= SUGGEST <= PREVIEW <= RW <= EXEC <= COMMIT
 ```
 
-Convenience profiles (`RO`, `SUGGEST`, `PREVIEW`, `RW`, `EXEC`, `COMMIT`) are named bundles, **not** a numeric privilege ladder. Resource scope is represented by typed resource records rather than free-form scope strings.
+A packet carries `mode`, explicit `scope`, optional `forbid`, limits, and
+confirmation/review/logging constraints. A stronger mode never widens scope and
+never removes constraints.
 
-Effective authority is evaluated as an exact host-side intersection of requested capabilities/resources, authenticated principal authority, host policy, runtime capability, and explicit constraints. Delegation may only attenuate authority.
+The action-capable host translates that mode into concrete internal capabilities
+(`read`, `suggest`, `prepare`, `write`, `execute`, `commit`) only at
+the authorization boundary. Those capabilities are not canonical packet fields.
 
-Action-capable hosts can use the reference authorization API together with any `ReplayStore` implementation. `ReplayGuard` is process-local; `SQLiteReplayStore` is durable for hosts that share one file-backed SQLite database. Multi-node/distributed deployments should provide another `ReplayStore` with equivalent atomic reservation semantics instead of changing authorization logic.
+Effective authority is an exact intersection of mode-derived internal
+capabilities, packet scope after forbids, authenticated principal authority,
+host policy, and runtime capability. Empty scope is never a wildcard.
+
+Delegation, expiry, trusted authorization references, and replay protection are
+implemented as host-security hardening. Their final core-vs-extension/revision
+status remains open under GOV-EXT and therefore is not part of the training
+freeze yet.
+
+Action-capable hosts can use the reference authorization API together with any
+`ReplayStore` implementation. `ReplayGuard` is process-local;
+`SQLiteReplayStore` is durable for hosts sharing one file-backed SQLite
+database. Multi-node deployments need another store with equivalent atomic
+reservation semantics.
 
 ## Semantic formats
 
@@ -208,7 +220,7 @@ The vector corpus is an initial executable baseline, not yet the independent int
 
 ## Protocol readiness
 
-`python tools/check_readiness.py` remains a release/training ledger. The canonical-contract split, typed runtime, parser/compiler, canonical serializer, core host authorization, semantic RFC3339/BCP47 validation, and replay-store abstraction are no longer principal blockers. Broader conformance/adversarial evidence, independent interoperability, SLAI integration, publication synchronization, and final release validation remain open.
+`python tools/check_readiness.py` remains the release/training ledger. The Whitepaper-aligned JSON semantic model is being restored in Phase B, but canonical Lattice grammar reconciliation (GOV-GRAM), GOV-EXT, broader conformance/adversarial evidence, independent interoperability, SLAI integration, publication synchronization, and final release validation remain open.
 
 Training data generation must wait until the readiness gate is green and the versioned conformance suite is sufficiently complete for the freeze criteria.
 
