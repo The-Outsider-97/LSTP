@@ -108,3 +108,80 @@ Whitepaper does not establish all of them as core v0.1 permission fields.
 
 They may remain host mechanisms, namespaced extensions or a future revision.
 They must not silently redefine Level-1 v0.1.
+
+
+## Engineering work that can be retained
+
+This audit does not recommend discarding the current implementation wholesale.
+The following components can largely survive the Whitepaper reconciliation:
+
+- bounded JSON input and canonical Unicode/number handling;
+- typed atom, relation, evidence and output implementations;
+- diagnostics infrastructure;
+- semantic reference validation;
+- context-resolution fail-closed behavior;
+- canonical byte serializer architecture;
+- host authorization intersection, after adapting its protocol input mapping;
+- delegation/replay implementations as host/security profiles;
+- ReplayStore abstraction and SQLite implementation;
+- RFC3339 and BCP47 validation;
+- test, CI, property-testing and adversarial-testing infrastructure.
+
+The principal rewrite is concentrated at the semantic contract boundary:
+pragmatics, permissions, canonical Lattice grammar and selected context fields.
+
+## Ordered remediation plan
+
+### Phase A — governance lock
+
+1. Restore Whitepaper > README > spec > implementation authority in normative
+   headers.
+2. Mark October canonical/schema/grammar/permission artifacts as candidate
+   artifacts under reconciliation.
+3. Keep `training_ready=false` and `contract_reconciled=false`.
+
+### Phase B — canonical semantic repair
+
+1. Define the Whitepaper-compliant pragmatics shape and vocabulary.
+2. Restore the Whitepaper permission mode/scope representation.
+3. Define a deterministic mode-to-host-capabilities mapping without changing
+   the wire contract.
+4. Restore missing Whitepaper context fields/names.
+5. Update schema, typed model, serializer/deserializer and semantic validator
+   together.
+
+### Phase C — grammar repair
+
+1. Restore canonical ordered-Octad Lattice grammar.
+2. Preserve compact operator syntax as a separately named profile.
+3. Implement canonical parsing plus compact-to-canonical compilation.
+4. Add atomic/framed/named/stream fixtures and round-trip tests.
+
+### Phase D — migration and conformance
+
+1. Define explicit migration handling for October candidate packets that use
+   act/capabilities/resources.
+2. Surface loss or ambiguity; never silently coerce.
+3. Expand positive, negative and hostile vectors.
+4. Re-run all permission-preservation and authorization tests against the
+   restored Whitepaper contract.
+
+### Phase E — freeze evidence
+
+1. Independent second implementation.
+2. Shared canonical-byte and semantic round-trip vectors.
+3. SLAI integration.
+4. Whitepaper/README/spec/runtime synchronization audit.
+5. Clean CI/release evidence.
+6. Only then set `contract_reconciled=true` and evaluate
+   `training_ready=true`.
+
+## Immediate readiness judgment
+
+The repository has a strong engineering core, but the contract boundary is not
+currently freeze-safe. Pre-training remains blocked until GOV-PRAG, GOV-PERM,
+GOV-GRAM and GOV-CTX are resolved and the resulting contract passes the
+conformance suite.
+
+Production hardening may continue only where it is protocol-neutral. New core
+semantic features should not be added until the authority conflict is closed.
