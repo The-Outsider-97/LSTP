@@ -1,1 +1,35 @@
-
+{
+  "id": "example-preview-email",
+  "version": "0.1",
+  "pragmatics": {
+    "type": "request",
+    "speech_act": "command",
+    "goal": "draft"
+  },
+  "atoms": [
+    {
+      "id": "a0",
+      "kind": "resource",
+      "value": "email"
+    }
+  ],
+  "relations": [],
+  "context": {
+    "thread_id": "example-thread",
+    "references": []
+  },
+  "confidence": 1.0,
+  "permissions": {
+    "mode": "PREVIEW",
+    "scope": ["urn:email:draft:1"],
+    "require_confirmation": true
+  },
+  "evidence": [],
+  "output": {
+    "format": "NL"
+  },
+  "carrier": {
+    "source": "lattice_text"
+  },
+  "audit": {}
+}
