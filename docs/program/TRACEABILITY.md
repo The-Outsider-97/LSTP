@@ -1,5 +1,7 @@
 # Initial requirements traceability
 
+> **6 October 2026 audit note:** implementation links below have advanced substantially since the initial audit, but canonical conformance remains blocked by GOV-PRAG, GOV-PERM, GOV-GRAM and GOV-CTX. See `WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`. Rows marked with older SPEC blockers are historical until this table is fully regenerated against the reconciled contract.
+
 This is an initial index, not completed conformance. `normative-candidates.json`
 records 193 uppercase-keyword candidate lines from the three technical Markdown
 specs with source/text-based IDs. They require manual splitting, PDF authority
@@ -15,31 +17,31 @@ evidence by itself.
 |---|---|---|---|---|
 | WP-3.1 | Canonical eight fields | schema; spec §3 | models.Octad; test_models field order | D-010; field container implemented, field semantics still SPEC-002-blocked |
 | WP-3.2 | Inspectable fields and deterministic diagnostics | spec §34 | errors.py, json_input.py; test_json_input diagnostics | README; partial (JSON only) |
-| WP-3.3 | Defined canonical round-trip equality | spec §§35–36 | PacketEnvelope.semantically_equals; test_models semantic/envelope distinction | D-010; serialization still blocked |
-| WP-3.4 | Authority never silently broadened | permissions; schema | Extension isolation test; no execution code | D-011/D-015; SPEC-003 blocks permission conformance |
+| WP-3.3 | Defined canonical round-trip equality | canonical JSON profile; candidate model | semantic equality plus canonical JSON round-trip tests implemented | Engineering mechanism implemented; canonical semantics still governance-blocked |
+| WP-3.4 | Authority never silently broadened | Whitepaper permissions; candidate host authorization | authorization intersection, delegation attenuation, extension isolation and replay tests implemented | Host hardening implemented; GOV-PERM blocks canonical permission conformance |
 | WP-3.5 | Referential context owned by host | spec §11 | None | D-010; SPEC-004 blocks |
 | WP-3.6 | No invented extension semantics | EBNF; operator table; spec extensions | PacketEnvelope namespace preservation; test_models extension cases | D-007/D-015; partial model boundary only |
-| WP-5.2 | Canonical Lattice forms | EBNF | None | D-007; SPEC-001 blocks |
+| WP-5.2 | Canonical Lattice forms | Whitepaper §7; compact EBNF candidate | compact tokenizer/parser/compiler implemented; canonical atomic/framed/named/stream grammar missing | GOV-GRAM blocks |
 | WP-5.3 | Machine-readable JSON Schema | octad_schema.json | test_artifacts meta-schema check | JSON syntax fixed, conformance blocked |
 | WP-5.5 | No semantic invention in compilation | spec §§21–29 | None | D-007/D-009; open |
-| WP-5.6 | Explicit serialization ordering/numbers/Unicode | spec §35 | None | D-010/D-013; open; JSON decoding isn't serialization |
-| WP-6.1 | Pragmatic type; numeric urgency | schema pragmatics | None | SPEC-002 blocks |
-| WP-6.2 | Typed aN atoms | schema atoms | None | SPEC-002 blocks |
-| WP-6.3 | Typed relations and resolvable arguments | schema relations | None | SPEC-002 blocks |
-| WP-6.4 | Required thread_id and context links | schema context | None | D-010; SPEC-002/004 block |
-| WP-6.5 | Numeric confidence [0,1] | schema confidence | None | D-009; SPEC-002 blocks |
+| WP-5.6 | Explicit serialization ordering/numbers/Unicode | canonical JSON byte profile | deterministic serializer/deserializer and Unicode/number tests implemented | Engineering profile implemented; must be revalidated after contract repair |
+| WP-6.1 | Pragmatic type; numeric urgency | Whitepaper §§6.1, 7.3 | candidate schema/runtime use act instead of Whitepaper type/speech_act model | GOV-PRAG blocks |
+| WP-6.2 | Typed aN atoms | schema atoms | typed Atom model and reference tests | Substantially aligned; revalidate after contract repair |
+| WP-6.3 | Typed relations and resolvable arguments | schema relations | typed Relation model plus semantic reference validation | Substantially aligned |
+| WP-6.4 | Required thread_id and context links | candidate schema/context model | thread_id/reference resolution implemented; field drift remains for parent/timezone/window | GOV-CTX blocks full conformance |
+| WP-6.5 | Numeric confidence [0,1] | schema confidence | bounded packet/relation confidence validation implemented | Aligned |
 | WP-6.6 | Modes/scope/forbids/limits/confirm/review/log | permissions; schema | Extension data cannot mutate Octad.permissions; no authorization runtime | D-011/D-015; SPEC-003 blocks |
-| WP-6.7 | Evidence constructors/provenance | schema evidence | None | D-014; authority-level JSON shape blocker |
-| WP-6.8 | Output format and constraints | schema output | None | SPEC-002 blocks |
+| WP-6.7 | Evidence constructors/provenance | candidate evidence schema/model | typed evidence source constructors and support-reference validation implemented | Source vocabulary aligned; exact canonical shape remains under audit |
+| WP-6.8 | Output format and constraints | schema output | typed output model plus BCP47/max-bytes validation | Substantially aligned |
 | WP-6.9 | References, permission preservation, extensions | spec semantic validation | Extension namespace structural checks only | D-007/D-011/D-015; partial |
 | WP-7.9 | Unresolved macros not guessed | EBNF; operators | None | D-007; open |
 | WP-8.3 | Each carrier has mapping, codecs, tests, failures | spec carriers | None | D-007/D-010; open |
 | WP-8.4 | Version/profile negotiation outside Octad | spec version | PacketEnvelope rejects versions other than 0.1; test_models unknown-version cases | D-010/D-015; v0.1 fail-closed boundary implemented, negotiation absent |
 | WP-9.4 | Resolver verifies existence/version/access | spec context | None | Open; host contract needed |
-| WP-10 | Requested ∩ policy ∩ capability | permissions | No execution code | D-011; SPEC-003 blocks |
+| WP-10 | Requested ∩ policy ∩ capability | Whitepaper permissions; host authorization | principal/policy/runtime/resource intersection, confirmation/review/logging, expiry and replay implemented | Host mechanism retained; GOV-PERM blocks wire-level conformance |
 | WP-11.2 | SLAI/model/LSTP and root launcher | corrected spec layout | No adapter | README; unimplemented |
 | WP-13.3 | Negative, hostile and positive input fixtures | spec §43.3 | test_json_input property/adversarial tests; test_models malformed envelope/extension tests | Partial; D-008/D-009 require blocked grammar cases |
-| WP-13.8 | Independent implementation interoperability | conformance corpus absent | None | Open |
+| WP-13.8 | Independent implementation interoperability | initial conformance corpus exists | no independent second implementation | Open hard blocker |
 | WP-13.9 | Measure only after correctness | benchmarks absent | None | No performance claims |
 | WP-16.5 | Working packaging/CLI commands | pyproject.toml | test_cli; wheel smoke | README; foundation only |
 | WP-16.6 | Conformance corpus and CI | .github/workflows/ci.yml | engineering suite; readiness gate | Partial, gate intentionally fails |

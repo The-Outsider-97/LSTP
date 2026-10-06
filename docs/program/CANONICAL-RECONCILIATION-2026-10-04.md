@@ -1,5 +1,7 @@
 # LSTP v0.1 canonical reconciliation — 4 October 2026
 
+> **Superseded governance record.** The spec-first authority decision below was reversed by the Whitepaper-first audit of 6 October 2026. This file is retained as design history, not current authority.
+
 ## Purpose
 
 This pass resolves the split-contract problem recorded in the 22 September 2026 audit. The project previously had two incompatible artifacts both described as v0.1: the Whitepaper model and a subordinate schema/specification model.

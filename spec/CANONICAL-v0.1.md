@@ -1,23 +1,23 @@
 # LSTP v0.1 Canonical Contract
 
-Status: normative protocol contract for the v0.1 reconciliation branch.
+Status: implementation candidate under Whitepaper-first reconciliation.
 
-This document resolves the September 2026 split between the Whitepaper model and the subordinate schema/specification. It is deliberately narrow: it defines one semantic model, one packet boundary, one permission representation, one evidence representation, and one vocabulary baseline that can be implemented and tested without guessing.
+This document records the October 2026 implementation candidate. It is not higher authority than the Level-1 Whitepaper. Where this file conflicts with `docs/LSTP_Whitepaper.pdf`, the Whitepaper governs until the conflict is explicitly reconciled and the project readiness gate records that decision.
 
 BCP 14 terms (`MUST`, `MUST NOT`, `SHOULD`, `SHOULD NOT`, `MAY`) are used normatively.
 
 ## 1. Authority
 
-For v0.1 implementation and conformance on this branch, authority is:
+The active project hierarchy is:
 
-1. `spec/CANONICAL-v0.1.md` — semantic and behavioral protocol contract;
-2. `spec/octad_schema.json` — normative JSON structural contract;
-3. `spec/grammar.ebnf`, `spec/operator-table.md`, `spec/permissions-safety.md`, and `spec/vocabulary.md` — normative carrier, operator, permission, and vocabulary profiles where consistent with items 1 and 2;
-4. conformance fixtures and tests — executable evidence of the contract;
-5. reference implementation — implementation of the contract, never a source of new protocol law;
-6. Whitepaper — informative rationale, history, research framing, and design background.
+1. `docs/LSTP_Whitepaper.pdf` — Level 1 authoritative conceptual/protocol reference;
+2. root `README.md` — Level 2 project guidance;
+3. `spec/` — Level 3 technical artifacts;
+4. `src/lstp/` — Level 4 reference implementation.
 
-The Whitepaper remains important project documentation but is no longer executable authority for v0.1 where its earlier draft wording conflicts with this contract. A publication revision SHOULD record this transition explicitly.
+Conformance fixtures and tests are executable evidence. They do not override a higher-authority source.
+
+This October candidate MUST NOT be used to redefine Whitepaper semantics. Known conflicts are tracked in `docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`. Until those conflicts are closed, this file is an implementation candidate rather than a frozen v0.1 authority.
 
 ## 2. Core model
 

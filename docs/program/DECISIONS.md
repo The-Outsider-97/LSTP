@@ -42,13 +42,30 @@ Whitepaper Figure 2 and §§6/8 distinguish semantic Octad content from protocol
 
 The reference model therefore keeps separate `Octad` and `PacketEnvelope` types. Round-trip tests must state whether they compare semantic Octad equality, envelope equality, normalized carrier syntax, or bytes.
 
-## D-011 — Permissions are requested authority and are never normalized by privilege ranking
+## D-011 — Permission modes have conceptual order without widening scope
 
-**Status:** accepted from authority.
+**Status:** accepted from Level-1 authority; October capability-wire replacement is superseded.
 
-The canonical modes named by the Whitepaper are `RO`, `SUGGEST`, `PREVIEW`, `RW`, `EXEC`, and `COMMIT`. They are requested modes, not capability tokens and not a total privilege lattice. Case folding, aliases, or conversion from unsupported subordinate modes must not silently create a canonical mode.
+**Authority:** Whitepaper §§6.6 and 10.1–10.4.
 
-Effective authority is always the intersection of requested LSTP authority, host policy, and runtime capability. `FORBID`, scope, limits, confirmation, review, and logging constraints must survive carrier conversion. Unsupported or conflicting authority declarations fail closed until a normative conflict rule exists.
+The canonical modes are `RO`, `SUGGEST`, `PREVIEW`, `RW`, `EXEC`, and
+`COMMIT`. The Whitepaper explicitly presents the conceptual order:
+
+```text
+RO <= SUGGEST <= PREVIEW <= RW <= EXEC <= COMMIT
+```
+
+The order expresses increasing operational authority. It does **not** widen
+resource scope, remove forbids, bypass limits, or satisfy confirmation/review/
+logging requirements.
+
+The host may translate a requested mode into concrete internal capabilities for
+authorization, but that translation is an implementation mechanism rather than
+a replacement wire representation.
+
+Effective authority remains the intersection of the requested Whitepaper
+permission, scope/constraints, authenticated/local policy and runtime capability.
+Unsupported or conflicting declarations fail closed.
 
 ## D-012 — Training freeze is blocked by canonical-contract conflicts
 

@@ -1,7 +1,12 @@
 (*
   LSTP v0.1 — Lattice text grammar
-  Status: Normative Phase 1 grammar
+  Status: Compact-carrier candidate under Whitepaper-first reconciliation
   Encoding: UTF-8
+
+  NOTE: This file currently defines the compact operator carrier. The Level-1
+  Whitepaper also requires canonical ordered-Octad atomic/framed/named/stream
+  packet productions. Until those are restored, this file is not the complete
+  canonical Lattice grammar.
 
   EBNF notation used in this file:
     = definition | alternative , concatenation [ ] optional { } repetition

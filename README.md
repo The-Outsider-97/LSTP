@@ -71,6 +71,8 @@ The active production-hardening mandate defines this hierarchy:
 
 Executable tests and conformance vectors provide evidence but do not override a higher-authority source. The October reconciliation introduced a conflicting spec-first hierarchy. Until that governance conflict and any resulting semantic differences are re-audited against the Whitepaper, the current implementation is an engineering candidate rather than a frozen v0.1 authority.
 
+The current field-by-field reconciliation record is [`docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`](docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md). It identifies the active blockers GOV-PRAG, GOV-PERM, GOV-GRAM, GOV-CTX, and GOV-EXT.
+
 ## Canonical packet
 
 A minimal canonical packet resembles:
