@@ -1,8 +1,9 @@
 # LSTP v0.1 Permissions and Safety
 
-Status: Whitepaper-aligned Level-3 permission profile. Host-security additions
-that are not yet established as Level-1 v0.1 core semantics remain provisional
-under GOV-EXT.
+Status: Whitepaper-aligned Level-3 permission profile. Canonical v0.1 is frozen
+to the Level-1 permission fields described below. Expiry, trusted authorization
+references, delegation bindings, and replay state are host-security metadata
+outside the canonical Octad.
 
 ## 1. Principle
 
@@ -42,11 +43,10 @@ Core fields:
 - `limits` — declared cost/time/count/application constraints;
 - `extensions` — namespaced extension data.
 
-The current engineering candidate also accepts `authorization_ref`,
-`expires_at`, and `delegation` for host-security hardening. These fields do
-not become frozen v0.1 core semantics merely because the reference
-implementation supports them. GOV-EXT must resolve their final status before
-training/release freeze.
+Canonical v0.1 MUST reject `authorization_ref`, `expires_at`, and
+`delegation` when they appear inside the packet `permissions` object. The
+reference host may enforce equivalent safeguards through trusted
+`HostAuthorizationContext` metadata supplied alongside the packet.
 
 ## 3. Core modes
 
@@ -193,31 +193,28 @@ If `require_logging` is true, logging MUST be ready before execution.
 Silence, timeout, continued conversation, parser success, schema success, model
 confidence, or a matching permission mode MUST NOT count as confirmation.
 
-## 9. Provisional host-security fields
+## 9. Host-security metadata outside the Octad
 
-### Authorization reference
+Production hosts often need authorization state that must not be controlled by
+the packet sender. The reference implementation therefore accepts trusted host
+metadata separately from canonical packet semantics.
 
-`authorization_ref`, when present in the current engineering candidate, is an
-opaque trusted-host reference. It grants no authority by itself and MUST be
-resolved against host-controlled authorization state.
+`HostAuthorizationContext` may carry:
 
-### Expiry
+- an opaque trusted authorization reference;
+- an RFC 3339 expiry;
+- a trusted delegation identity binding.
 
-`expires_at` narrows the candidate authorization lifetime and is interpreted as
-RFC 3339. A host MAY apply a shorter lifetime.
+These values are supplied by the host and are never parsed from canonical v0.1
+`permissions`. Delegation remains attenuating: requested mode-derived
+capabilities and scope MUST NOT exceed authenticated parent authority.
 
-### Delegation
-
-Delegation MUST be attenuating. The child request's derived capabilities and
-effective scope MUST NOT exceed authenticated parent authority.
-
-These mechanisms are retained as security hardening while GOV-EXT decides
-whether they become v0.1 extensions, a named host profile, or a later protocol
-revision.
+This separation is normative for v0.1. A later protocol revision may standardize
+additional wire fields only through an explicit versioned change.
 
 ## 10. Replay and idempotency
 
-Packet identity and expiry do not themselves provide replay protection.
+Packet identity and host-side expiry do not themselves provide replay protection.
 
 Action-capable hosts SHOULD use an atomic replay/idempotency store. The reference
 implementation exposes a `ReplayStore` contract with in-process and SQLite
