@@ -29,7 +29,7 @@ def test_october_candidate_permission_fields_are_rejected() -> None:
     permissions["properties"]["capabilities"] = {"type": "array"}  # type: ignore[index]
     failures = contract_failures(schema)
     assert any(
-        failure.startswith("PERMISSION_CANDIDATE_FIELD:")
+        failure.startswith("PERMISSION_NONCORE_FIELD:")
         for failure in failures
     )
 

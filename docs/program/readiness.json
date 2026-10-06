@@ -4,15 +4,15 @@
   "blockers": [
     {
       "id": "VERIFY-001",
-      "summary": "Run the complete clean-checkout engineering matrix successfully: schema drift gate, Ruff, formatting, strict mypy, pytest, build, wheel/sdist install smoke, canonical JSON/Lattice conformance, and readiness checks. GitHub-hosted jobs currently fail before any step executes, so independent executable evidence is still required."
+      "summary": "A unified cross-platform engineering runner now exists at tools/run_release_checks.py and normal CI is separated from the intentionally failing final readiness gate. VERIFY-001 remains open until the full runner succeeds from a clean checkout on supported environments."
     },
     {
       "id": "TEST-001",
-      "summary": "Complete the production conformance/adversarial corpus: canonical JSON/Lattice positive and negative vectors, compact-to-canonical equivalence, mutation/property/fuzz coverage, resource limits, migration ambiguity, permission-preservation, and unsupported-field fail-closed behavior."
+      "summary": "Executable example pairs, canonical JSON/Lattice vectors, permission/segment adversarial checks, and Hypothesis permission-preservation tests exist. TEST-001 remains open for broader mutation/fuzz/resource/migration coverage and final production corpus review."
     },
     {
       "id": "INTEROP-001",
-      "summary": "A second independent implementation must consume the shared v0.1 vectors and reproduce canonical semantics/bytes for the frozen profiles."
+      "summary": "A dependency-free independent JavaScript canonical JSON implementation now consumes multiple shared byte vectors and rejects non-core permission channels. INTEROP-001 remains open until its execution is recorded successfully alongside the Python conformance suite."
     },
     {
       "id": "SLAI-001",
@@ -57,6 +57,11 @@
     "canonical-lattice-unrepresentable-vectors",
     "whitepaper-contract-reconciled",
     "gov-ext-host-security-boundary",
-    "canonical-permissions-whitepaper-only"
+    "canonical-permissions-whitepaper-only",
+    "executable-example-pairs",
+    "unified-release-check-runner",
+    "independent-js-canonical-json-implementation",
+    "release-permission-property-tests",
+    "dead-scaffold-cleanup"
   ]
 }

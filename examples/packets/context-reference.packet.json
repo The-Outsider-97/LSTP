@@ -1,1 +1,31 @@
-
+{
+  "id": "example-context-reference",
+  "version": "0.1",
+  "pragmatics": {
+    "type": "question",
+    "speech_act": "question",
+    "goal": "risk"
+  },
+  "atoms": [],
+  "relations": [],
+  "context": {
+    "thread_id": "example-thread",
+    "references": [
+      {
+        "packet_id": "risk-2",
+        "depth": 2,
+        "agent": "risk"
+      }
+    ]
+  },
+  "confidence": 1.0,
+  "permissions": {},
+  "evidence": [],
+  "output": {
+    "format": "NL"
+  },
+  "carrier": {
+    "source": "lattice_text"
+  },
+  "audit": {}
+}
