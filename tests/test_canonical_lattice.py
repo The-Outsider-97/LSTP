@@ -148,3 +148,28 @@ def test_compile_accepts_semantically_valid_canonical_packet() -> None:
     )
     document = compile_canonical_lattice(source)
     assert document.packets[0].octad.permissions.mode == "COMMIT"
+
+
+def test_atom_attributes_and_relation_metadata_are_preserved() -> None:
+    source = (
+        '[π=(TYPE=INFORM)|'
+        'A=(a0:ENT("door"){ROLE=TARGET,ATTRIBUTES={"locked":false}})|'
+        'R=(is(a0){ID=r0,CONFIDENCE=0.75,ATTRIBUTES={"source":"sensor"}})|'
+        'C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=JSON)]'
+    )
+    octad = parse_canonical_lattice(source).packets[0].octad
+    assert octad.atoms[0].attributes["locked"] is False
+    relation = octad.relations[0]
+    assert relation.id == "r0"
+    assert relation.confidence == 0.75
+    assert relation.attributes["source"] == "sensor"
+
+
+def test_relation_metadata_unknown_field_fails_closed() -> None:
+    source = (
+        '[π=(TYPE=INFORM)|A=(a0:ENT("door"))|'
+        'R=(is(a0){PROFILE=fast})|C=(THREAD="t1")|κ=1|'
+        'Π=()|E=()|Ω=(FORMAT=NL)]'
+    )
+    with pytest.raises(LatticeSyntaxError, match="unknown canonical relation metadata"):
+        parse_canonical_lattice(source)
