@@ -19,7 +19,7 @@ LSTP is a semantic transport protocol. It is not a language model, authenticatio
 
 ## Current status
 
-The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The 6 October Whitepaper-first audit restored the mandated authority order and identified semantic drift introduced by the October spec-first reconciliation. The typed model, schema, canonical JSON path, semantic validator, compact Lattice compiler, and host authorization boundary are now being repaired against the Whitepaper rather than treating the candidate implementation as protocol law.
+The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The 6 October Whitepaper-first repair has restored the mandated authority order across the typed model, schema, canonical JSON path, permission wire semantics, compact compiler, and host authorization boundary. Phase C additionally restores the Whitepaper canonical ordered-Octad Lattice grammar as a separate carrier profile.
 
 Canonical v0.1 now has:
 
@@ -248,7 +248,7 @@ The vector corpus is an initial executable baseline, not yet the independent int
 
 ## Protocol readiness
 
-`python tools/check_readiness.py` remains the release/training ledger. The Whitepaper-aligned JSON semantic model is being restored in Phase B, but canonical Lattice grammar reconciliation (GOV-GRAM), GOV-EXT, broader conformance/adversarial evidence, independent interoperability, SLAI integration, publication synchronization, and final release validation remain open.
+`python tools/check_readiness.py` remains the release/training ledger. The Whitepaper-aligned semantic model and canonical Lattice grammar are implemented as candidates, but Phase B/Phase C verification, GOV-EXT, broader conformance/adversarial evidence, independent interoperability, SLAI integration, publication synchronization, and final release validation remain open.
 
 Training data generation must wait until the readiness gate is green and the versioned conformance suite is sufficiently complete for the freeze criteria.
 
