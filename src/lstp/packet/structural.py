@@ -74,7 +74,8 @@ def validate_canonical_json_types(root: Mapping[str, object]) -> None:
     _object(root["audit"], "$.audit")
 
     pragmatics = _object(root["pragmatics"], "$.pragmatics")
-    _string(pragmatics["act"], "$.pragmatics.act")
+    _string(pragmatics["type"], "$.pragmatics.type")
+    _optional_string(pragmatics, "speech_act", "$.pragmatics")
     _optional_string(pragmatics, "goal", "$.pragmatics")
     _optional_string(pragmatics, "register", "$.pragmatics")
     if "urgency" in pragmatics:
@@ -111,7 +112,14 @@ def validate_canonical_json_types(root: Mapping[str, object]) -> None:
 
     context = _object(root["context"], "$.context")
     _string(context["thread_id"], "$.context.thread_id")
-    for key in ("packet_id", "parent_id", "conversation_id", "speaker", "time"):
+    for key in (
+        "packet_id",
+        "parent_packet_id",
+        "conversation_id",
+        "speaker",
+        "time",
+        "timezone",
+    ):
         _optional_string(context, key, "$.context")
     if "turn" in context:
         _integer(context["turn"], "$.context.turn")
@@ -133,10 +141,11 @@ def validate_canonical_json_types(root: Mapping[str, object]) -> None:
             _object(reference["extensions"], f"{path}.extensions")
 
     permissions = _object(root["permissions"], "$.permissions")
-    _string_array(permissions["capabilities"], "$.permissions.capabilities")
+    _optional_string(permissions, "mode", "$.permissions")
+    if "scope" in permissions:
+        _string_array(permissions["scope"], "$.permissions.scope")
     if "forbid" in permissions:
         _string_array(permissions["forbid"], "$.permissions.forbid")
-    _optional_string(permissions, "profile", "$.permissions")
     _optional_string(permissions, "authorization_ref", "$.permissions")
     _optional_string(permissions, "expires_at", "$.permissions")
     for key in ("require_confirmation", "require_review", "require_logging"):
@@ -145,14 +154,6 @@ def validate_canonical_json_types(root: Mapping[str, object]) -> None:
         _object(permissions["limits"], "$.permissions.limits")
     if "extensions" in permissions:
         _object(permissions["extensions"], "$.permissions.extensions")
-    for index, raw in enumerate(_array(permissions["resources"], "$.permissions.resources")):
-        path = f"$.permissions.resources[{index}]"
-        resource = _object(raw, path)
-        _string(resource["id"], f"{path}.id")
-        _optional_string(resource, "kind", path)
-        _optional_string(resource, "atom", path)
-        if "extensions" in resource:
-            _object(resource["extensions"], f"{path}.extensions")
     if "delegation" in permissions:
         delegation = _object(permissions["delegation"], "$.permissions.delegation")
         for key in ("parent_packet", "delegator", "principal"):
