@@ -419,8 +419,16 @@ def _check_structure(data: object) -> Mapping[str, Any]:
     _strict_keys(
         root["pragmatics"],
         path="$.pragmatics",
-        allowed={"act", "goal", "modifiers", "register", "urgency", "extensions"},
-        required={"act"},
+        allowed={
+            "type",
+            "speech_act",
+            "goal",
+            "modifiers",
+            "register",
+            "urgency",
+            "extensions",
+        },
+        required={"type"},
     )
     atoms = root["atoms"]
     if not isinstance(atoms, list):
@@ -457,12 +465,14 @@ def _check_structure(data: object) -> Mapping[str, Any]:
         allowed={
             "thread_id",
             "packet_id",
-            "parent_id",
+            "parent_packet_id",
             "conversation_id",
             "turn",
             "speaker",
             "audience",
             "time",
+            "timezone",
+            "window",
             "location",
             "bindings",
             "references",
@@ -488,9 +498,8 @@ def _check_structure(data: object) -> Mapping[str, Any]:
         root["permissions"],
         path="$.permissions",
         allowed={
-            "capabilities",
-            "resources",
-            "profile",
+            "mode",
+            "scope",
             "forbid",
             "require_confirmation",
             "require_review",
@@ -501,22 +510,7 @@ def _check_structure(data: object) -> Mapping[str, Any]:
             "delegation",
             "extensions",
         },
-        required={"capabilities", "resources"},
     )
-    resources = permissions["resources"]
-    if not isinstance(resources, list):
-        raise _error(
-            "expected_array",
-            "permissions.resources must be an array",
-            "$.permissions.resources",
-        )
-    for index, item in enumerate(resources):
-        _strict_keys(
-            item,
-            path=f"$.permissions.resources[{index}]",
-            allowed={"id", "kind", "atom", "extensions"},
-            required={"id"},
-        )
     if "delegation" in permissions:
         _strict_keys(
             permissions["delegation"],
