@@ -1,0 +1,1 @@
+{"audit":{},"atoms":[],"carrier":{},"confidence":1,"context":{"references":[],"thread_id":"t1"},"evidence":[{"description":"rich provenance detail","id":"e0","source_ref":"request","source_type":"user"}],"id":"p1","output":{"format":"NL"},"permissions":{},"pragmatics":{"type":"inform"},"relations":[],"version":"0.1"}
