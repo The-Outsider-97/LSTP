@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from lstp.models import Atom, Context, EvidenceItem, Octad, Output, PacketEnvelope, Permissions, Pragmatics, Relation, Resource
+from lstp.models import Atom, Context, EvidenceItem, Octad, Output, PacketEnvelope, Permissions, Pragmatics, Relation
 from lstp.packet.validator import validate_packet
 
 
 def packet_with(*, atoms=(), relations=(), permissions=None, evidence=()) -> PacketEnvelope:
     return PacketEnvelope(
         Octad(
-            pragmatics=Pragmatics(act="request"), atoms=atoms, relations=relations,
+            pragmatics=Pragmatics(type="request", speech_act="command"), atoms=atoms, relations=relations,
             context=Context(thread_id="thread-1"), confidence=1.0,
             permissions=permissions or Permissions(), evidence=evidence,
             output=Output(format="NL"),
@@ -30,18 +30,26 @@ def test_validator_rejects_unresolved_relation_atom() -> None:
     assert {item.code for item in result.diagnostics} == {"unresolved_atom"}
 
 
-def test_validator_rejects_permission_profile_widening() -> None:
-    result = validate_packet(packet_with(permissions=Permissions(
-        capabilities=("read", "commit"), resources=(Resource("urn:x"),), profile="RO"
-    )))
-    assert "profile_capability_mismatch" in {item.code for item in result.diagnostics}
+def test_validator_requires_scope_for_side_effect_capable_mode() -> None:
+    result = validate_packet(packet_with(permissions=Permissions(mode="COMMIT")))
+    assert "missing_permission_scope" in {item.code for item in result.diagnostics}
 
 
-def test_validator_requires_resource_scope_for_side_effects() -> None:
-    result = validate_packet(packet_with(permissions=Permissions(capabilities=("commit",))))
-    assert "missing_resource_scope" in {item.code for item in result.diagnostics}
+def test_validator_reports_forbidden_scope_overlap() -> None:
+    result = validate_packet(
+        packet_with(
+            permissions=Permissions(
+                mode="COMMIT",
+                scope=("urn:x",),
+                forbid=("urn:x",),
+            )
+        )
+    )
+    assert "permission_scope_forbidden" in {
+        item.code for item in result.diagnostics
+    }
 
 
-def test_validator_reports_permission_contradiction() -> None:
-    result = validate_packet(packet_with(permissions=Permissions(capabilities=("read",), forbid=("read",))))
-    assert "permission_contradiction" in {item.code for item in result.diagnostics}
+def test_readonly_mode_can_be_scope_free() -> None:
+    result = validate_packet(packet_with(permissions=Permissions(mode="RO")))
+    assert result.valid
