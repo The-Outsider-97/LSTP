@@ -1,1 +1,42 @@
-
+{
+  "id": "example-decision",
+  "version": "0.1",
+  "pragmatics": {
+    "type": "request",
+    "speech_act": "command",
+    "goal": "state"
+  },
+  "atoms": [
+    {
+      "id": "a0",
+      "kind": "resource",
+      "value": "decision"
+    },
+    {
+      "id": "a1",
+      "kind": "concept",
+      "value": "approved"
+    }
+  ],
+  "relations": [
+    {
+      "id": "r0",
+      "type": "is",
+      "arguments": ["a0", "a1"]
+    }
+  ],
+  "context": {
+    "thread_id": "example-thread",
+    "references": []
+  },
+  "confidence": 1.0,
+  "permissions": {},
+  "evidence": [],
+  "output": {
+    "format": "JSON"
+  },
+  "carrier": {
+    "source": "lattice_text"
+  },
+  "audit": {}
+}
