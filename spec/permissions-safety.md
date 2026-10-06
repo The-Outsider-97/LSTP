@@ -108,12 +108,15 @@ COMMIT packet still requires independent host authorization.
 does not infer wildcard, prefix, URI hierarchy, regular-expression, or glob
 semantics.
 
-The reference authorization layer performs exact matching unless an explicitly
-named host profile defines additional semantics.
+The reference authorization layer performs exact scope matching unless an
+explicitly named host profile defines additional semantics.
 
-`forbid` always narrows. At minimum, an exact item that appears in both
-`scope` and `forbid` MUST be treated as denied. Carrier conversion MUST NOT
-remove or weaken forbids.
+`forbid` always narrows and may describe a prohibited target, operation, or
+other host-enforced restriction. The reference host understands exact scope IDs
+and its internal capability names. Any other forbid expression is preserved but
+is **not guessed**: an action-capable reference host fails closed until a
+host-specific policy can interpret it. Carrier conversion MUST NOT remove or
+weaken forbids.
 
 An empty scope MUST NOT be interpreted as a wildcard. For side-effect-capable
 modes (`RW`, `EXEC`, `COMMIT`), the reference semantic validator requires
@@ -153,7 +156,7 @@ INTERSECT runtime capabilities
 and independently:
 
 ```text
-(requested scope MINUS exact forbids)
+(requested scope MINUS understood resource forbids)
 INTERSECT authenticated principal resources
 INTERSECT host-policy resources
 INTERSECT runtime resources
