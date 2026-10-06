@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Callable, TypeVar
+from typing import TypeVar, cast
 
 from lstp.errors import Diagnostic, LatticeSyntaxError
 from lstp.models import (
@@ -14,6 +15,7 @@ from lstp.models import (
     Context,
     ContextReference,
     EvidenceItem,
+    JSONValue,
     Octad,
     Output,
     Permissions,
@@ -148,7 +150,7 @@ class _Parser:
         self.index += consumed
         return value
 
-    def _json_value(self) -> object:
+    def _json_value(self) -> JSONValue:
         self._skip_layout()
         try:
             value, consumed = json.JSONDecoder(
@@ -158,7 +160,7 @@ class _Parser:
         except json.JSONDecodeError as exc:
             raise self._error("invalid_json_value", exc.msg) from None
         self.index += consumed
-        return value
+        return cast(JSONValue, value)
 
     def _string_or_identifier(self) -> str:
         self._skip_layout()
