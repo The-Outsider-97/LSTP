@@ -141,8 +141,9 @@ def _requested_authority(permissions: Permissions) -> Authority:
     """Translate Whitepaper wire semantics into host-internal authority.
 
     The packet transports one requested permission mode plus explicit scope.
-    Concrete capabilities exist only at the host boundary. Forbid removes
-    exact scope entries; it never grants or widens authority.
+    Concrete capabilities exist only at the host boundary. Understood forbids
+    subtract exact capabilities or scope entries; unresolved forbid expressions
+    are rejected by action authorization rather than guessed.
     """
     capabilities = (
         frozenset()
