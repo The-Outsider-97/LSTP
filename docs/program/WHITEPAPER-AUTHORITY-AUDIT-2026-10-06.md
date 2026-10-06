@@ -221,3 +221,32 @@ Still open:
   conformance evidence before these repairs are treated as merged/verified.
 
 Accordingly, `contract_reconciled` and `training_ready` remain false.
+
+
+## Phase C implementation status — 6 October 2026
+
+The Whitepaper canonical Lattice grammar has now been restored as a candidate
+without deleting or overloading the existing compact operator carrier.
+
+Implemented:
+
+- `spec/grammar.ebnf` now defines the ordered
+  `π | A | R | C | κ | Π | E | Ω` canonical carrier;
+- atomic, framed, named, and named-stream packet productions are explicit;
+- `spec/compact-grammar.ebnf` preserves the operator-oriented authoring carrier
+  as a separate profile;
+- `parse_canonical_lattice()` parses canonical packets directly into typed
+  Octads while preserving named-packet labels only as carrier metadata;
+- the exact Whitepaper example is covered by executable parser tests;
+- canonical field order, duplicate fields, obsolete October permission fields,
+  stream separators, and compact/canonical profile separation have negative
+  regression coverage.
+
+Phase C deliberately does not invent envelope identifiers from Lattice packet
+labels, does not assign undocumented atom-constructor aliases, and does not
+silently accept compact syntax as canonical syntax.
+
+**PHASEC-VERIFY** remains open until executable engineering/conformance evidence
+is available. **GOV-EXT** remains independent and unresolved.
+
+Accordingly, `contract_reconciled` and `training_ready` remain false.
