@@ -35,7 +35,7 @@ evidence by itself.
 | WP-6.8 | Output format and constraints | schema output | typed output model plus BCP47/max-bytes validation | Substantially aligned |
 | WP-6.9 | References, permission preservation, extensions | spec semantic validation | Extension namespace structural checks only | D-007/D-011/D-015; partial |
 | WP-7.9 | Unresolved macros not guessed | EBNF; operators | None | D-007; open |
-| WP-8.3 | Each carrier has mapping, codecs, tests, failures | canonical + compact grammar profiles | canonical parser and compact parser/compiler have separate APIs/tests; canonical encoder and broader round-trip corpus remain open | Partial; PHASEC-VERIFY/TEST-001 remain |
+| WP-8.3 | Each carrier has mapping, codecs, tests, failures | canonical + compact grammar profiles | canonical parser/compiler/fail-closed encoder plus compact parser/compiler have separate APIs/tests; governed canonical surface has semantic round-trip tests | Partial; PHASEC-VERIFY/TEST-001 and independent interoperability remain |
 | WP-8.4 | Version/profile negotiation outside Octad | spec version | PacketEnvelope rejects versions other than 0.1; test_models unknown-version cases | D-010/D-015; v0.1 fail-closed boundary implemented, negotiation absent |
 | WP-9.4 | Resolver verifies existence/version/access | spec context | None | Open; host contract needed |
 | WP-10 | Requested ∩ policy ∩ capability | Whitepaper permissions; host authorization | six-mode wire request is deterministically mapped to host-internal capabilities then intersected with principal/policy/runtime authority and scope; confirmation/review/logging, expiry and replay retained | Phase B implemented; GOV-EXT/verification remain |
