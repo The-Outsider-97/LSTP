@@ -15,14 +15,6 @@ CORE_RELATIONS = frozenset({
     "outcome.needs_confirmation", "outcome.needs_context",
 })
 
-MODE_CAPABILITIES: dict[str, frozenset[str]] = {
-    "RO": frozenset({"read"}),
-    "SUGGEST": frozenset({"read", "suggest"}),
-    "PREVIEW": frozenset({"read", "suggest", "prepare"}),
-    "RW": frozenset({"read", "suggest", "prepare", "write"}),
-    "EXEC": frozenset({"read", "suggest", "prepare", "write", "execute"}),
-    "COMMIT": frozenset({"read", "suggest", "prepare", "write", "execute", "commit"}),
-}
 SIDE_EFFECT_MODES = frozenset({"RW", "EXEC", "COMMIT"})
 
 
