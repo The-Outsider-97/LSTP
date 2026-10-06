@@ -43,6 +43,17 @@ _ATOM_KINDS = {
     "PROPOSITION": "proposition",
     "UNKNOWN": "unknown",
 }
+_CORE_PRAGMATIC_TYPES = {
+    "ASSERT",
+    "REQUEST",
+    "QUESTION",
+    "INFORM",
+    "CORRECT",
+    "ACKNOWLEDGE",
+    "REFUSE",
+    "RESPOND",
+}
+_CORE_SPEECH_ACTS = {"COMMAND", "QUESTION", "STATEMENT"}
 _PERMISSION_MODES = {"RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"}
 _EVIDENCE_SOURCES = {
     "USER": "user",
@@ -234,13 +245,23 @@ class _Parser:
         entries = self._entries(parse_value)
         if "TYPE" not in entries:
             raise self._error("missing_pragmatics_type", "π requires TYPE")
+        type_token = str(entries["TYPE"])
+        type_value = (
+            type_token.lower()
+            if type_token in _CORE_PRAGMATIC_TYPES
+            else type_token
+        )
+        speech_act: str | None = None
+        if "SPEECH_ACT" in entries:
+            speech_token = str(entries["SPEECH_ACT"])
+            speech_act = (
+                speech_token.lower()
+                if speech_token in _CORE_SPEECH_ACTS
+                else speech_token
+            )
         return Pragmatics(
-            type=str(entries["TYPE"]).lower(),
-            speech_act=(
-                str(entries["SPEECH_ACT"]).lower()
-                if "SPEECH_ACT" in entries
-                else None
-            ),
+            type=type_value,
+            speech_act=speech_act,
             goal=str(entries["GOAL"]) if "GOAL" in entries else None,
             modifiers=cast(tuple[str, ...], entries.get("MOD", ())),
             register=str(entries["REGISTER"]) if "REGISTER" in entries else None,
