@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from lstp.errors import LatticeSyntaxError
-from lstp.text.canonical import parse_canonical_lattice
+from lstp.errors import LatticeSyntaxError, SemanticValidationError
+from lstp.text.canonical import compile_canonical_lattice, parse_canonical_lattice
 
 
 WHITEPAPER_EXAMPLE = """[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)
@@ -117,3 +117,34 @@ def test_compact_syntax_is_not_accepted_by_canonical_parser() -> None:
         parse_canonical_lattice(
             '!open @door {mode=COMMIT, scope=["door"]} -> NL %0.95'
         )
+
+
+def test_parse_does_not_hide_semantic_reference_errors() -> None:
+    source = (
+        '[π=(TYPE=INFORM)|A=()|R=(is(a9))|C=(THREAD="t1")|κ=1|'
+        'Π=()|E=()|Ω=(FORMAT=NL)]'
+    )
+    document = parse_canonical_lattice(source)
+    assert document.packets[0].octad.relations[0].arguments == ("a9",)
+    with pytest.raises(SemanticValidationError):
+        compile_canonical_lattice(source)
+
+
+def test_compile_rejects_side_effect_mode_without_scope() -> None:
+    source = (
+        '[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)|A=()|R=()|C=(THREAD="t1")|'
+        'κ=1|Π=(MODE=COMMIT)|E=()|Ω=(FORMAT=NONE)]'
+    )
+    with pytest.raises(SemanticValidationError, match="explicit scope"):
+        compile_canonical_lattice(source)
+
+
+def test_compile_accepts_semantically_valid_canonical_packet() -> None:
+    source = (
+        '[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)|'
+        'A=(a0:RES("door"){ROLE=TARGET})|R=(requests(a0))|'
+        'C=(THREAD="t1")|κ=1|Π=(MODE=COMMIT,SCOPE=["door"])|'
+        'E=(USER("open the door"))|Ω=(FORMAT=NONE)]'
+    )
+    document = compile_canonical_lattice(source)
+    assert document.packets[0].octad.permissions.mode == "COMMIT"
