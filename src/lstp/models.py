@@ -115,6 +115,17 @@ def _sequence(value: object, *, path: str) -> list[Any]:
     return list(value)
 
 
+def _reject_unknown_keys(
+    data: Mapping[str, Any],
+    *,
+    allowed: set[str],
+    path: str,
+) -> None:
+    unknown = sorted(set(data) - allowed)
+    if unknown:
+        raise ValueError(f"unknown field at {path}: {unknown[0]!r}")
+
+
 @dataclass(frozen=True, slots=True)
 class Pragmatics:
     type: str
@@ -152,6 +163,19 @@ class Pragmatics:
     @classmethod
     def from_mapping(cls, value: object) -> "Pragmatics":
         data = _mapping(value, path="$.pragmatics")
+        _reject_unknown_keys(
+            data,
+            allowed={
+                "type",
+                "speech_act",
+                "goal",
+                "modifiers",
+                "register",
+                "urgency",
+                "extensions",
+            },
+            path="$.pragmatics",
+        )
         return cls(
             type=_non_empty_string(data.get("type"), path="$.pragmatics.type"),
             speech_act=(
@@ -338,6 +362,26 @@ class Context:
     @classmethod
     def from_mapping(cls, value: object) -> "Context":
         data = _mapping(value, path="$.context")
+        _reject_unknown_keys(
+            data,
+            allowed={
+                "thread_id",
+                "references",
+                "packet_id",
+                "parent_packet_id",
+                "conversation_id",
+                "turn",
+                "speaker",
+                "audience",
+                "time",
+                "timezone",
+                "window",
+                "location",
+                "bindings",
+                "extensions",
+            },
+            path="$.context",
+        )
         return cls(
             thread_id=_non_empty_string(data.get("thread_id"), path="$.context.thread_id"),
             references=tuple(
@@ -467,6 +511,23 @@ class Permissions:
     @classmethod
     def from_mapping(cls, value: object) -> "Permissions":
         data = _mapping(value, path="$.permissions")
+        _reject_unknown_keys(
+            data,
+            allowed={
+                "mode",
+                "scope",
+                "forbid",
+                "require_confirmation",
+                "require_review",
+                "require_logging",
+                "limits",
+                "authorization_ref",
+                "expires_at",
+                "delegation",
+                "extensions",
+            },
+            path="$.permissions",
+        )
         delegation = data.get("delegation")
         return cls(
             mode=data.get("mode") if isinstance(data.get("mode"), str) else None,
