@@ -325,24 +325,6 @@
       },
       "additionalProperties": false
     },
-    "delegation": {
-      "type": "object",
-      "properties": {
-        "parent_packet": {
-          "$ref": "#/$defs/nonEmptyString"
-        },
-        "delegator": {
-          "$ref": "#/$defs/qualifiedIdentifier"
-        },
-        "principal": {
-          "$ref": "#/$defs/qualifiedIdentifier"
-        },
-        "extensions": {
-          "$ref": "#/$defs/extensions"
-        }
-      },
-      "additionalProperties": false
-    },
     "permissions": {
       "type": "object",
       "properties": {
@@ -378,18 +360,6 @@
         },
         "limits": {
           "type": "object"
-        },
-        "authorization_ref": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 1024
-        },
-        "expires_at": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "delegation": {
-          "$ref": "#/$defs/delegation"
         },
         "extensions": {
           "$ref": "#/$defs/extensions"

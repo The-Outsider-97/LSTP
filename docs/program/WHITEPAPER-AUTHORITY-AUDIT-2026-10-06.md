@@ -178,13 +178,10 @@ pragmatics, permissions, canonical Lattice grammar and selected context fields.
 
 ## Immediate readiness judgment
 
-The repository has a strong engineering core, but the contract boundary is not
-currently freeze-safe. Pre-training remains blocked until GOV-PRAG, GOV-PERM,
-GOV-GRAM and GOV-CTX are resolved and the resulting contract passes the
-conformance suite.
-
-Production hardening may continue only where it is protocol-neutral. New core
-semantic features should not be added until the authority conflict is closed.
+The Whitepaper-first v0.1 contract is now reconciled. The remaining pre-training
+work is evidence and integration work rather than unresolved core semantics.
+No new core semantic fields should be added before the v0.1 freeze unless the
+Level-1 Whitepaper is explicitly revised.
 
 
 ## Phase B implementation status — 6 October 2026
@@ -210,18 +207,9 @@ Implemented repairs:
 - October candidate semantic fields are rejected rather than silently aliased or
   migrated by the canonical decoder/model boundary.
 
-Still open:
-
-- **GOV-GRAM:** the canonical ordered-Octad atomic/framed/named/stream Lattice
-  grammar remains to be restored. The current parser/compiler covers the compact
-  operator carrier only.
-- **GOV-EXT:** final core-vs-extension/revision status for
-  `authorization_ref`, `expires_at`, and delegation metadata remains open.
-- **PHASEB-VERIFY:** the repair is merged via PR #12, but successful executable
-  engineering/conformance evidence is still missing because GitHub Actions fails
-  before any workflow step executes.
-
-Accordingly, `contract_reconciled` and `training_ready` remain false.
+Phase B is merged via PR #12. Its implementation evidence is now tracked by the
+single repository-wide `VERIFY-001` release gate rather than a phase-specific
+blocker.
 
 
 ## Phase C implementation status — 6 October 2026
@@ -252,7 +240,18 @@ Phase C deliberately does not invent envelope identifiers from Lattice packet
 labels, does not assign undocumented atom-constructor aliases, and does not
 silently accept compact syntax as canonical syntax.
 
-**PHASEC-VERIFY** remains open until executable engineering/conformance evidence
-is available. **GOV-EXT** remains independent and unresolved.
+Phase C is merged via PR #13. Executable evidence is tracked by `VERIFY-001`.
 
-Accordingly, `contract_reconciled` and `training_ready` remain false.
+## GOV-EXT resolution — 6 October 2026
+
+`authorization_ref`, expiry, and delegation identity metadata are not canonical
+v0.1 Octad fields. They are trusted host-security metadata carried through
+`HostAuthorizationContext` / `HostDelegationBinding` outside the packet.
+
+Canonical JSON/schema/model boundaries reject those fields inside
+`permissions`. Production authorization retains expiry, trusted-reference and
+delegation-attenuation checks using the host context.
+
+With this decision, all identified Whitepaper/core-contract governance conflicts
+are closed and `contract_reconciled=true`. `training_ready` remains false
+until the finite release gates in `docs/program/readiness.json` are cleared.

@@ -4,21 +4,18 @@ This register records hardening decisions that affect conformance work. It is no
 
 ## D-007 — Two Lattice surfaces must not be conflated
 
-**Status:** accepted engineering interpretation; no protocol semantics changed.
+**Status:** resolved and implemented in v0.1.
 
 **Authority:** Whitepaper §§5.2 and 7.1–7.10.
 
-The Whitepaper describes both (a) an ordered canonical Octad text form and (b) compact operator notation. The current `spec/grammar.ebnf` only defines the compact notation, despite its status text and documentation implying that it is the complete canonical Lattice grammar.
+The Whitepaper describes both (a) an ordered canonical Octad text form and
+(b) compact operator notation. v0.1 now keeps these as separate carrier
+profiles: `spec/grammar.ebnf` defines canonical ordered-Octad Lattice and
+`spec/compact-grammar.ebnf` defines the compact operator surface.
 
-Until the grammar is reconciled, implementations MUST NOT claim that acceptance by the compact grammar proves acceptance of canonical LSTP v0.1, and MUST NOT infer missing Octad fields from compact syntax without an explicit normative mapping.
-
-Required follow-up before parser conformance can be marked ready:
-
-1. Add explicit canonical productions for the ordered eight-field Octad and the atomic/framed/named forms described by the Whitepaper.
-2. Define the stream separator rather than guessing one; the Whitepaper names `packet_sep` but does not supply its terminal.
-3. Define a normative compact-to-canonical mapping for every supported compact construct.
-4. Give ambiguous or unmappable compact input a deterministic diagnostic instead of synthesizing semantics.
-5. Test canonical and compact surfaces independently before testing their equivalence.
+Canonical and compact parsing/compilation have separate APIs and tests. Compact
+input does not prove canonical acceptance, and unmappable syntax fails rather
+than inventing Octad semantics.
 
 ## D-008 — Signed numeric ambiguity is a grammar defect, not an AST choice
 
@@ -67,13 +64,19 @@ Effective authority remains the intersection of the requested Whitepaper
 permission, scope/constraints, authenticated/local policy and runtime capability.
 Unsupported or conflicting declarations fail closed.
 
-## D-012 — Training freeze is blocked by canonical-contract conflicts
+## D-012 — Training freeze requires a reconciled contract plus independent evidence
 
-**Status:** active gate.
+**Status:** contract conflict resolved; release evidence gate remains active.
 
-No LSTP-derived training corpus may be described as protocol-frozen while SPEC-001 through SPEC-004 remain unresolved. In particular, generated data must not depend on an implementation-specific choice for Octad field shape, compact grammar mapping, permission modes, identity placement, or serialization equality.
+The Whitepaper-first v0.1 contract is now reconciled across Octad shape,
+canonical/compact Lattice, permission modes, context, envelope placement, and
+canonical serialization. `docs/program/readiness.json` records
+`contract_reconciled=true`.
 
-The readiness gate may be cleared only after the relevant authoritative requirements have implementation and independent conformance evidence, not merely after code exists.
+Training readiness still requires executable engineering checks, adversarial
+conformance evidence, independent interoperability, SLAI integration,
+publication synchronization, and final release sign-off. Code existence alone
+is not sufficient.
 
 ## D-013 — Canonical model values use a strict JSON-value boundary
 
@@ -83,25 +86,22 @@ The canonical Python containers accept only values representable by the JSON dat
 
 This decision constrains the implementation boundary only. It does not define number precision, Unicode normalization, member ordering, textual formatting, or canonical bytes; those remain part of the unresolved serialization profile. Diagnostics include the value path so malformed nested data can be rejected deterministically without echoing payload content.
 
-## D-014 — Evidence constructors are normative vocabulary, not an invented JSON shape
+## D-014 — Evidence constructors are normative vocabulary with Level-3 structural refinement
 
-**Status:** active blocker; conservative interpretation accepted.
+**Status:** resolved for v0.1.
 
-**Authority:** Whitepaper evidence/provenance requirements and the Lattice evidence constructors identified by the authoritative audit.
+**Authority:** Whitepaper evidence/provenance requirements and the canonical
+JSON Schema.
 
-The authoritative material establishes evidence as a semantic Octad domain and identifies source/provenance constructors for user, sensor, model, tool, retrieved, and inferred evidence. It does not establish enough detail to derive a unique canonical JSON object shape, item cardinality, or field mapping for those constructors.
+The Whitepaper establishes evidence as an Octad domain and the source types
+`user`, `sensor`, `model`, `tool`, `retrieved`, and `inferred`.
+The Level-3 schema supplies the concrete JSON item structure
+(`id`, `source_type`, optional provenance/support metadata) as a technical
+refinement that does not contradict the Level-1 semantics.
 
-The subordinate `spec/lstp-v0.1.md` and current JSON Schema instead describe `provided`, `needed`, `assumptions`, and `challenges`, and permit concise strings or structured items. Those shapes must not become canonical merely because they already exist in a subordinate artifact.
-
-Until the authoritative contract is deliberately clarified:
-
-1. the current `evidence` schema remains non-canonical;
-2. no compiler may translate authoritative evidence constructors into `provided`/`needed`/`assumptions`/`challenges` heuristically;
-3. no validator may certify that subordinate evidence shape as canonical v0.1 evidence;
-4. unknown or unmappable evidence syntax must be preserved only as explicitly namespaced extension data where the protocol permits that, otherwise rejected with a deterministic diagnostic;
-5. training-data generation remains blocked from treating the current evidence JSON shape as frozen protocol semantics.
-
-This decision intentionally resolves only implementation behavior under ambiguity: **fail closed rather than invent a mapping**. It does not change the Whitepaper and does not define the missing evidence JSON representation.
+Carrier mappings MUST preserve source type and supported metadata when the
+carrier defines syntax for it. Canonical Lattice currently fails closed on rich
+evidence metadata whose text syntax is not frozen rather than dropping it.
 
 ## D-015 — Envelope versions and extensions fail closed
 
@@ -116,3 +116,24 @@ Envelope `carrier`, `audit`, and `extensions` values are required to be JSON obj
 Extensions are never an alternate permission channel. An extension payload containing action-like or permission-like data does not modify `Octad.permissions`, does not grant authority, and is not promoted into a core field. Unknown extension meaning remains opaque to the core implementation; execution that depends on it requires separate host understanding and validation.
 
 This decision deliberately does not define a namespace registry, extension naming ontology, carrier-specific preservation policy, or canonical extension bytes. Those remain specification/serialization work rather than assumptions in the model.
+
+
+## D-016 — GOV-EXT security metadata remains outside canonical v0.1
+
+**Status:** accepted and implemented.
+
+**Authority:** Whitepaper §§6.6 and 10; Whitepaper-first hierarchy.
+
+`authorization_ref`, permission expiry, and delegation identity bindings are
+useful production security controls but are not Level-1 canonical permission
+fields. Canonical v0.1 therefore rejects them inside `permissions`.
+
+The reference host preserves the safeguards through trusted
+`HostAuthorizationContext` and `HostDelegationBinding` inputs supplied
+outside the packet. This prevents sender-controlled packet data from becoming a
+trusted authorization channel while retaining expiry, authorization-reference,
+and delegation-attenuation enforcement.
+
+A future protocol version may standardize additional wire fields only through an
+explicit versioned change. v0.1 training data MUST use only the Whitepaper core
+permission fields.

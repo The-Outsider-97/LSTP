@@ -146,21 +146,12 @@ def validate_canonical_json_types(root: Mapping[str, object]) -> None:
         _string_array(permissions["scope"], "$.permissions.scope")
     if "forbid" in permissions:
         _string_array(permissions["forbid"], "$.permissions.forbid")
-    _optional_string(permissions, "authorization_ref", "$.permissions")
-    _optional_string(permissions, "expires_at", "$.permissions")
     for key in ("require_confirmation", "require_review", "require_logging"):
         _optional_bool(permissions, key, "$.permissions")
     if "limits" in permissions:
         _object(permissions["limits"], "$.permissions.limits")
     if "extensions" in permissions:
         _object(permissions["extensions"], "$.permissions.extensions")
-    if "delegation" in permissions:
-        delegation = _object(permissions["delegation"], "$.permissions.delegation")
-        for key in ("parent_packet", "delegator", "principal"):
-            _optional_string(delegation, key, "$.permissions.delegation")
-        if "extensions" in delegation:
-            _object(delegation["extensions"], "$.permissions.delegation.extensions")
-
     for index, raw in enumerate(_array(root["evidence"], "$.evidence")):
         path = f"$.evidence[{index}]"
         evidence = _object(raw, path)

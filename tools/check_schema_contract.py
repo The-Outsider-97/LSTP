@@ -131,10 +131,17 @@ def contract_failures(schema: dict[str, Any]) -> list[str]:
     ):
         if field not in per_props:
             failures.append(f"PERMISSION_FIELD: missing {field!r}")
-    for field in ("capabilities", "resources", "profile"):
+    for field in (
+        "capabilities",
+        "resources",
+        "profile",
+        "authorization_ref",
+        "expires_at",
+        "delegation",
+    ):
         if field in per_props:
             failures.append(
-                f"PERMISSION_CANDIDATE_FIELD: October candidate field {field!r} must not be canonical"
+                f"PERMISSION_NONCORE_FIELD: field {field!r} must not be canonical v0.1"
             )
 
     evidence_item = defs.get("evidenceItem", {})

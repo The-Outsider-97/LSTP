@@ -28,7 +28,6 @@ from lstp.models import (
     Atom,
     Context,
     ContextReference,
-    Delegation,
     EvidenceItem,
     JSONValue,
     Output,
@@ -253,16 +252,6 @@ def _context(value: Context) -> dict[str, object]:
     return data
 
 
-def _delegation(value: Delegation) -> dict[str, object]:
-    data: dict[str, object] = {}
-    _put_optional(data, "parent_packet", value.parent_packet)
-    _put_optional(data, "delegator", value.delegator)
-    _put_optional(data, "principal", value.principal)
-    if value.extensions:
-        data["extensions"] = _extensions(value.extensions)
-    return data
-
-
 def _permissions(value: Permissions) -> dict[str, object]:
     data: dict[str, object] = {}
     _put_optional(data, "mode", value.mode)
@@ -278,10 +267,6 @@ def _permissions(value: Permissions) -> dict[str, object]:
         data["require_logging"] = True
     if value.limits:
         data["limits"] = _thaw(value.limits)
-    _put_optional(data, "authorization_ref", value.authorization_ref)
-    _put_optional(data, "expires_at", value.expires_at)
-    if value.delegation is not None:
-        data["delegation"] = _delegation(value.delegation)
     if value.extensions:
         data["extensions"] = _extensions(value.extensions)
     return data
@@ -505,18 +490,9 @@ def _check_structure(data: object) -> Mapping[str, Any]:
             "require_review",
             "require_logging",
             "limits",
-            "authorization_ref",
-            "expires_at",
-            "delegation",
             "extensions",
         },
     )
-    if "delegation" in permissions:
-        _strict_keys(
-            permissions["delegation"],
-            path="$.permissions.delegation",
-            allowed={"parent_packet", "delegator", "principal", "extensions"},
-        )
     evidence = root["evidence"]
     if not isinstance(evidence, list):
         raise _error("expected_array", "evidence must be an array", "$.evidence")

@@ -11,12 +11,19 @@ def test_schema_is_valid_json_and_meta_schema() -> None:
     Draft202012Validator.check_schema(schema)
 
 
-def test_protocol_remains_not_training_ready_for_implementation_reasons() -> None:
+def test_contract_is_reconciled_but_release_gates_remain_open() -> None:
     state = json.loads((ROOT / "docs/program/readiness.json").read_text())
+    assert state["contract_reconciled"] is True
     assert state["training_ready"] is False
     ids = {item["id"] for item in state["blockers"]}
-    assert "IMPL-001" in ids
-    assert "SPEC-002" not in ids
+    assert ids == {
+        "VERIFY-001",
+        "TEST-001",
+        "INTEROP-001",
+        "SLAI-001",
+        "DOC-001",
+        "REL-001",
+    }
 
 
 def test_identifier_patterns_reject_trailing_controls() -> None:
@@ -28,7 +35,9 @@ def test_identifier_patterns_reject_trailing_controls() -> None:
         ("relationId", "r0"),
         ("evidenceId", "e0"),
     ]:
-        validator = Draft202012Validator({"$defs": schema["$defs"], "$ref": f"#/$defs/{definition}"})
+        validator = Draft202012Validator(
+            {"$defs": schema["$defs"], "$ref": f"#/$defs/{definition}"}
+        )
         assert validator.is_valid(valid)
         for suffix in ["\n", "\r", "\t", "\0"]:
             assert not validator.is_valid(valid + suffix)
@@ -36,6 +45,8 @@ def test_identifier_patterns_reject_trailing_controls() -> None:
 
 def test_extension_namespace_rejects_trailing_newline() -> None:
     schema = json.loads((ROOT / "spec/octad_schema.json").read_text())
-    validator = Draft202012Validator({"$defs": schema["$defs"], "$ref": "#/$defs/extensions"})
+    validator = Draft202012Validator(
+        {"$defs": schema["$defs"], "$ref": "#/$defs/extensions"}
+    )
     assert validator.is_valid({"slai": {}})
     assert not validator.is_valid({"slai\n": {}})

@@ -70,3 +70,19 @@ def test_permission_model_rejects_unknown_mode() -> None:
 def test_extension_payload_must_be_namespaced_object() -> None:
     with pytest.raises(TypeError, match="must contain an object"):
         PacketEnvelope(make_octad(), "p-1", "0.1", extensions={"slai": "commit"})  # type: ignore[dict-item]
+
+
+@pytest.mark.parametrize(
+    "field",
+    ("authorization_ref", "expires_at", "delegation"),
+)
+def test_permissions_mapping_rejects_host_only_security_fields(field: str) -> None:
+    value: object
+    if field == "delegation":
+        value = {"parent_packet": "p0"}
+    elif field == "expires_at":
+        value = "2026-10-06T12:00:00Z"
+    else:
+        value = "auth-1"
+    with pytest.raises(ValueError, match="unknown field at \\$\\.permissions"):
+        Permissions.from_mapping({field: value})

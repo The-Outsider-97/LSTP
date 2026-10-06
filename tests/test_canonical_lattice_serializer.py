@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from lstp import canonical_loads
-from lstp.errors import CompilationError
+from lstp.errors import CanonicalizationError, CompilationError
 from lstp.models import EvidenceItem
 from lstp.text.canonical import compile_canonical_lattice, parse_canonical_lattice
 from lstp.text.canonical_serializer import (
@@ -53,20 +53,6 @@ def test_named_stream_round_trips_labels_and_semantics() -> None:
     assert [packet.octad for packet in decoded.packets] == [
         packet.octad for packet in original.packets
     ]
-
-
-def test_encoder_rejects_provisional_gov_ext_permission_fields() -> None:
-    source = (
-        '[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
-        'Π=(MODE=RO)|E=()|Ω=(FORMAT=NL)]'
-    )
-    octad = compile_canonical_lattice(source).packets[0].octad
-    permissions = replace(
-        octad.permissions,
-        authorization_ref="host-auth-1",
-    )
-    with pytest.raises(CompilationError, match="authorization_ref"):
-        canonical_lattice_dumps(replace(octad, permissions=permissions))
 
 
 def test_encoder_rejects_rich_evidence_without_governed_syntax() -> None:
@@ -119,19 +105,15 @@ def test_encoder_rejects_unrepresentable_audience_identifier() -> None:
         canonical_lattice_dumps(replace(octad, context=context))
 
 
-@pytest.mark.parametrize(
-    ("name", "message"),
-    [
-        ("gov-ext-authorization-ref.json", "authorization_ref"),
-        ("rich-evidence.json", "rich evidence metadata"),
-    ],
-)
-def test_versioned_unrepresentable_vectors_fail_closed(
-    name: str,
-    message: str,
-) -> None:
+def test_versioned_gov_ext_vector_is_not_canonical_v01() -> None:
+    data = (ROOT / "unrepresentable" / "gov-ext-authorization-ref.json").read_bytes()
+    with pytest.raises(CanonicalizationError, match="authorization_ref"):
+        canonical_loads(data)
+
+
+def test_versioned_rich_evidence_vector_fails_lattice_encoding() -> None:
     packet = canonical_loads(
-        (ROOT / "unrepresentable" / name).read_bytes()
+        (ROOT / "unrepresentable" / "rich-evidence.json").read_bytes()
     )
-    with pytest.raises(CompilationError, match=message):
+    with pytest.raises(CompilationError, match="rich evidence metadata"):
         canonical_lattice_dumps(packet.octad)
