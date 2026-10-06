@@ -173,3 +173,21 @@ def test_relation_metadata_unknown_field_fails_closed() -> None:
     )
     with pytest.raises(LatticeSyntaxError, match="unknown canonical relation metadata"):
         parse_canonical_lattice(source)
+
+
+def test_utf8_bom_is_accepted_by_canonical_parser() -> None:
+    source = (
+        '\ufeff[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
+        'Π=()|E=()|Ω=(FORMAT=NL)]'
+    )
+    document = parse_canonical_lattice(source)
+    assert document.packets[0].octad.pragmatics.type == "inform"
+
+
+def test_named_packet_rejects_line_break_before_frame() -> None:
+    source = (
+        'alpha:\n[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
+        'Π=()|E=()|Ω=(FORMAT=NL)]'
+    )
+    with pytest.raises(LatticeSyntaxError, match="must use label"):
+        parse_canonical_lattice(source)
