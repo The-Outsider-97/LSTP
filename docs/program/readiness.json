@@ -4,11 +4,11 @@
   "blockers": [
     {
       "id": "PHASEB-VERIFY",
-      "summary": "Whitepaper-aligned pragmatics, mode/scope permissions, context fields, canonical JSON decoding, compact compiler mapping, and host mode-to-capability authorization are implemented on the Phase B candidate branch. Closure requires successful engineering/conformance checks and merge evidence."
+      "summary": "Whitepaper-aligned pragmatics, mode/scope permissions, context fields, canonical JSON decoding, compact compiler mapping, and host mode-to-capability authorization are merged on main via PR #12. Executable verification remains open because current GitHub Actions runs fail before any job step executes."
     },
     {
       "id": "PHASEC-VERIFY",
-      "summary": "Whitepaper canonical ordered-Octad Lattice grammar, atomic/framed/named/stream packet forms, separate compact grammar profile, and canonical parser are implemented on the Phase C candidate branch. Closure requires successful engineering/conformance checks and merge evidence."
+      "summary": "Whitepaper canonical ordered-Octad Lattice grammar, atomic/framed/named/stream forms, separate compact grammar profile, canonical parser/compiler, and initial canonical-Lattice fixtures are implemented in PR #13. Closure requires executable engineering/conformance evidence and merge evidence."
     },
     {
       "id": "GOV-EXT",
