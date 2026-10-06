@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
@@ -46,6 +47,10 @@ _CORE_SPEECH_TO_WIRE = {
     "question": "QUESTION",
     "statement": "STATEMENT",
 }
+_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
+_QUALIFIED_IDENTIFIER_RE = re.compile(
+    r"^[A-Za-z_][A-Za-z0-9_-]*(?:\.[A-Za-z_][A-Za-z0-9_-]*)*$"
+)
 
 
 def _error(message: str, path: str) -> CompilationError:
@@ -123,6 +128,18 @@ def _wire_core_identifier(
             "core identifier casing is not canonical in the typed Octad",
             path,
         )
+    return value
+
+
+def _require_identifier(
+    value: str,
+    *,
+    path: str,
+    qualified: bool = True,
+) -> str:
+    pattern = _QUALIFIED_IDENTIFIER_RE if qualified else _IDENTIFIER_RE
+    if pattern.fullmatch(value) is None:
+        raise _error("value cannot be represented as a canonical identifier", path)
     return value
 
 
@@ -247,7 +264,11 @@ def _context(octad: Octad) -> str:
     if value.speaker is not None:
         entries.append("SPEAKER=" + value.speaker)
     if value.audience:
-        entries.append("AUDIENCE=[" + ",".join(value.audience) + "]")
+        audience = [
+            _require_identifier(item, path=f"$.context.audience[{index}]")
+            for index, item in enumerate(value.audience)
+        ]
+        entries.append("AUDIENCE=[" + ",".join(audience) + "]")
     return "C=(" + ",".join(entries) + ")"
 
 
@@ -353,7 +374,13 @@ def canonical_lattice_dumps(
         )
     )
     framed = "[" + core + "]"
-    return framed if label is None else label + ":" + framed
+    if label is None:
+        return framed
+    return (
+        _require_identifier(label, path="$.carrier.label", qualified=False)
+        + ":"
+        + framed
+    )
 
 
 def canonical_lattice_document_dumps(
