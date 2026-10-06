@@ -1,1 +1,31 @@
-
+{
+  "id": "example-analyze-sales",
+  "version": "0.1",
+  "pragmatics": {
+    "type": "request",
+    "speech_act": "command",
+    "goal": "analyze"
+  },
+  "atoms": [
+    {
+      "id": "a0",
+      "kind": "resource",
+      "value": "sales"
+    }
+  ],
+  "relations": [],
+  "context": {
+    "thread_id": "example-thread",
+    "references": []
+  },
+  "confidence": 1.0,
+  "permissions": {},
+  "evidence": [],
+  "output": {
+    "format": "JSON"
+  },
+  "carrier": {
+    "source": "lattice_text"
+  },
+  "audit": {}
+}
