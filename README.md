@@ -1,6 +1,6 @@
 # LSTP — Lattice Semantic Transport Protocol
 
-**Pre-alpha reference implementation; core runtime is executable, but v0.1 authority/conformance is under renewed Whitepaper-first audit.**
+**Pre-alpha reference implementation with a Whitepaper-reconciled v0.1 contract. The remaining work is release evidence, interoperability, SLAI integration, publication synchronization, and final freeze.**
 
 LSTP represents semantic messages through an eight-part Octad:
 
@@ -19,7 +19,7 @@ LSTP is a semantic transport protocol. It is not a language model, authenticatio
 
 ## Current status
 
-The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The 6 October Whitepaper-first repair has restored the mandated authority order across the typed model, schema, canonical JSON path, permission wire semantics, compact compiler, and host authorization boundary. Phase C additionally restores the Whitepaper canonical ordered-Octad Lattice grammar as a separate carrier profile.
+The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The 6 October Whitepaper-first repair reconciled the contract across the typed model, schema, canonical JSON, canonical/compact Lattice, permission wire semantics, context, evidence, serialization, and host authorization boundary. `contract_reconciled=true` is now recorded in the readiness ledger.
 
 Canonical v0.1 now has:
 
@@ -37,7 +37,7 @@ Canonical v0.1 now has:
 - one replay-store interface with in-process and durable SQLite reference implementations;
 - positive and negative executable conformance fixtures.
 
-The repository is **not yet production-ready or training-ready**. Remaining blockers include broader adversarial/conformance coverage, distributed replay-store integrations where required, application-specific permission-limit enforcement, a second independent implementation, SLAI integration, Whitepaper publication synchronization, and the final release/pre-training audit.
+The repository is **not yet production-ready or training-ready**, but the remaining work is finite and explicitly gated. The six release blockers are clean executable verification, production conformance/adversarial coverage, independent interoperability, SLAI integration, Whitepaper publication synchronization, and the final release/pre-training audit.
 
 Implemented engineering/runtime foundation includes:
 
@@ -69,9 +69,9 @@ The active production-hardening mandate defines this hierarchy:
 3. [`spec/`](spec/) — Level 3 normative technical artifacts, including `CANONICAL-v0.1.md`, schema, grammar, serialization, permission, operator, and vocabulary profiles;
 4. [`src/lstp/`](src/lstp/) — Level 4 reference implementation.
 
-Executable tests and conformance vectors provide evidence but do not override a higher-authority source. The October reconciliation introduced a conflicting spec-first hierarchy. Until that governance conflict and any resulting semantic differences are re-audited against the Whitepaper, the current implementation is an engineering candidate rather than a frozen v0.1 authority.
+Executable tests and conformance vectors provide evidence but do not override a higher-authority source. The Whitepaper-first governance conflict is now closed; the remaining readiness work is evidence and integration work.
 
-The current field-by-field reconciliation record is [`docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`](docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md). Phase B restored pragmatics, permissions, and context semantics. Phase C restores the Whitepaper canonical ordered-Octad Lattice grammar and parser while retaining compact Lattice as a separate carrier profile. GOV-EXT remains open.
+The field-by-field reconciliation record is [`docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`](docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md). The finite release ledger is [`docs/program/readiness.json`](docs/program/readiness.json).
 
 ## Canonical packet
 
