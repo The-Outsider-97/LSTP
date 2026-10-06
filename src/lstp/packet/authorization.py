@@ -7,10 +7,11 @@ from datetime import datetime, timezone
 
 from lstp.errors import AuthorizationError, Diagnostic
 from lstp.formats import parse_rfc3339
-from lstp.models import CAPABILITIES, PacketEnvelope, Permissions
+from lstp.models import PacketEnvelope, Permissions
 from lstp.packet.replay import ReplayGuard, ReplayStore
 from lstp.packet.validator import MODE_CAPABILITIES, require_semantic_validity
 
+CAPABILITIES = frozenset().union(*MODE_CAPABILITIES.values())
 _SIDE_EFFECTS = frozenset({"write", "execute", "commit"})
 
 
