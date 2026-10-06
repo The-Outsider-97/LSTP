@@ -106,15 +106,16 @@ def test_target_plus_context_focus_resolves_stable_packet_reference() -> None:
 def test_layout_newlines_are_accepted_inside_constraint_block() -> None:
     source = (
         "!open @door {\n"
-        "capabilities=[commit],\n"
-        'resources=["urn:door:front"]\n'
+        "mode=COMMIT,\n"
+        'scope=["urn:door:front"]\n'
         "} -> JSON"
     )
     packet = compile_lattice(
         source,
         options=CompilerOptions(packet_id="p1", thread_id="t1"),
     )
-    assert packet.octad.permissions.capabilities == ("commit",)
+    assert packet.octad.permissions.mode == "COMMIT"
+    assert packet.octad.permissions.scope == ("urn:door:front",)
 
 
 def test_runtime_context_commands_fail_canonical_compilation() -> None:
