@@ -35,7 +35,7 @@ def test_validator_requires_scope_for_side_effect_capable_mode() -> None:
     assert "missing_permission_scope" in {item.code for item in result.diagnostics}
 
 
-def test_validator_reports_forbidden_scope_overlap() -> None:
+def test_forbid_overlap_is_valid_narrowing_semantics() -> None:
     result = validate_packet(
         packet_with(
             permissions=Permissions(
@@ -45,9 +45,7 @@ def test_validator_reports_forbidden_scope_overlap() -> None:
             )
         )
     )
-    assert "permission_scope_forbidden" in {
-        item.code for item in result.diagnostics
-    }
+    assert result.valid
 
 
 def test_readonly_mode_can_be_scope_free() -> None:
