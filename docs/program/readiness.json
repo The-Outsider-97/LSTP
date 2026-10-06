@@ -7,8 +7,8 @@
       "summary": "Whitepaper-aligned pragmatics, mode/scope permissions, context fields, canonical JSON decoding, compact compiler mapping, and host mode-to-capability authorization are implemented on the Phase B candidate branch. Closure requires successful engineering/conformance checks and merge evidence."
     },
     {
-      "id": "GOV-GRAM",
-      "summary": "Whitepaper canonical Lattice includes ordered Octad atomic/framed/named/stream forms. Current grammar defines only the compact operator carrier. Canonical grammar and compact-to-canonical mapping are incomplete."
+      "id": "PHASEC-VERIFY",
+      "summary": "Whitepaper canonical ordered-Octad Lattice grammar, atomic/framed/named/stream packet forms, separate compact grammar profile, and canonical parser are implemented on the Phase C candidate branch. Closure requires successful engineering/conformance checks and merge evidence."
     },
     {
       "id": "GOV-EXT",
@@ -58,6 +58,10 @@
     "whitepaper-permission-mode-scope-wire-model",
     "host-mode-to-capability-adapter",
     "whitepaper-context-parent-timezone-window-fields",
-    "fail-closed-october-candidate-field-rejection"
+    "fail-closed-october-candidate-field-rejection",
+    "canonical-lattice-ordered-octad-grammar",
+    "canonical-lattice-atomic-framed-named-stream",
+    "canonical-lattice-parser",
+    "separate-compact-lattice-grammar-profile"
   ]
 }
