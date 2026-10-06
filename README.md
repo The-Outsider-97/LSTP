@@ -19,7 +19,7 @@ LSTP is a semantic transport protocol. It is not a language model, authenticatio
 
 ## Current status
 
-The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The 6 October Whitepaper-first audit restored the mandated authority order and identified semantic drift introduced by the October spec-first reconciliation. The typed model, schema, canonical JSON path, semantic validator, compact Lattice compiler, and host authorization boundary are now being repaired against the Whitepaper rather than treating the candidate implementation as protocol law.
+The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The 6 October Whitepaper-first repair has restored the mandated authority order across the typed model, schema, canonical JSON path, permission wire semantics, compact compiler, and host authorization boundary. Phase C additionally restores the Whitepaper canonical ordered-Octad Lattice grammar as a separate carrier profile.
 
 Canonical v0.1 now has:
 
@@ -71,7 +71,7 @@ The active production-hardening mandate defines this hierarchy:
 
 Executable tests and conformance vectors provide evidence but do not override a higher-authority source. The October reconciliation introduced a conflicting spec-first hierarchy. Until that governance conflict and any resulting semantic differences are re-audited against the Whitepaper, the current implementation is an engineering candidate rather than a frozen v0.1 authority.
 
-The current field-by-field reconciliation record is [`docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`](docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md). Phase B repairs GOV-PRAG, GOV-PERM, and GOV-CTX in the implementation candidate; GOV-GRAM and GOV-EXT remain active until the canonical Lattice grammar and extension/security-field status are resolved and tested.
+The current field-by-field reconciliation record is [`docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`](docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md). Phase B restored pragmatics, permissions, and context semantics. Phase C restores the Whitepaper canonical ordered-Octad Lattice grammar and parser while retaining compact Lattice as a separate carrier profile. GOV-EXT remains open.
 
 ## Canonical packet
 
@@ -99,11 +99,49 @@ All eight Octad domains are required in canonical JSON. Compact carriers may omi
 
 ## Lattice text
 
-Lattice is an authoring/carrier surface, not a second semantic contract. The strict parser recognizes the normative grammar including target scopes/ranges, composition, alternatives, annotations, approximation, exclusion, claims, ambiguity forms, macros, metadata, context references, and context commands.
+LSTP now has two explicit Lattice carrier profiles with one semantic Octad:
 
-Only constructs with deterministic canonical semantics are compiled into packets. Runtime-only constructs such as `ctx.push`/`ctx.pop` are parsed for inspectability but fail canonical packet compilation rather than being assigned invented semantics.
+1. **Canonical Lattice** — `spec/grammar.ebnf`; ordered
+   `π | A | R | C | κ | Π | E | Ω`, with atomic, framed, named, and named-stream
+   packet forms.
+2. **Compact Lattice** — `spec/compact-grammar.ebnf`; the operator-oriented
+   authoring surface using directives, targets, scopes, `::`, `->`, `%`,
+   context references, macros, and related shorthand.
 
-Relative references such as `↑2` must resolve to stable packet IDs before canonical transport, replay, hashing, or storage.
+The canonical carrier parser is exposed as:
+
+```python
+from lstp import (
+    canonical_lattice_dumps,
+    compile_canonical_lattice,
+    parse_canonical_lattice,
+)
+
+document = parse_canonical_lattice(
+    '[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)'
+    '|A=(a0:ENT("door"){ROLE=TARGET})'
+    '|R=(OPEN(a0))'
+    '|C=(THREAD="t1")'
+    '|κ=0.95'
+    '|Π=(MODE=EXEC,SCOPE=["door"])'
+    '|E=(USER("open the door"))'
+    '|Ω=(FORMAT=NL)]'
+)
+```
+
+Compact Lattice continues to use `parse()` / `compile_lattice()`. Compact
+syntax is not silently accepted as canonical ordered-Octad syntax, and packet
+labels in named canonical streams remain carrier labels rather than becoming
+envelope IDs.
+
+For the governed canonical surface, `canonical_lattice_dumps(octad)` emits one
+deterministic framed representation and `compile_canonical_lattice()` validates
+the result back into typed semantics. The encoder fails closed rather than
+dropping fields whose canonical Lattice syntax is not yet governed, including
+the provisional GOV-EXT permission fields and richer evidence metadata.
+
+Relative compact references such as `↑2` must still resolve to stable packet
+IDs before canonical transport, replay, hashing, or storage.
 
 ## Canonical JSON bytes
 
@@ -214,13 +252,23 @@ Successful generic JSON inspection reports:
 
 Versioned vectors live under [`conformance/v0.1/`](conformance/v0.1/).
 
-Positive canonical-byte fixtures must decode, validate and re-encode byte-for-byte identically. Negative fixtures must fail closed at the structural or semantic layer and must never be silently migrated into a different meaning.
+Canonical JSON positive fixtures must decode, validate and re-encode
+byte-for-byte identically. Negative JSON fixtures must fail closed at the
+structural or semantic layer.
 
-The vector corpus is an initial executable baseline, not yet the independent interoperability evidence required for release/training freeze.
+Canonical Lattice fixtures live under
+`conformance/v0.1/lattice/canonical/` and are executed through
+`parse_canonical_lattice()` / `compile_canonical_lattice()`. The initial
+corpus includes a semantically valid Whitepaper-style packet, strict
+segment-order rejection, and JSON-backed vectors that prove canonical Lattice
+encoding fails closed for currently ungoverned GOV-EXT and rich-evidence fields.
+
+The vector corpus is still an initial baseline, not yet the independent
+interoperability evidence required for release/training freeze.
 
 ## Protocol readiness
 
-`python tools/check_readiness.py` remains the release/training ledger. The Whitepaper-aligned JSON semantic model is being restored in Phase B, but canonical Lattice grammar reconciliation (GOV-GRAM), GOV-EXT, broader conformance/adversarial evidence, independent interoperability, SLAI integration, publication synchronization, and final release validation remain open.
+`python tools/check_readiness.py` remains the release/training ledger. The Whitepaper-aligned semantic model and canonical Lattice grammar are implemented as candidates, but Phase B/Phase C verification, GOV-EXT, broader conformance/adversarial evidence, independent interoperability, SLAI integration, publication synchronization, and final release validation remain open.
 
 Training data generation must wait until the readiness gate is green and the versioned conformance suite is sufficiently complete for the freeze criteria.
 

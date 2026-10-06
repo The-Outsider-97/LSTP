@@ -4,11 +4,11 @@
   "blockers": [
     {
       "id": "PHASEB-VERIFY",
-      "summary": "Whitepaper-aligned pragmatics, mode/scope permissions, context fields, canonical JSON decoding, compact compiler mapping, and host mode-to-capability authorization are implemented on the Phase B candidate branch. Closure requires successful engineering/conformance checks and merge evidence."
+      "summary": "Whitepaper-aligned pragmatics, mode/scope permissions, context fields, canonical JSON decoding, compact compiler mapping, and host mode-to-capability authorization are merged on main via PR #12. Executable verification remains open because current GitHub Actions runs fail before any job step executes."
     },
     {
-      "id": "GOV-GRAM",
-      "summary": "Whitepaper canonical Lattice includes ordered Octad atomic/framed/named/stream forms. Current grammar defines only the compact operator carrier. Canonical grammar and compact-to-canonical mapping are incomplete."
+      "id": "PHASEC-VERIFY",
+      "summary": "Whitepaper canonical ordered-Octad Lattice grammar, atomic/framed/named/stream forms, separate compact grammar profile, canonical parser/compiler/encoder, semantic round-trip tests, and initial canonical-Lattice fixtures are implemented in PR #13. Closure still requires executable engineering/conformance evidence and merge evidence."
     },
     {
       "id": "GOV-EXT",
@@ -16,7 +16,7 @@
     },
     {
       "id": "TEST-001",
-      "summary": "Existing parser/compiler/canonicalization/authorization/replay tests are substantial, but the conformance corpus must be rebuilt/expanded against the restored Whitepaper-first contract, including canonical packet forms and migration vectors."
+      "summary": "Canonical JSON and canonical-Lattice positive/negative fixtures now exist; the governed canonical Lattice surface has typed semantic round-trip tests and initial versioned unrepresentable-field vectors for GOV-EXT/rich evidence. Broader production, migration, mutation, and interoperability coverage remains required before freeze."
     },
     {
       "id": "TEST-002",
@@ -58,6 +58,14 @@
     "whitepaper-permission-mode-scope-wire-model",
     "host-mode-to-capability-adapter",
     "whitepaper-context-parent-timezone-window-fields",
-    "fail-closed-october-candidate-field-rejection"
+    "fail-closed-october-candidate-field-rejection",
+    "canonical-lattice-ordered-octad-grammar",
+    "canonical-lattice-atomic-framed-named-stream",
+    "canonical-lattice-parser",
+    "separate-compact-lattice-grammar-profile",
+    "canonical-lattice-conformance-fixtures",
+    "canonical-lattice-fail-closed-encoder",
+    "canonical-lattice-semantic-roundtrip",
+    "canonical-lattice-unrepresentable-vectors"
   ]
 }

@@ -1,0 +1,8 @@
+[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)
+ |A=(a0:RES("quarterly-report"){ROLE=TARGET,ATTRIBUTES={"class":"document"}})
+ |R=(requests(a0){ID=r0,CONFIDENCE=0.9})
+ |C=(THREAD="finance-review",TURN=3,TIMEZONE="Europe/Amsterdam")
+ |κ=0.90
+ |Π=(MODE=RO,SCOPE=["quarterly-report"],LOG=true)
+ |E=(USER("summarize the quarterly report"))
+ |Ω=(FORMAT=NL,LANG="en")]

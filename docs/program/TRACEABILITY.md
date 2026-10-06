@@ -1,6 +1,6 @@
 # Initial requirements traceability
 
-> **6 October 2026 audit note:** implementation links below have advanced substantially since the initial audit, but canonical conformance remains blocked by GOV-PRAG, GOV-PERM, GOV-GRAM and GOV-CTX. See `WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`. Rows marked with older SPEC blockers are historical until this table is fully regenerated against the reconciled contract.
+> **6 October 2026 audit note:** Phase B restored Whitepaper pragmatics, permissions, and context semantics. Phase C restores canonical ordered-Octad Lattice syntax and keeps compact Lattice as a separate carrier profile. Verification, GOV-EXT, interoperability, and release/training gates remain open.
 
 This is an initial index, not completed conformance. `normative-candidates.json`
 records 193 uppercase-keyword candidate lines from the three technical Markdown
@@ -21,7 +21,7 @@ evidence by itself.
 | WP-3.4 | Authority never silently broadened | Whitepaper permissions; host authorization | Whitepaper mode is translated only at host boundary; exact scope/forbid plus principal/policy/runtime intersection, delegation attenuation, extension isolation and replay controls implemented | Phase B implemented; GOV-EXT/verification remain |
 | WP-3.5 | Referential context owned by host | spec §11 | None | D-010; SPEC-004 blocks |
 | WP-3.6 | No invented extension semantics | EBNF; operator table; spec extensions | PacketEnvelope namespace preservation; test_models extension cases | D-007/D-015; partial model boundary only |
-| WP-5.2 | Canonical Lattice forms | Whitepaper §7; compact EBNF candidate | compact tokenizer/parser/compiler implemented; canonical atomic/framed/named/stream grammar missing | GOV-GRAM blocks |
+| WP-5.2 | Canonical Lattice forms | Whitepaper §7; `spec/grammar.ebnf`; `spec/compact-grammar.ebnf` | canonical ordered-Octad parser implements atomic/framed/named/stream forms; compact parser/compiler remains separate | Phase C implemented; PHASEC-VERIFY pending |
 | WP-5.3 | Machine-readable JSON Schema | octad_schema.json | test_artifacts meta-schema check | JSON syntax fixed, conformance blocked |
 | WP-5.5 | No semantic invention in compilation | spec §§21–29 | None | D-007/D-009; open |
 | WP-5.6 | Explicit serialization ordering/numbers/Unicode | canonical JSON byte profile | deterministic serializer/deserializer and Unicode/number tests implemented | Engineering profile implemented; must be revalidated after contract repair |
@@ -35,7 +35,7 @@ evidence by itself.
 | WP-6.8 | Output format and constraints | schema output | typed output model plus BCP47/max-bytes validation | Substantially aligned |
 | WP-6.9 | References, permission preservation, extensions | spec semantic validation | Extension namespace structural checks only | D-007/D-011/D-015; partial |
 | WP-7.9 | Unresolved macros not guessed | EBNF; operators | None | D-007; open |
-| WP-8.3 | Each carrier has mapping, codecs, tests, failures | spec carriers | None | D-007/D-010; open |
+| WP-8.3 | Each carrier has mapping, codecs, tests, failures | canonical + compact grammar profiles | canonical parser/compiler/fail-closed encoder plus compact parser/compiler have separate APIs/tests; governed canonical surface has semantic round-trip tests | Partial; PHASEC-VERIFY/TEST-001 and independent interoperability remain |
 | WP-8.4 | Version/profile negotiation outside Octad | spec version | PacketEnvelope rejects versions other than 0.1; test_models unknown-version cases | D-010/D-015; v0.1 fail-closed boundary implemented, negotiation absent |
 | WP-9.4 | Resolver verifies existence/version/access | spec context | None | Open; host contract needed |
 | WP-10 | Requested ∩ policy ∩ capability | Whitepaper permissions; host authorization | six-mode wire request is deterministically mapped to host-internal capabilities then intersected with principal/policy/runtime authority and scope; confirmation/review/logging, expiry and replay retained | Phase B implemented; GOV-EXT/verification remain |

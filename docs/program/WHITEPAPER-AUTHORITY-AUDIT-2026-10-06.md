@@ -217,7 +217,42 @@ Still open:
   operator carrier only.
 - **GOV-EXT:** final core-vs-extension/revision status for
   `authorization_ref`, `expires_at`, and delegation metadata remains open.
-- **PHASEB-VERIFY:** the repaired candidate requires successful engineering and
-  conformance evidence before these repairs are treated as merged/verified.
+- **PHASEB-VERIFY:** the repair is merged via PR #12, but successful executable
+  engineering/conformance evidence is still missing because GitHub Actions fails
+  before any workflow step executes.
+
+Accordingly, `contract_reconciled` and `training_ready` remain false.
+
+
+## Phase C implementation status — 6 October 2026
+
+The Whitepaper canonical Lattice grammar has now been restored as a candidate
+without deleting or overloading the existing compact operator carrier.
+
+Implemented:
+
+- `spec/grammar.ebnf` now defines the ordered
+  `π | A | R | C | κ | Π | E | Ω` canonical carrier;
+- atomic, framed, named, and named-stream packet productions are explicit;
+- `spec/compact-grammar.ebnf` preserves the operator-oriented authoring carrier
+  as a separate profile;
+- `parse_canonical_lattice()` parses canonical packets directly into typed
+  Octads while preserving named-packet labels only as carrier metadata;
+- `compile_canonical_lattice()` adds semantic validation, while
+  `canonical_lattice_dumps()` provides deterministic encoding for the governed
+  surface and fails closed on syntax that has not been normatively assigned;
+- the exact Whitepaper example is covered by executable parser tests;
+- canonical field order, duplicate fields, obsolete October permission fields,
+  stream separators, compact/canonical profile separation, and unrepresentable
+  carrier fields have negative regression coverage;
+- the governed canonical surface has typed Octad -> canonical Lattice -> typed
+  Octad semantic round-trip coverage.
+
+Phase C deliberately does not invent envelope identifiers from Lattice packet
+labels, does not assign undocumented atom-constructor aliases, and does not
+silently accept compact syntax as canonical syntax.
+
+**PHASEC-VERIFY** remains open until executable engineering/conformance evidence
+is available. **GOV-EXT** remains independent and unresolved.
 
 Accordingly, `contract_reconciled` and `training_ready` remain false.

@@ -6,7 +6,8 @@ The canonical v0.1 protocol contract is now defined in:
 
 - `spec/CANONICAL-v0.1.md` — semantic and behavioral contract;
 - `spec/octad_schema.json` — canonical JSON shape;
-- `spec/grammar.ebnf` — compact Lattice carrier grammar;
+- `spec/grammar.ebnf` — canonical ordered-Octad Lattice grammar;
+- `spec/compact-grammar.ebnf` — compact operator-carrier grammar;
 - `spec/operator-table.md` — operator semantics;
 - `spec/permissions-safety.md` — permission/safety profile;
 - `spec/vocabulary.md` — core vocabulary.
@@ -18,11 +19,11 @@ This file intentionally no longer carries an independent packet model. The previ
 1. The semantic Octad has exactly eight required canonical domains: `pragmatics`, `atoms`, `relations`, `context`, `confidence`, `permissions`, `evidence`, and `output`.
 2. Envelope identity/version/carrier/audit/extensions are outside Octad semantic equality.
 3. Canonical JSON MUST satisfy `spec/octad_schema.json`.
-4. Compact Lattice is an authoring/carrier syntax. It MUST compile deterministically to the canonical Octad or fail with a diagnostic.
+4. Canonical Lattice MUST preserve the ordered Octad semantics defined by `spec/grammar.ebnf`; compact Lattice is a separate authoring/carrier syntax that MUST compile deterministically to the same Octad or fail with a diagnostic.
 5. Permission declarations request authority only; the host independently authorizes effects.
 6. Extensions MUST NOT override core semantics or become alternate authority channels.
 7. Relative context authoring references MUST resolve to stable packet IDs before canonical storage/replay/inter-agent transport.
-8. Unsupported protocol versions and unknown permission capabilities fail closed.
+8. Unsupported protocol versions and unknown permission modes fail closed.
 9. No implementation may claim canonical byte equality until the serialization/numeric profile and conformance vectors are frozen.
 10. Training data MUST NOT be called protocol-frozen until the readiness gate defined by `spec/CANONICAL-v0.1.md` is satisfied.
 

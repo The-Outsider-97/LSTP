@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-GRAMMAR = Path("spec/grammar.ebnf")
+GRAMMAR = Path("spec/compact-grammar.ebnf")
 
 
 def _grammar() -> str:

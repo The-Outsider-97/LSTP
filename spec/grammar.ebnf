@@ -1,154 +1,269 @@
 (*
-  LSTP v0.1 — Lattice text grammar
-  Status: Compact-carrier candidate under Whitepaper-first reconciliation
+  LSTP v0.1 — Canonical Lattice grammar
+  Status: Whitepaper-aligned canonical text profile
   Encoding: UTF-8
 
-  NOTE: This file currently defines the compact operator carrier. The Level-1
-  Whitepaper also requires canonical ordered-Octad atomic/framed/named/stream
-  packet productions. Until those are restored, this file is not the complete
-  canonical Lattice grammar.
+  Canonical Lattice is the ordered Octad text carrier described by the Level-1
+  Whitepaper. The compact operator carrier is specified separately in
+  spec/compact-grammar.ebnf.
 
-  EBNF notation used in this file:
+  EBNF notation:
     = definition | alternative , concatenation [ ] optional { } repetition
     ( ) grouping, quoted strings are terminals, ? ... ? lexical classes.
 
-  Strict-core rules:
-  - `-` outside a target scope is unary exclusion; signed literals occur only in scope.
-  - `%` is packet-level confidence. v0.1 does not guess relation/claim attachment.
-  - Context resolution and macro expansion are Phase 3 semantics.
-  - Undefined draft glyphs are absent from strict v0.1.
+  Canonical ordering is fixed:
+    pragmatics | atoms | relations | context | confidence | permissions
+    | evidence | output
+
+  This grammar carries Octad semantics only. Envelope id/version/carrier/audit
+  remain outside the Octad.
 *)
 
 lstp_document = bom_opt, horizontal_space_opt,
-  [ top_level_clause, { line_break_plus, horizontal_space_opt, [ top_level_clause ] } ],
+  ( stream_packet | named_packet | framed_packet | atomic_packet ),
   horizontal_space_opt ;
+
 bom_opt = [ utf8_bom ] ;
 utf8_bom = ? U+FEFF ? ;
 
-top_level_clause = main_clause | constraint_clause | output_clause | confidence_clause
-  | metadata_clause | evidence_clause | claim_clause | ambiguity_clause
-  | context_command | macro_definition ;
+atomic_packet = octad_core ;
+framed_packet = "[", layout_space_opt, octad_core, layout_space_opt, "]" ;
+named_packet = identifier, horizontal_space_opt, ":", horizontal_space_opt, framed_packet ;
+stream_packet = named_packet, { packet_sep, named_packet } ;
+packet_sep = line_break_plus ;
 
-main_clause = force_prefix, action_identifier,
-  [ horizontal_space_plus, focus ], [ horizontal_space_opt, relation_tail ],
-  [ horizontal_space_opt, operation_block ], { horizontal_space_plus, inline_modifier },
-  [ horizontal_space_plus, output_clause ], [ horizontal_space_plus, confidence_clause ],
-  [ horizontal_space_plus, metadata_clause ] ;
-force_prefix = urgent_directive | directive | interrogative | declarative ;
-urgent_directive = "!!" ;
-directive = "!" ;
-interrogative = "?" ;
-declarative = "." ;
-action_identifier = qualified_identifier ;
-focus = target_reference, [ horizontal_space_plus, context_reference ] | context_reference ;
-target_reference = "@", qualified_identifier, [ scope_block ] ;
-relation_tail = "=", horizontal_space_opt, expression | ":", horizontal_space_opt, expression ;
-operation_block = "::", horizontal_space_opt, expression ;
-inline_modifier = constraint_block | evidence_clause ;
+octad_core =
+  pragmatics_segment, segment_sep,
+  atoms_segment, segment_sep,
+  relations_segment, segment_sep,
+  context_segment, segment_sep,
+  confidence_segment, segment_sep,
+  permissions_segment, segment_sep,
+  evidence_segment, segment_sep,
+  output_segment ;
 
-constraint_clause = constraint_block ;
-constraint_block = "{", layout_space_opt,
-  [ constraint_entry, { layout_space_opt, ",", layout_space_opt, constraint_entry } ],
-  layout_space_opt, "}" ;
-constraint_entry = qualified_identifier, horizontal_space_opt, constraint_separator,
-  horizontal_space_opt, expression ;
-constraint_separator = "=" | ":" ;
+segment_sep = layout_space_opt, "|", layout_space_opt ;
 
-output_clause = "->", horizontal_space_opt, output_format, [ zoom_marker ] ;
-output_format = qualified_identifier | string_literal ;
-zoom_marker = "@z", zoom_value ;
-zoom_value = "0" | "1" | "2" | "3" | "4" | "5" | "max" ;
-confidence_clause = "%", confidence_number ;
-confidence_number = zero_to_one_number ;
-metadata_clause = ";", horizontal_space_opt, metadata_item,
-  { horizontal_space_opt, ",", horizontal_space_opt, metadata_item } ;
-metadata_item = context_metadata | qualified_identifier, horizontal_space_opt,
-  constraint_separator, horizontal_space_opt, expression ;
-context_metadata = "ctx", context_reference ;
+(* ---------- Pragmatics ---------- *)
 
-context_reference = "↑", unsigned_integer, [ "@", identifier ] ;
-context_command = "ctx.", ( "push", horizontal_space_opt, constraint_block | "pop" ) ;
-macro_reference = "#", identifier ;
-macro_definition = "def", horizontal_space_plus, macro_reference, horizontal_space_opt,
-  "=", horizontal_space_opt, macro_body ;
-macro_body = "{", layout_space_opt, [ expression ], layout_space_opt, "}" ;
+pragmatics_segment = "π", horizontal_space_opt, "=", horizontal_space_opt,
+  "(", layout_space_opt, pragmatics_entries, layout_space_opt, ")" ;
 
-evidence_clause = evidence_keyword, "[", layout_space_opt, [ expression_list ],
-  layout_space_opt, "]" ;
-evidence_keyword = "because" | "assume" | "challenge" ;
-claim_clause = "claim", horizontal_space_opt, ":", horizontal_space_opt, expression ;
-ambiguity_clause = "ambig", "{", layout_space_opt, ambiguity_key, layout_space_opt,
-  ":", layout_space_opt, weighted_alternative,
-  { layout_space_opt, "|", layout_space_opt, weighted_alternative }, layout_space_opt, "}" ;
-ambiguity_key = string_literal | qualified_identifier ;
-weighted_alternative = primary_expression ;
+pragmatics_entries = pragmatics_entry,
+  { layout_space_opt, ",", layout_space_opt, pragmatics_entry } ;
 
-expression = annotation_expression | alternative_expression ;
-annotation_expression = qualified_identifier, horizontal_space_opt, ":",
-  horizontal_space_opt, alternative_expression ;
-alternative_expression = composition_expression,
-  { horizontal_space_opt, "|", horizontal_space_opt, composition_expression } ;
-composition_expression = unary_expression,
-  { horizontal_space_opt, "+", horizontal_space_opt, unary_expression } ;
-unary_expression = [ "-", horizontal_space_opt ], postfix_expression ;
-postfix_expression = primary_expression, [ "~" ] ;
-primary_expression = function_call | parenthesized_expression | macro_reference
-  | target_reference | context_reference | list_literal | string_literal
-  | unsigned_number | boolean_literal | null_literal | qualified_identifier ;
-parenthesized_expression = "(", layout_space_opt, expression, layout_space_opt, ")" ;
-function_call = qualified_identifier, "(", layout_space_opt, [ expression_list ],
+pragmatics_entry =
+    "TYPE", assign, identifier_value
+  | "SPEECH_ACT", assign, identifier_value
+  | "GOAL", assign, identifier_value
+  | "MOD", assign, identifier_list
+  | "REGISTER", assign, identifier_value
+  | "URGENCY", assign, confidence_number ;
+
+(* ---------- Atoms ---------- *)
+
+atoms_segment = "A", horizontal_space_opt, "=", horizontal_space_opt,
+  "(", layout_space_opt, [ atom, { layout_space_opt, ",", layout_space_opt, atom } ],
   layout_space_opt, ")" ;
-expression_list = expression, { horizontal_space_opt, ",", horizontal_space_opt, expression } ;
-list_literal = "[", layout_space_opt, [ expression_list ], layout_space_opt, "]" ;
 
-scope_block = "[", layout_space_opt, [ scope_expression ], layout_space_opt, "]" ;
-scope_expression = scope_item,
-  { horizontal_space_opt, scope_joiner, horizontal_space_opt, scope_item } ;
-scope_joiner = "," | "|" ;
-scope_item = scope_assignment | signed_period | range_literal | string_literal
-  | signed_number | qualified_identifier ;
-scope_assignment = qualified_identifier, horizontal_space_opt, constraint_separator,
-  horizontal_space_opt, scope_scalar ;
-scope_scalar = signed_period | string_literal | signed_number | qualified_identifier ;
-signed_period = [ sign ], unsigned_number, period_unit ;
-period_unit = "s" | "m" | "h" | "D" | "W" | "M" | "Q" | "Y" ;
-range_literal = scope_scalar, horizontal_space_opt, "..", horizontal_space_opt, scope_scalar ;
+atom = atom_id, horizontal_space_opt, ":", horizontal_space_opt,
+  atom_kind, "(", layout_space_opt, [ json_value ], layout_space_opt, ")",
+  [ atom_metadata ] ;
+
+atom_kind =
+    "ENT"
+  | "CONCEPT"
+  | "VALUE"
+  | "EVENT"
+  | "TIME"
+  | "LOCATION"
+  | "RES"
+  | "PROPOSITION"
+  | "UNKNOWN" ;
+
+atom_metadata = "{", layout_space_opt,
+  atom_metadata_entry,
+  { layout_space_opt, ",", layout_space_opt, atom_metadata_entry },
+  layout_space_opt, "}" ;
+
+atom_metadata_entry =
+    "ROLE", assign, identifier_value
+  | "DATATYPE", assign, string_or_identifier
+  | "LANGUAGE", assign, string_or_identifier
+  | "ATTRIBUTES", assign, json_object ;
+
+atom_id = "a", unsigned_integer ;
+
+(* ---------- Relations ---------- *)
+
+relations_segment = "R", horizontal_space_opt, "=", horizontal_space_opt,
+  "(", layout_space_opt,
+  [ relation, { layout_space_opt, ",", layout_space_opt, relation } ],
+  layout_space_opt, ")" ;
+
+relation = qualified_identifier, "(", layout_space_opt,
+  relation_argument, { layout_space_opt, ",", layout_space_opt, relation_argument },
+  layout_space_opt, ")", [ relation_metadata ] ;
+
+relation_metadata = "{", layout_space_opt,
+  relation_metadata_entry,
+  { layout_space_opt, ",", layout_space_opt, relation_metadata_entry },
+  layout_space_opt, "}" ;
+
+relation_metadata_entry =
+    "ID", assign, string_or_identifier
+  | "CONFIDENCE", assign, confidence_number
+  | "ATTRIBUTES", assign, json_object ;
+
+relation_argument = atom_id | special_argument ;
+special_argument = "SELF" | "NOW" | "USER" | "SYSTEM" ;
+
+(* ---------- Context ---------- *)
+
+context_segment = "C", horizontal_space_opt, "=", horizontal_space_opt,
+  "(", layout_space_opt, context_entries, layout_space_opt, ")" ;
+
+context_entries = context_entry,
+  { layout_space_opt, ",", layout_space_opt, context_entry } ;
+
+context_entry =
+    "THREAD", assign, string_or_identifier
+  | "PACKET", assign, string_or_identifier
+  | "PARENT", assign, string_or_identifier
+  | "CONVERSATION", assign, string_or_identifier
+  | "TURN", assign, unsigned_integer
+  | "TIME", assign, string_literal
+  | "TIMEZONE", assign, string_or_identifier
+  | "WINDOW", assign, json_value
+  | "LOCATION", assign, json_value
+  | "BINDINGS", assign, json_object
+  | "REFERENCES", assign, context_reference_list
+  | "SPEAKER", assign, identifier_value
+  | "AUDIENCE", assign, identifier_list ;
+
+context_reference_list = "[", layout_space_opt,
+  [ string_or_identifier, { layout_space_opt, ",", layout_space_opt, string_or_identifier } ],
+  layout_space_opt, "]" ;
+
+(* ---------- Confidence ---------- *)
+
+confidence_segment = "κ", horizontal_space_opt, "=", horizontal_space_opt,
+  confidence_number ;
+
+confidence_number = "0" | "1" | "0.", digit, { digit } | "1.", zero, { zero } ;
+
+(* ---------- Permissions ---------- *)
+
+permissions_segment = "Π", horizontal_space_opt, "=", horizontal_space_opt,
+  "(", layout_space_opt, [ permission_entries ], layout_space_opt, ")" ;
+
+permission_entries = permission_entry,
+  { layout_space_opt, ",", layout_space_opt, permission_entry } ;
+
+permission_entry =
+    "MODE", assign, permission_mode
+  | "SCOPE", assign, string_list
+  | "FORBID", assign, string_list
+  | "LIMITS", assign, json_object
+  | "REQUIRE_CONFIRM", assign, boolean_literal
+  | "REQUIRE_REVIEW", assign, boolean_literal
+  | "LOG", assign, boolean_literal ;
+
+permission_mode = "RO" | "SUGGEST" | "PREVIEW" | "RW" | "EXEC" | "COMMIT" ;
+
+(* ---------- Evidence ---------- *)
+
+evidence_segment = "E", horizontal_space_opt, "=", horizontal_space_opt,
+  "(", layout_space_opt,
+  [ evidence_item, { layout_space_opt, ",", layout_space_opt, evidence_item } ],
+  layout_space_opt, ")" ;
+
+evidence_item = evidence_source, "(", layout_space_opt,
+  [ string_literal ], layout_space_opt, ")" ;
+
+evidence_source = "USER" | "SENSOR" | "MODEL" | "TOOL" | "RETRIEVED" | "INFERRED" ;
+
+(* ---------- Output ---------- *)
+
+output_segment = "Ω", horizontal_space_opt, "=", horizontal_space_opt,
+  "(", layout_space_opt, output_entries, layout_space_opt, ")" ;
+
+output_entries = output_entry,
+  { layout_space_opt, ",", layout_space_opt, output_entry } ;
+
+output_entry =
+    "FORMAT", assign, output_format
+  | "SCHEMA", assign, string_or_identifier
+  | "CHANNEL", assign, identifier_value
+  | "TARGET", assign, string_or_identifier
+  | "LANG", assign, string_or_identifier
+  | "MAX_BYTES", assign, unsigned_integer
+  | "REQUIREMENTS", assign, string_list ;
+
+output_format = "NL" | "LATTICE" | "JSON" | "YAML" | "TABLE" | "CODE" | "FILE" | "NONE" ;
+
+(* ---------- JSON-compatible literal subset ---------- *)
+
+json_value = json_object | json_array | json_scalar ;
+json_object = "{", layout_space_opt,
+  [ string_literal, layout_space_opt, ":", layout_space_opt, json_value,
+    { layout_space_opt, ",", layout_space_opt,
+      string_literal, layout_space_opt, ":", layout_space_opt, json_value } ],
+  layout_space_opt, "}" ;
+json_array = "[", layout_space_opt,
+  [ json_value, { layout_space_opt, ",", layout_space_opt, json_value } ],
+  layout_space_opt, "]" ;
+json_scalar = string_literal | number | boolean_literal | null_literal ;
+
+string_list = "[", layout_space_opt,
+  [ string_or_identifier, { layout_space_opt, ",", layout_space_opt, string_or_identifier } ],
+  layout_space_opt, "]" ;
+identifier_list = "[", layout_space_opt,
+  [ identifier_value, { layout_space_opt, ",", layout_space_opt, identifier_value } ],
+  layout_space_opt, "]" ;
+
+assign = horizontal_space_opt, "=", horizontal_space_opt ;
+string_or_identifier = string_literal | qualified_identifier ;
+identifier_value = qualified_identifier ;
 
 boolean_literal = "true" | "false" ;
 null_literal = "null" ;
-signed_number = [ sign ], unsigned_number ;
-sign = "+" | "-" ;
-zero_to_one_number = "0" | "1" | "0.", digit, { digit } | "1.", zero, { zero } ;
+number = [ "-" ], unsigned_number ;
 unsigned_number = unsigned_integer, [ ".", digit, { digit } ] ;
 unsigned_integer = "0" | nonzero_digit, { digit } ;
-string_literal = quotation_mark, { string_character | escape_sequence }, quotation_mark ;
-string_character = ? any Unicode scalar value except U+0022 QUOTATION MARK,
-  U+005C REVERSE SOLIDUS, and U+0000 through U+001F ? ;
-escape_sequence = reverse_solidus,
-  ( quotation_mark | reverse_solidus | "/" | "b" | "f" | "n" | "r" | "t" | unicode_escape ) ;
-quotation_mark = ? U+0022 QUOTATION MARK ? ;
-reverse_solidus = ? U+005C REVERSE SOLIDUS ? ;
-unicode_escape = "u", hex_digit, hex_digit, hex_digit, hex_digit ;
 
 qualified_identifier = identifier, { ".", identifier } ;
 identifier = identifier_start, { identifier_continue } ;
 identifier_start = ascii_letter | "_" ;
 identifier_continue = ascii_letter | digit | "_" | "-" ;
-ascii_letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J"
+
+string_literal = quotation_mark, { string_character | escape_sequence }, quotation_mark ;
+string_character = ? any Unicode scalar value except U+0022 QUOTATION MARK,
+  U+005C REVERSE SOLIDUS, and U+0000 through U+001F ? ;
+escape_sequence = reverse_solidus,
+  ( quotation_mark | reverse_solidus | "/" | "b" | "f" | "n" | "r" | "t"
+  | unicode_escape ) ;
+quotation_mark = ? U+0022 QUOTATION MARK ? ;
+reverse_solidus = ? U+005C REVERSE SOLIDUS ? ;
+unicode_escape = "u", hex_digit, hex_digit, hex_digit, hex_digit ;
+
+ascii_letter =
+    "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J"
   | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T"
   | "U" | "V" | "W" | "X" | "Y" | "Z"
   | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j"
   | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t"
   | "u" | "v" | "w" | "x" | "y" | "z" ;
+
 digit = zero | nonzero_digit ;
 zero = "0" ;
 nonzero_digit = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
-hex_digit = digit | "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b" | "c" | "d" | "e" | "f" ;
+hex_digit = digit | "A" | "B" | "C" | "D" | "E" | "F"
+  | "a" | "b" | "c" | "d" | "e" | "f" ;
 
 layout_space_opt = { layout_space } ;
 layout_space = horizontal_space | line_break ;
 horizontal_space_opt = { horizontal_space } ;
-horizontal_space_plus = horizontal_space, { horizontal_space } ;
 horizontal_space = " " | tab ;
 line_break_plus = line_break, { line_break } ;
 line_break = crlf | lf | cr ;
@@ -158,18 +273,13 @@ cr = ? U+000D CARRIAGE RETURN ? ;
 crlf = cr, lf ;
 
 (*
-  Strict-core exclusions / reserved syntax
-  ----------------------------------------
-  <= >= => <=> && || ^ postfix ↑ postfix ↓ are not core v0.1 productions.
-
-  Semantic constraints not expressible in EBNF
-  ---------------------------------------------
-  1. % confidence is packet-level in core v0.1 and limited to [0,1].
-  2. @z is limited to 0..5 or max.
-  3. ↑ depth is a non-negative integer.
-  4. Unknown core permission modes are rejected during semantic compilation.
-  5. Targets/references require semantic resolution where applicable.
-  6. Context references and macros may parse before their values are resolvable.
-  7. Lattice syntax never grants host execution authority.
-  8. Signed numeric/period literals are scope syntax; outside scope `-` is exclusion.
+  Semantic constraints outside EBNF:
+  1. Octad segment order is fixed and segments may not repeat.
+  2. Pragmatics TYPE is required; duplicate named fields are rejected.
+  3. Context THREAD is required.
+  4. Output FORMAT is required.
+  5. Atom IDs are unique and relation atom references must resolve.
+  6. COMMIT/RW/EXEC permission semantics are validated by the semantic layer.
+  7. Packet names are carrier labels only and do not become envelope IDs.
+  8. Canonical Lattice never grants host execution authority.
 *)
