@@ -28,11 +28,9 @@ ATOM_KINDS = {
     "entity", "concept", "value", "event", "time", "location",
     "resource", "proposition", "unknown",
 }
-CAPABILITIES = {"read", "suggest", "prepare", "write", "execute", "commit"}
-PROFILES = {"RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"}
+PERMISSION_MODES = {"RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"}
 EVIDENCE_TYPES = {"user", "sensor", "model", "tool", "retrieved", "inferred"}
 OUTPUT_FORMATS = {"NL", "LATTICE", "JSON", "YAML", "TABLE", "CODE", "FILE", "NONE"}
-ACTS = {"assert", "request", "question", "inform", "correct", "acknowledge", "refuse", "respond"}
 
 
 def _defs(schema: dict[str, Any]) -> dict[str, Any]:
@@ -74,8 +72,12 @@ def contract_failures(schema: dict[str, Any]) -> list[str]:
 
     pragmatics = defs.get("pragmatics", {})
     pprops = _properties(pragmatics)
-    if "act" not in _required(pragmatics) or _enum(pprops.get("act")) != ACTS:
-        failures.append("PRAGMATICS_ACT: canonical act field/vocabulary drift")
+    if "type" not in _required(pragmatics):
+        failures.append("PRAGMATICS_TYPE: canonical pragmatics.type must be required")
+    if "speech_act" not in pprops:
+        failures.append("PRAGMATICS_SPEECH_ACT: speech_act field must remain available")
+    if "act" in pprops:
+        failures.append("PRAGMATICS_ACT: October candidate act field must not be canonical")
 
     confidence = defs.get("confidence", {})
     if not (
@@ -103,26 +105,37 @@ def contract_failures(schema: dict[str, Any]) -> list[str]:
         failures.append("RELATION_SPO: legacy SPO fields are not canonical")
 
     context = defs.get("context", {})
+    cprops = _properties(context)
     if not {"thread_id", "references"}.issubset(_required(context)):
         failures.append("CONTEXT_REQUIRED: context.thread_id and references must be required")
+    for field in ("parent_packet_id", "timezone", "window"):
+        if field not in cprops:
+            failures.append(f"CONTEXT_FIELD: missing {field!r}")
+    if "parent_id" in cprops:
+        failures.append("CONTEXT_PARENT: parent_id is not the Whitepaper field name")
     context_ref = defs.get("contextReference", {})
     if "packet_id" not in _required(context_ref):
         failures.append("CONTEXT_STABLE_REF: canonical context references require packet_id")
 
     permissions = defs.get("permissions", {})
     per_props = _properties(permissions)
-    if not {"capabilities", "resources"}.issubset(_required(permissions)):
-        failures.append("PERMISSION_REQUIRED: capabilities and resources must be required")
-    capability_ref = defs.get("capability", {})
-    if _enum(capability_ref) != CAPABILITIES:
-        failures.append("PERMISSION_CAPABILITIES: capability vocabulary drift")
-    if _enum(per_props.get("profile")) != PROFILES:
-        failures.append("PERMISSION_PROFILES: profile vocabulary drift")
-    for field in ("forbid", "require_confirmation", "require_review", "require_logging"):
+    if _enum(defs.get("permissionMode")) != PERMISSION_MODES:
+        failures.append("PERMISSION_MODE: Whitepaper permission-mode vocabulary drift")
+    for field in (
+        "mode",
+        "scope",
+        "forbid",
+        "require_confirmation",
+        "require_review",
+        "require_logging",
+    ):
         if field not in per_props:
             failures.append(f"PERMISSION_FIELD: missing {field!r}")
-    if "mode" in per_props:
-        failures.append("PERMISSION_MODE: legacy scalar mode must not be canonical")
+    for field in ("capabilities", "resources", "profile"):
+        if field in per_props:
+            failures.append(
+                f"PERMISSION_CANDIDATE_FIELD: October candidate field {field!r} must not be canonical"
+            )
 
     evidence_item = defs.get("evidenceItem", {})
     eprops = _properties(evidence_item)
@@ -153,7 +166,7 @@ def main() -> int:
     if failures:
         print(f"Schema contract drift: {len(failures)} blocking finding(s).")
         return 1
-    print("Reconciled v0.1 schema contract checks passed.")
+    print("Whitepaper-aligned v0.1 schema contract checks passed.")
     return 0
 
 
