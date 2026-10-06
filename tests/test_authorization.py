@@ -174,6 +174,39 @@ def test_forbid_removes_exact_scope_before_host_intersection() -> None:
     assert decision.allowed is False
     assert "resource_denied" in {item.code for item in decision.diagnostics}
 
+def test_unresolved_forbid_expression_fails_closed() -> None:
+    packet = _packet()
+    packet = PacketEnvelope(
+        Octad(
+            packet.octad.pragmatics,
+            packet.octad.atoms,
+            packet.octad.relations,
+            packet.octad.context,
+            packet.octad.confidence,
+            Permissions(
+                mode="COMMIT",
+                scope=(RESOURCE,),
+                forbid=("external-write",),
+            ),
+            packet.octad.evidence,
+            packet.octad.output,
+        ),
+        packet.packet_id,
+        packet.protocol_version,
+    )
+    decision = authorize_operation(
+        packet,
+        _operation(),
+        principal=_principal("commit"),
+        policy=_policy("commit"),
+        runtime=_authority("commit"),
+    )
+    assert decision.allowed is False
+    assert "unresolved_permission_forbid" in {
+        item.code for item in decision.diagnostics
+    }
+
+
 def test_empty_trusted_resource_scope_is_never_wildcard() -> None:
     packet = _packet()
     decision = authorize_operation(
