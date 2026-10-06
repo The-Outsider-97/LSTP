@@ -19,7 +19,7 @@ LSTP is a semantic transport protocol. It is not a language model, authenticatio
 
 ## Current status
 
-The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The October canonical reconciliation resolved that design split. The reference implementation now contains an executable typed packet model, semantic validator, strict Lattice tokenizer/parser/AST/compiler, deterministic canonical JSON serializer/deserializer, and an initial versioned conformance-vector suite.
+The 22 September 2026 audit found two incompatible contracts both presented as LSTP v0.1. The October canonical reconciliation resolved that design split. The reference implementation now contains an executable typed packet model, semantic validator, strict Lattice tokenizer/parser/AST/compiler, deterministic canonical JSON serializer/deserializer, permission-aware host authorization, delegation attenuation, replay/idempotency protection, and an initial versioned conformance-vector suite.
 
 Canonical v0.1 now has:
 
@@ -32,9 +32,12 @@ Canonical v0.1 now has:
 - one explicit response/outcome vocabulary;
 - deterministic Lattice-to-Octad mappings for the normative grammar surface;
 - one canonical JSON byte profile;
+- semantic RFC 3339 and structural BCP 47 validation;
+- one host-authorization intersection model;
+- one replay-store interface with in-process and durable SQLite reference implementations;
 - positive and negative executable conformance fixtures.
 
-The repository is **not yet production-ready or training-ready**. Remaining blockers include permission-aware host authorization, delegation attenuation against authenticated parent authority, replay/idempotency integration, broader adversarial/conformance coverage, a second independent implementation, SLAI integration, Whitepaper publication synchronization, and the final release/pre-training audit.
+The repository is **not yet production-ready or training-ready**. Remaining blockers include broader adversarial/conformance coverage, distributed replay-store integrations where required, application-specific permission-limit enforcement, a second independent implementation, SLAI integration, Whitepaper publication synchronization, and the final release/pre-training audit.
 
 Implemented engineering/runtime foundation includes:
 
@@ -42,13 +45,18 @@ Implemented engineering/runtime foundation includes:
 - bounded UTF-8 JSON inspection with duplicate-key and resource checks;
 - immutable typed canonical Octad/envelope model;
 - strict v0.1 version handling;
-- semantic/reference/permission validation;
+- semantic/reference/permission/format validation;
 - Lattice tokenizer, AST, parser and compiler;
 - stable resolution requirement for relative context references;
 - deterministic canonical JSON serialization/deserialization;
 - NFC and bidirectional-control canonicalization safeguards;
+- permission-aware host authorization with exact capability/resource intersection;
+- authenticated delegation attenuation;
+- confirmation, review, logging, expiry and trusted authorization-reference enforcement;
+- replay/idempotency reservation through a pluggable `ReplayStore` contract;
+- thread-safe in-process `ReplayGuard` and durable file-backed `SQLiteReplayStore`;
 - namespaced extension isolation;
-- unit, adversarial, parser/compiler, canonicalization and conformance-vector tests;
+- unit, adversarial, parser/compiler, canonicalization, authorization, replay-store and conformance-vector tests;
 - CI engineering matrix;
 - readiness and traceability records.
 
@@ -120,7 +128,7 @@ encoded: bytes = canonical_dumps(packet)
 round_tripped = canonical_loads(encoded, require_canonical_bytes=True)
 ```
 
-## Permissions
+## Permissions and host authorization
 
 Permissions use orthogonal requested capabilities:
 
@@ -135,7 +143,20 @@ commit
 
 Convenience profiles (`RO`, `SUGGEST`, `PREVIEW`, `RW`, `EXEC`, `COMMIT`) are named bundles, **not** a numeric privilege ladder. Resource scope is represented by typed resource records rather than free-form scope strings.
 
-Effective authority remains a host-side intersection of requested capabilities, authenticated principal authority, policy, runtime capability, resources, and constraints.
+Effective authority is evaluated as an exact host-side intersection of requested capabilities/resources, authenticated principal authority, host policy, runtime capability, and explicit constraints. Delegation may only attenuate authority.
+
+Action-capable hosts can use the reference authorization API together with any `ReplayStore` implementation. `ReplayGuard` is process-local; `SQLiteReplayStore` is durable for hosts that share one file-backed SQLite database. Multi-node/distributed deployments should provide another `ReplayStore` with equivalent atomic reservation semantics instead of changing authorization logic.
+
+## Semantic formats
+
+Fields declared by the canonical contract now receive semantic format validation:
+
+- `context.time` — RFC 3339 date-time;
+- `permissions.expires_at` — RFC 3339 date-time;
+- `atoms[].language` — structurally well-formed BCP 47 language tag;
+- `output.language` — structurally well-formed BCP 47 language tag.
+
+BCP 47 validation is grammar-level and does not claim IANA registry membership for every individual subtag.
 
 ## Install and engineering checks
 
@@ -169,7 +190,7 @@ lstp json-check path/to/input.json
 python -m lstp json-check path/to/input.json
 ```
 
-`json-check` checks bounded generic JSON only. It does **not** certify LSTP semantic conformance or authorization. Library-level canonical decoding and semantic validation are now implemented; CLI protocol commands are being hardened separately so generic JSON inspection remains clearly distinct from protocol certification.
+`json-check` checks bounded generic JSON only. It does **not** certify LSTP semantic conformance or authorization. Library-level canonical decoding, semantic validation, and host authorization are implemented; CLI protocol commands are being hardened separately so generic JSON inspection remains clearly distinct from protocol certification.
 
 Successful generic JSON inspection reports:
 
@@ -187,7 +208,7 @@ The vector corpus is an initial executable baseline, not yet the independent int
 
 ## Protocol readiness
 
-`python tools/check_readiness.py` remains a release/training ledger. The canonical-contract split, typed core runtime, parser/compiler scaffolding, and canonical serializer are no longer the principal blockers. Host authorization, broader conformance/adversarial evidence, independent interoperability, SLAI integration, publication synchronization, and final release validation remain open.
+`python tools/check_readiness.py` remains a release/training ledger. The canonical-contract split, typed runtime, parser/compiler, canonical serializer, core host authorization, semantic RFC3339/BCP47 validation, and replay-store abstraction are no longer principal blockers. Broader conformance/adversarial evidence, independent interoperability, SLAI integration, publication synchronization, and final release validation remain open.
 
 Training data generation must wait until the readiness gate is green and the versioned conformance suite is sufficiently complete for the freeze criteria.
 

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from threading import Lock
 
 from lstp.errors import AuthorizationError, Diagnostic
+from lstp.formats import parse_rfc3339
 from lstp.models import CAPABILITIES, PacketEnvelope, Permissions
+from lstp.packet.replay import ReplayGuard, ReplayStore
 from lstp.packet.validator import require_semantic_validity
 
 _SIDE_EFFECTS = frozenset({"write", "execute", "commit"})
@@ -19,31 +20,6 @@ def _diag(code: str, message: str, path: str | None = None) -> Diagnostic:
 
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
-
-
-def _parse_rfc3339(value: str) -> datetime:
-    text = value.strip()
-    if text.endswith("Z"):
-        text = text[:-1] + "+00:00"
-    try:
-        parsed = datetime.fromisoformat(text)
-    except ValueError as exc:
-        raise AuthorizationError((
-            _diag(
-                "invalid_expiry",
-                "permissions.expires_at must be an RFC 3339 date-time",
-                "$.permissions.expires_at",
-            ),
-        )) from exc
-    if parsed.tzinfo is None:
-        raise AuthorizationError((
-            _diag(
-                "invalid_expiry",
-                "permissions.expires_at must include a timezone offset",
-                "$.permissions.expires_at",
-            ),
-        ))
-    return parsed.astimezone(timezone.utc)
 
 
 @dataclass(frozen=True, slots=True)
@@ -148,37 +124,6 @@ class AuthorizationDecision:
             raise AuthorizationError(self.diagnostics)
 
 
-class ReplayGuard:
-    """Thread-safe in-process reservation store for idempotent side effects.
-
-    Production hosts SHOULD use durable shared storage. Each operation id is
-    bound to an action digest. Any repeated id is denied; a differing digest is
-    reported as an operation-identity mutation rather than a normal replay.
-    """
-
-    def __init__(self) -> None:
-        self._lock = Lock()
-        self._reserved: dict[str, str] = {}
-
-    def reserve(self, operation_id: str, action_digest: str) -> str | None:
-        if not operation_id or not action_digest:
-            raise ValueError("operation_id and action_digest must be non-empty")
-        with self._lock:
-            existing = self._reserved.get(operation_id)
-            if existing is not None:
-                return existing
-            self._reserved[operation_id] = action_digest
-            return None
-
-    def release(self, operation_id: str) -> None:
-        with self._lock:
-            self._reserved.pop(operation_id, None)
-
-    def digest_for(self, operation_id: str) -> str | None:
-        with self._lock:
-            return self._reserved.get(operation_id)
-
-
 def _requested_authority(permissions: Permissions) -> Authority:
     capabilities = frozenset(permissions.capabilities) - frozenset(permissions.forbid)
     resources = frozenset(resource.id for resource in permissions.resources)
@@ -267,23 +212,28 @@ def authorize_operation(
     policy: HostPolicy,
     runtime: Authority,
     parent: DelegationContext | None = None,
-    replay_guard: ReplayGuard | None = None,
+    replay_guard: ReplayStore | None = None,
     now: datetime | None = None,
 ) -> AuthorizationDecision:
     """Authorize one concrete operation without performing it.
 
-    Callers MUST invoke this immediately before a side effect. If a replay guard
-    is supplied, side-effect operation identity is atomically reserved only after
-    all other authorization checks succeed.
+    Callers MUST invoke this immediately before a side effect. If a replay store
+    is supplied, side-effect identity is atomically reserved only after every
+    other authorization check succeeds.
     """
     require_semantic_validity(packet)
     permissions = packet.octad.permissions
     diagnostics: list[Diagnostic] = []
 
     if permissions.expires_at is not None:
-        expiry = _parse_rfc3339(permissions.expires_at)
-        current = (now or _utc_now()).astimezone(timezone.utc)
-        if current >= expiry:
+        expiry = parse_rfc3339(permissions.expires_at)
+        current = now or _utc_now()
+        if current.tzinfo is None:
+            diagnostics.append(_diag(
+                "invalid_authorization_clock",
+                "authorization clock must be timezone-aware",
+            ))
+        elif current.astimezone(timezone.utc) >= expiry:
             diagnostics.append(_diag(
                 "authorization_expired",
                 "permission request has expired",
@@ -345,19 +295,15 @@ def authorize_operation(
     if replay_guard is not None and operation.capability in _SIDE_EFFECTS:
         existing_digest = replay_guard.reserve(operation.operation_id, operation.action_digest)
         if existing_digest is not None:
-            if existing_digest != operation.action_digest:
-                replay = _diag(
-                    "operation_changed",
-                    "operation id was already bound to different action content",
-                )
-            else:
-                replay = _diag(
-                    "replay_detected",
-                    "operation id has already been reserved or executed",
-                )
+            code = "operation_changed" if existing_digest != operation.action_digest else "replay_detected"
+            message = (
+                "operation id was already bound to different action content"
+                if code == "operation_changed"
+                else "operation id has already been reserved or executed"
+            )
             return AuthorizationDecision(
                 False,
-                (replay,),
+                (_diag(code, message),),
                 effective.capabilities,
                 effective.resources,
             )
@@ -373,7 +319,7 @@ def require_authorized_operation(
     policy: HostPolicy,
     runtime: Authority,
     parent: DelegationContext | None = None,
-    replay_guard: ReplayGuard | None = None,
+    replay_guard: ReplayStore | None = None,
     now: datetime | None = None,
 ) -> AuthorizationDecision:
     decision = authorize_operation(
@@ -388,3 +334,19 @@ def require_authorized_operation(
     )
     decision.raise_for_denial()
     return decision
+
+
+__all__ = [
+    "Authority",
+    "AuthorizationDecision",
+    "DelegationContext",
+    "HostPolicy",
+    "OperationRequest",
+    "PrincipalContext",
+    "ReplayGuard",
+    "ReplayStore",
+    "authorize_operation",
+    "effective_authority",
+    "require_authorized_operation",
+    "validate_delegation",
+]
