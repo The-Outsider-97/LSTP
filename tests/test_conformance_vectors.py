@@ -21,7 +21,7 @@ def test_positive_vectors_round_trip_byte_identically() -> None:
     [
         ("unknown-field.json", CanonicalizationError),
         ("unresolved-relation.json", SemanticValidationError),
-        ("forbidden-scope.json", SemanticValidationError),
+        ("missing-commit-scope.json", SemanticValidationError),
     ],
 )
 def test_negative_vectors_fail_closed(name: str, error_type: type[Exception]) -> None:
