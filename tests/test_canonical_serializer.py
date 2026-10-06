@@ -12,8 +12,8 @@ from lstp.packet.compiler import CompilerOptions, compile_lattice
 
 def _packet():
     return compile_lattice(
-        '!open @door {capabilities=[commit], resources=["urn:door:front"], '
-        'profile=COMMIT, confirm=true} -> JSON %0.50',
+        '!open @door {mode=COMMIT, scope=["urn:door:front"], '
+        'confirm=true} -> JSON %0.50',
         options=CompilerOptions(packet_id="p1", thread_id="t1"),
     )
 
