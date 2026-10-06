@@ -6,7 +6,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from lstp import CanonicalizationError, SemanticValidationError, canonical_loads
+from lstp import CanonicalizationError, LatticeSyntaxError, SemanticValidationError, canonical_loads
 from lstp.packet.compiler import CompilerOptions, compile_lattice
 from lstp.text.canonical import parse_canonical_lattice
 
@@ -121,5 +121,5 @@ BASE_CANONICAL = (
 )
 def test_canonical_octad_segment_reordering_is_rejected(mutated: str) -> None:
     assert parse_canonical_lattice(BASE_CANONICAL).packets
-    with pytest.raises(Exception):
+    with pytest.raises(LatticeSyntaxError):
         parse_canonical_lattice(mutated)
