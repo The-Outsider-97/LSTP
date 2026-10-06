@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from lstp.models import Context, Octad, Output, PacketEnvelope, Permissions, Pragmatics, Resource
+from lstp.models import Context, Octad, Output, PacketEnvelope, Permissions, Pragmatics
 from lstp.packet.authorization import Authority, HostPolicy, OperationRequest, PrincipalContext, authorize_operation
 from lstp.packet.replay import SQLiteReplayStore
 
@@ -15,7 +15,7 @@ def _packet() -> PacketEnvelope:
             (),
             Context("thread-1"),
             1.0,
-            Permissions(("commit",), (Resource(RESOURCE),)),
+            Permissions(mode="COMMIT", scope=(RESOURCE,)),
             (),
             Output("NONE"),
         ),
