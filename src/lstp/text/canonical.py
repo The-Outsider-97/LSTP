@@ -267,6 +267,7 @@ class _Parser:
         role: str | None = None
         datatype: str | None = None
         language: str | None = None
+        attributes: object = {}
         self._skip_layout()
         if self._peek() == "{":
             self.index += 1
@@ -287,6 +288,13 @@ class _Parser:
                     datatype = self._string_or_identifier()
                 elif key == "LANGUAGE":
                     language = self._string_or_identifier()
+                elif key == "ATTRIBUTES":
+                    attributes = self._json_value()
+                    if not isinstance(attributes, dict):
+                        raise self._error(
+                            "expected_object",
+                            "atom ATTRIBUTES requires a JSON object",
+                        )
                 else:
                     raise self._error(
                         "unknown_atom_metadata",
@@ -305,6 +313,7 @@ class _Parser:
             role=role,
             datatype=datatype,
             language=language,
+            attributes=attributes,  # type: ignore[arg-type]
         )
 
     def _atoms(self) -> tuple[Atom, ...]:
@@ -349,7 +358,58 @@ class _Parser:
                 break
             self.index += 1
         self._expect(")", layout=True)
-        return Relation(relation_type, tuple(arguments))
+
+        relation_id: str | None = None
+        confidence: Decimal | None = None
+        attributes: object = {}
+        self._skip_layout()
+        if self._peek() == "{":
+            self.index += 1
+            seen: set[str] = set()
+            while True:
+                self._skip_layout()
+                key = self._identifier()
+                if key in seen:
+                    raise self._error(
+                        "duplicate_relation_metadata",
+                        f"duplicate relation metadata {key!r}",
+                    )
+                seen.add(key)
+                self._expect("=")
+                if key == "ID":
+                    relation_id = self._string_or_identifier()
+                elif key == "CONFIDENCE":
+                    confidence = self._number()
+                    if confidence < 0 or confidence > 1:
+                        raise self._error(
+                            "confidence_range",
+                            "relation CONFIDENCE must be between 0 and 1",
+                        )
+                elif key == "ATTRIBUTES":
+                    attributes = self._json_value()
+                    if not isinstance(attributes, dict):
+                        raise self._error(
+                            "expected_object",
+                            "relation ATTRIBUTES requires a JSON object",
+                        )
+                else:
+                    raise self._error(
+                        "unknown_relation_metadata",
+                        f"unknown canonical relation metadata {key!r}",
+                    )
+                self._skip_layout()
+                if self._peek() != ",":
+                    break
+                self.index += 1
+            self._expect("}", layout=True)
+
+        return Relation(
+            relation_type,
+            tuple(arguments),
+            id=relation_id,
+            confidence=confidence,  # type: ignore[arg-type]
+            attributes=attributes,  # type: ignore[arg-type]
+        )
 
     def _relations(self) -> tuple[Relation, ...]:
         self._expect("R", layout=True)
