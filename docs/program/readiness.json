@@ -4,6 +4,7 @@
   "blockers": [
     {
       "id": "VERIFY-001",
+
       "summary": "A unified cross-platform engineering runner now exists at tools/run_release_checks.py and normal CI is separated from the intentionally failing final readiness gate. VERIFY-001 remains open until the full runner succeeds from a clean checkout on supported environments."
     },
     {
@@ -13,6 +14,7 @@
     {
       "id": "INTEROP-001",
       "summary": "A dependency-free independent JavaScript canonical JSON implementation now consumes multiple shared byte vectors and rejects non-core permission channels. INTEROP-001 remains open until its execution is recorded successfully alongside the Python conformance suite."
+
     },
     {
       "id": "SLAI-001",
@@ -57,11 +59,13 @@
     "canonical-lattice-unrepresentable-vectors",
     "whitepaper-contract-reconciled",
     "gov-ext-host-security-boundary",
+
     "canonical-permissions-whitepaper-only",
     "executable-example-pairs",
     "unified-release-check-runner",
     "independent-js-canonical-json-implementation",
     "release-permission-property-tests",
     "dead-scaffold-cleanup"
+
   ]
 }
