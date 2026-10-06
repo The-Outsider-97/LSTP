@@ -71,7 +71,7 @@ The active production-hardening mandate defines this hierarchy:
 
 Executable tests and conformance vectors provide evidence but do not override a higher-authority source. The October reconciliation introduced a conflicting spec-first hierarchy. Until that governance conflict and any resulting semantic differences are re-audited against the Whitepaper, the current implementation is an engineering candidate rather than a frozen v0.1 authority.
 
-The current field-by-field reconciliation record is [`docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`](docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md). Phase B repairs GOV-PRAG, GOV-PERM, and GOV-CTX in the implementation candidate; GOV-GRAM and GOV-EXT remain active until the canonical Lattice grammar and extension/security-field status are resolved and tested.
+The current field-by-field reconciliation record is [`docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md`](docs/program/WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md). Phase B restored pragmatics, permissions, and context semantics. Phase C restores the Whitepaper canonical ordered-Octad Lattice grammar and parser while retaining compact Lattice as a separate carrier profile. GOV-EXT remains open.
 
 ## Canonical packet
 
@@ -99,11 +99,39 @@ All eight Octad domains are required in canonical JSON. Compact carriers may omi
 
 ## Lattice text
 
-Lattice is an authoring/carrier surface, not a second semantic contract. The strict parser recognizes the normative grammar including target scopes/ranges, composition, alternatives, annotations, approximation, exclusion, claims, ambiguity forms, macros, metadata, context references, and context commands.
+LSTP now has two explicit Lattice carrier profiles with one semantic Octad:
 
-Only constructs with deterministic canonical semantics are compiled into packets. Runtime-only constructs such as `ctx.push`/`ctx.pop` are parsed for inspectability but fail canonical packet compilation rather than being assigned invented semantics.
+1. **Canonical Lattice** — `spec/grammar.ebnf`; ordered
+   `π | A | R | C | κ | Π | E | Ω`, with atomic, framed, named, and named-stream
+   packet forms.
+2. **Compact Lattice** — `spec/compact-grammar.ebnf`; the operator-oriented
+   authoring surface using directives, targets, scopes, `::`, `->`, `%`,
+   context references, macros, and related shorthand.
 
-Relative references such as `↑2` must resolve to stable packet IDs before canonical transport, replay, hashing, or storage.
+The canonical carrier parser is exposed as:
+
+```python
+from lstp import parse_canonical_lattice
+
+document = parse_canonical_lattice(
+    '[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)'
+    '|A=(a0:ENT("door"){ROLE=TARGET})'
+    '|R=(OPEN(a0))'
+    '|C=(THREAD="t1")'
+    '|κ=0.95'
+    '|Π=(MODE=EXEC,SCOPE=["door"])'
+    '|E=(USER("open the door"))'
+    '|Ω=(FORMAT=NL)]'
+)
+```
+
+Compact Lattice continues to use `parse()` / `compile_lattice()`. Compact
+syntax is not silently accepted as canonical ordered-Octad syntax, and packet
+labels in named canonical streams remain carrier labels rather than becoming
+envelope IDs.
+
+Relative compact references such as `↑2` must still resolve to stable packet
+IDs before canonical transport, replay, hashing, or storage.
 
 ## Canonical JSON bytes
 
