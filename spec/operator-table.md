@@ -35,11 +35,11 @@ The governing principles are:
 | `.` | Declarative prefix | Statement/context declaration when leading a clause | `pragmatics` / `context` | `.note` |
 | `@` | Target/reference prefix | Entity, source, or target reference | `atoms`, `relations` | `@sales` |
 | `.` | Path separator | Qualified target/identifier path when internal | atom reference | `@dog.color` |
-| `::` | Operation delimiter | Begins operation expression for a clause | `relations` / `pragmatics.action` | `:: cmp(region)` |
+| `::` | Operation delimiter | Begins operation expression for a clause | `relations` / `pragmatics.goal` | `:: cmp(region)` |
 | `+` | Composition | Combine/include sibling expression terms | operations/constraints | `risk + cost` |
 | `-` | Exclusion | Exclude or negate a term in an expression | qualifier/relation semantics | `-jargon` |
 | `->` | Output delimiter | Begins requested output description | `output` | `-> brief@z2` |
-| `{ ... }` | Constraint block | Constraints, assumptions, permission declarations, modifiers | several Octad fields | `{mode=readonly}` |
+| `{ ... }` | Constraint block | Constraints, assumptions, permission declarations, modifiers | several Octad fields | `{mode=RO}` |
 | `[ ... ]` | Scope block | Target scope, time range, filter, or list | atom/context scope | `@sales[-4Q]` |
 | `( ... )` | Call/grouping | Function-like operation arguments or expression grouping | relations/operation AST | `cmp(region)` |
 | `%` | Confidence marker | Confidence value in `[0,1]` | `confidence` | `%0.82` |
@@ -52,7 +52,7 @@ The governing principles are:
 | `=` | Assignment/equality delimiter | Associates a key/value or explicit relational value | constraints/relations | `tone=warm` |
 | `:` | Annotation delimiter | Associates an annotation key with a value | constraints/annotations | `assume:market_stable` |
 | `|` | Alternative | Separates explicit alternatives | ambiguity/scope expression | `finance | river_edge` |
-| `,` | Separator | Separates entries or arguments | structural | `mode=preview, tone=warm` |
+| `,` | Separator | Separates entries or arguments | structural | `mode=PREVIEW, tone=warm` |
 | `;` | Metadata delimiter | Introduces clause-level metadata | `context`, `audit`, extensions | `; ctx↑0` |
 
 ---
@@ -77,7 +77,7 @@ Example:
 
 It does **not** imply real-world execution permission. Execution remains governed by the `permissions` Octad field.
 
-A parser SHOULD preserve the literal action identifier and SHOULD map the force into `pragmatics.force`.
+A compiler SHOULD preserve the literal action identifier as `pragmatics.goal`. The reference compact mapping is `!`/`!!` -> `type=request, speech_act=command`; `?` -> `type=question, speech_act=question`; leading `.` -> `type=inform, speech_act=statement`. This mapping affects communicative semantics only and grants no execution authority.
 
 ### 3.2 `!!` — urgent directive
 
@@ -278,9 +278,9 @@ A brace block contains comma-separated entries.
 Examples:
 
 ```lattice
-{mode=readonly}
-{mode=preview, tone=warm+firm}
-{mode=readonly, assume:market_stable}
+{mode=RO}
+{mode=PREVIEW, tone=warm+firm}
+{mode=RO, assume:market_stable}
 ```
 
 Entries use either:
@@ -297,11 +297,17 @@ The difference is intentionally narrow in v0.1:
 
 Both compile into structured packet fields according to the recognized key vocabulary.
 
-Recognized core keys include at least:
+Recognized permission keys include:
 
 - `mode`
-- `tone`
-- `assume`
+- `scope`
+- `forbid`
+- `confirm` / `require_confirmation`
+- `review` / `require_review`
+- `log` / `require_logging`
+
+Other compact constraints require an explicit canonical mapping or remain
+unresolved/extension syntax. They MUST NOT create authority by synonym.
 
 Unknown keys MAY be retained as constraints or namespaced extensions. They MUST NOT be allowed to override core permissions by using a misleading synonym.
 
@@ -607,18 +613,20 @@ This restriction applies to symbolic names, not to natural-language content carr
 
 ## 15. Permission mode tokens
 
-The following values are reserved core permission values when used as the value of `mode`:
+The following values are the six Whitepaper core permission modes when used as
+the value of `mode`:
 
 ```text
-readonly
-preview
-sandbox
-confirm
-commit
-auto
-advisory
-reply_or_explain_only
+RO
+SUGGEST
+PREVIEW
+RW
+EXEC
+COMMIT
 ```
+
+The conceptual order is `RO <= SUGGEST <= PREVIEW <= RW <= EXEC <= COMMIT`.
+This order never widens scope or removes forbids/constraints.
 
 A parser MUST reject an unknown value when compiling `mode` into the core `permissions.mode` field.
 
@@ -632,7 +640,7 @@ A host-specific mode MUST NOT masquerade as a core mode. It belongs in a namespa
 
 ```lattice
 !analyze @sales[-4Q] :: cmp(region) + detect(anomaly) + infer(cause~)
-{mode=readonly, assume:market_stable}
+{mode=RO, assume:market_stable}
 -> brief@z2
 %0.82
 ; ctx↑0
@@ -642,7 +650,7 @@ A host-specific mode MUST NOT masquerade as a core mode. It belongs in a namespa
 
 ```lattice
 !email @client :: propose_meeting
-{mode=preview, tone=warm+firm}
+{mode=PREVIEW, tone=warm+firm}
 -> draft@z2
 ```
 
@@ -657,7 +665,7 @@ A host-specific mode MUST NOT masquerade as a core mode. It belongs in a namespa
 
 ```lattice
 !state @dog.color = blue
-{mode=reply_or_explain_only}
+{mode=RO}
 -> explanation@z2
 ```
 
@@ -665,7 +673,7 @@ A host-specific mode MUST NOT masquerade as a core mode. It belongs in a namespa
 
 ```lattice
 !decide @product_launch[next_Q] :: eval(demand + readiness + legal_risk + support_burden)
-{risk_tolerance=med, mode=advisory}
+{risk_tolerance=med, mode=SUGGEST}
 -> recommendation@z4
 ```
 
