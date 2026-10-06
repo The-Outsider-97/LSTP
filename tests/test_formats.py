@@ -16,7 +16,7 @@ def _packet(*, context_time: str | None = None, output_language: str | None = No
             (),
             Context("thread-1", time=context_time),
             1.0,
-            Permissions((), (), expires_at=expires_at),
+            Permissions(expires_at=expires_at),
             (),
             Output("NL", language=output_language),
         ),
