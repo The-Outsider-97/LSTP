@@ -636,10 +636,21 @@ class _Parser:
     def _named(self) -> CanonicalLatticePacket:
         label = self._identifier()
         self._expect(":")
+        self._skip_horizontal()
+        if self._peek() != "[":
+            raise self._error(
+                "expected_framed_packet",
+                "named canonical packet must use label:[octad] framing",
+            )
         return CanonicalLatticePacket(self._framed(), label=label)
 
     def parse(self) -> CanonicalLatticeDocument:
         self._skip_horizontal()
+        if self._peek() in {"\r", "\n"}:
+            raise self._error(
+                "leading_line_break",
+                "canonical document may not start with a line break",
+            )
         if self._peek() == "[":
             packet = CanonicalLatticePacket(self._framed())
             self._skip_horizontal()
