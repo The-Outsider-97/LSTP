@@ -1,1 +1,2 @@
-
+!summarize @meeting -> NL
+because[user("urn:meeting:notes")]
