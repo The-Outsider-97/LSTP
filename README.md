@@ -242,9 +242,18 @@ Successful generic JSON inspection reports:
 
 Versioned vectors live under [`conformance/v0.1/`](conformance/v0.1/).
 
-Positive canonical-byte fixtures must decode, validate and re-encode byte-for-byte identically. Negative fixtures must fail closed at the structural or semantic layer and must never be silently migrated into a different meaning.
+Canonical JSON positive fixtures must decode, validate and re-encode
+byte-for-byte identically. Negative JSON fixtures must fail closed at the
+structural or semantic layer.
 
-The vector corpus is an initial executable baseline, not yet the independent interoperability evidence required for release/training freeze.
+Canonical Lattice fixtures live under
+`conformance/v0.1/lattice/canonical/` and are executed through
+`parse_canonical_lattice()` / `compile_canonical_lattice()`. The initial
+corpus includes a semantically valid Whitepaper-style packet and strict
+segment-order rejection.
+
+The vector corpus is still an initial baseline, not yet the independent
+interoperability evidence required for release/training freeze.
 
 ## Protocol readiness
 
