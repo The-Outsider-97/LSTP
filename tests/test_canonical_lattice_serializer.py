@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from lstp import canonical_loads
 from lstp.errors import CompilationError
 from lstp.models import EvidenceItem
 from lstp.text.canonical import compile_canonical_lattice, parse_canonical_lattice
@@ -116,3 +117,21 @@ def test_encoder_rejects_unrepresentable_audience_identifier() -> None:
     context = replace(octad.context, audience=("human user",))
     with pytest.raises(CompilationError, match="canonical identifier"):
         canonical_lattice_dumps(replace(octad, context=context))
+
+
+@pytest.mark.parametrize(
+    ("name", "message"),
+    [
+        ("gov-ext-authorization-ref.json", "authorization_ref"),
+        ("rich-evidence.json", "rich evidence metadata"),
+    ],
+)
+def test_versioned_unrepresentable_vectors_fail_closed(
+    name: str,
+    message: str,
+) -> None:
+    packet = canonical_loads(
+        (ROOT / "unrepresentable" / name).read_bytes()
+    )
+    with pytest.raises(CompilationError, match=message):
+        canonical_lattice_dumps(packet.octad)
