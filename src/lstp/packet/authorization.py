@@ -76,6 +76,50 @@ class DelegationContext:
 
 
 @dataclass(frozen=True, slots=True)
+class HostDelegationBinding:
+    """Trusted host-side delegation identity binding.
+
+    This is authorization metadata, not canonical LSTP packet semantics.
+    """
+
+    parent_packet: str | None = None
+    delegator: str | None = None
+    principal: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.parent_packet is not None and not self.parent_packet:
+            raise ValueError("parent_packet must be non-empty when supplied")
+        if self.delegator is not None and not self.delegator:
+            raise ValueError("delegator must be non-empty when supplied")
+        if self.principal is not None and not self.principal:
+            raise ValueError("principal must be non-empty when supplied")
+        if (
+            self.parent_packet is None
+            and self.delegator is None
+            and self.principal is None
+        ):
+            raise ValueError("host delegation binding must identify at least one link")
+
+
+@dataclass(frozen=True, slots=True)
+class HostAuthorizationContext:
+    """Trusted authorization metadata supplied by the consuming host.
+
+    These fields intentionally live outside the canonical v0.1 Octad.
+    """
+
+    authorization_ref: str | None = None
+    expires_at: str | None = None
+    delegation: HostDelegationBinding | None = None
+
+    def __post_init__(self) -> None:
+        if self.authorization_ref is not None and not self.authorization_ref:
+            raise ValueError("authorization_ref must be non-empty when supplied")
+        if self.expires_at is not None:
+            parse_rfc3339(self.expires_at)
+
+
+@dataclass(frozen=True, slots=True)
 class HostPolicy:
     """Host policy that can only narrow principal/runtime authority."""
 
@@ -186,11 +230,10 @@ def validate_delegation(
     *,
     child: PrincipalContext,
     parent: DelegationContext,
+    binding: HostDelegationBinding,
 ) -> tuple[Diagnostic, ...]:
-    """Verify identity binding and monotonic attenuation for delegation."""
-    delegation = packet.octad.permissions.delegation
-    if delegation is None:
-        return ()
+    """Verify trusted host delegation binding and monotonic attenuation."""
+    delegation = binding
     requested = _requested_authority(packet.octad.permissions)
     diagnostics: list[Diagnostic] = []
 
@@ -198,19 +241,19 @@ def validate_delegation(
         diagnostics.append(_diag(
             "delegation_parent_mismatch",
             "delegation parent_packet does not match authenticated parent packet",
-            "$.permissions.delegation.parent_packet",
+            "$.host_authorization.delegation.parent_packet",
         ))
     if delegation.delegator is not None and delegation.delegator != parent.principal_id:
         diagnostics.append(_diag(
             "delegator_mismatch",
             "delegation delegator does not match authenticated parent principal",
-            "$.permissions.delegation.delegator",
+            "$.host_authorization.delegation.delegator",
         ))
     if delegation.principal is not None and delegation.principal != child.principal_id:
         diagnostics.append(_diag(
             "delegated_principal_mismatch",
             "delegation principal does not match authenticated child principal",
-            "$.permissions.delegation.principal",
+            "$.host_authorization.delegation.principal",
         ))
 
     extra_capabilities = requested.capabilities - parent.authority.capabilities
@@ -238,6 +281,7 @@ def authorize_operation(
     policy: HostPolicy,
     runtime: Authority,
     parent: DelegationContext | None = None,
+    authorization_context: HostAuthorizationContext | None = None,
     replay_guard: ReplayStore | None = None,
     now: datetime | None = None,
 ) -> AuthorizationDecision:
@@ -262,38 +306,49 @@ def authorize_operation(
             )
         )
 
-    if permissions.expires_at is not None:
-        expiry = parse_rfc3339(permissions.expires_at)
-        current = now or _utc_now()
-        if current.tzinfo is None:
-            diagnostics.append(_diag(
-                "invalid_authorization_clock",
-                "authorization clock must be timezone-aware",
-            ))
-        elif current.astimezone(timezone.utc) >= expiry:
-            diagnostics.append(_diag(
-                "authorization_expired",
-                "permission request has expired",
-                "$.permissions.expires_at",
-            ))
+    if authorization_context is not None:
+        if authorization_context.expires_at is not None:
+            expiry = parse_rfc3339(authorization_context.expires_at)
+            current = now or _utc_now()
+            if current.tzinfo is None:
+                diagnostics.append(_diag(
+                    "invalid_authorization_clock",
+                    "authorization clock must be timezone-aware",
+                ))
+            elif current.astimezone(timezone.utc) >= expiry:
+                diagnostics.append(_diag(
+                    "authorization_expired",
+                    "trusted host authorization context has expired",
+                    "$.host_authorization.expires_at",
+                ))
 
-    if permissions.authorization_ref is not None:
-        if permissions.authorization_ref not in policy.trusted_authorization_refs:
-            diagnostics.append(_diag(
-                "authorization_ref_untrusted",
-                "authorization_ref is not recognized by the trusted host policy",
-                "$.permissions.authorization_ref",
-            ))
+        if authorization_context.authorization_ref is not None:
+            if (
+                authorization_context.authorization_ref
+                not in policy.trusted_authorization_refs
+            ):
+                diagnostics.append(_diag(
+                    "authorization_ref_untrusted",
+                    "authorization_ref is not recognized by trusted host policy",
+                    "$.host_authorization.authorization_ref",
+                ))
 
-    if permissions.delegation is not None:
-        if parent is None:
-            diagnostics.append(_diag(
-                "delegation_parent_authority_missing",
-                "delegated packet requires authenticated parent authority",
-                "$.permissions.delegation",
-            ))
-        else:
-            diagnostics.extend(validate_delegation(packet, child=principal, parent=parent))
+        if authorization_context.delegation is not None:
+            if parent is None:
+                diagnostics.append(_diag(
+                    "delegation_parent_authority_missing",
+                    "delegated operation requires authenticated parent authority",
+                    "$.host_authorization.delegation",
+                ))
+            else:
+                diagnostics.extend(
+                    validate_delegation(
+                        packet,
+                        child=principal,
+                        parent=parent,
+                        binding=authorization_context.delegation,
+                    )
+                )
 
     effective = effective_authority(packet, principal=principal, policy=policy, runtime=runtime)
     if operation.capability not in effective.capabilities:
@@ -356,6 +411,7 @@ def require_authorized_operation(
     policy: HostPolicy,
     runtime: Authority,
     parent: DelegationContext | None = None,
+    authorization_context: HostAuthorizationContext | None = None,
     replay_guard: ReplayStore | None = None,
     now: datetime | None = None,
 ) -> AuthorizationDecision:
@@ -366,6 +422,7 @@ def require_authorized_operation(
         policy=policy,
         runtime=runtime,
         parent=parent,
+        authorization_context=authorization_context,
         replay_guard=replay_guard,
         now=now,
     )
@@ -377,6 +434,8 @@ __all__ = [
     "Authority",
     "AuthorizationDecision",
     "DelegationContext",
+    "HostAuthorizationContext",
+    "HostDelegationBinding",
     "HostPolicy",
     "OperationRequest",
     "PrincipalContext",
