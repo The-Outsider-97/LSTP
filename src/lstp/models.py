@@ -126,6 +126,48 @@ def _reject_unknown_keys(
         raise ValueError(f"unknown field at {path}: {unknown[0]!r}")
 
 
+def _optional_string(
+    data: Mapping[str, Any],
+    key: str,
+    *,
+    path: str,
+) -> str | None:
+    if key not in data or data[key] is None:
+        return None
+    return _non_empty_string(data[key], path=f"{path}.{key}")
+
+
+def _optional_bool(
+    data: Mapping[str, Any],
+    key: str,
+    *,
+    path: str,
+    default: bool = False,
+) -> bool:
+    if key not in data:
+        return default
+    value = data[key]
+    if not isinstance(value, bool):
+        raise TypeError(f"expected boolean at {path}.{key}")
+    return value
+
+
+def _optional_non_negative_int(
+    data: Mapping[str, Any],
+    key: str,
+    *,
+    path: str,
+) -> int | None:
+    if key not in data or data[key] is None:
+        return None
+    value = data[key]
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TypeError(f"expected integer at {path}.{key}")
+    if value < 0:
+        raise ValueError(f"value at {path}.{key} must be non-negative")
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class Pragmatics:
     type: str
@@ -178,12 +220,12 @@ class Pragmatics:
         )
         return cls(
             type=_non_empty_string(data.get("type"), path="$.pragmatics.type"),
-            speech_act=(
-                data.get("speech_act")
-                if isinstance(data.get("speech_act"), str)
-                else None
+            speech_act=_optional_string(
+                data,
+                "speech_act",
+                path="$.pragmatics",
             ),
-            goal=data.get("goal") if isinstance(data.get("goal"), str) else None,
+            goal=_optional_string(data, "goal", path="$.pragmatics"),
             modifiers=tuple(
                 _non_empty_string(x, path="$.pragmatics.modifiers[]")
                 for x in _sequence(
@@ -191,10 +233,10 @@ class Pragmatics:
                     path="$.pragmatics.modifiers",
                 )
             ),
-            register=(
-                data.get("register")
-                if isinstance(data.get("register"), str)
-                else None
+            register=_optional_string(
+                data,
+                "register",
+                path="$.pragmatics",
             ),
             urgency=(
                 None
@@ -391,32 +433,19 @@ class Context:
                     path="$.context.references",
                 )
             ),
-            packet_id=(
-                data.get("packet_id")
-                if isinstance(data.get("packet_id"), str)
-                else None
+            packet_id=_optional_string(data, "packet_id", path="$.context"),
+            parent_packet_id=_optional_string(
+                data,
+                "parent_packet_id",
+                path="$.context",
             ),
-            parent_packet_id=(
-                data.get("parent_packet_id")
-                if isinstance(data.get("parent_packet_id"), str)
-                else None
+            conversation_id=_optional_string(
+                data,
+                "conversation_id",
+                path="$.context",
             ),
-            conversation_id=(
-                data.get("conversation_id")
-                if isinstance(data.get("conversation_id"), str)
-                else None
-            ),
-            turn=(
-                data.get("turn")
-                if isinstance(data.get("turn"), int)
-                and not isinstance(data.get("turn"), bool)
-                else None
-            ),
-            speaker=(
-                data.get("speaker")
-                if isinstance(data.get("speaker"), str)
-                else None
-            ),
+            turn=_optional_non_negative_int(data, "turn", path="$.context"),
+            speaker=_optional_string(data, "speaker", path="$.context"),
             audience=tuple(
                 _non_empty_string(x, path="$.context.audience[]")
                 for x in _sequence(
@@ -424,12 +453,8 @@ class Context:
                     path="$.context.audience",
                 )
             ),
-            time=data.get("time") if isinstance(data.get("time"), str) else None,
-            timezone=(
-                data.get("timezone")
-                if isinstance(data.get("timezone"), str)
-                else None
-            ),
+            time=_optional_string(data, "time", path="$.context"),
+            timezone=_optional_string(data, "timezone", path="$.context"),
             window=data.get("window"),
             location=data.get("location"),
             bindings=_mapping(data.get("bindings", {}), path="$.context.bindings"),
@@ -530,7 +555,7 @@ class Permissions:
         )
         delegation = data.get("delegation")
         return cls(
-            mode=data.get("mode") if isinstance(data.get("mode"), str) else None,
+            mode=_optional_string(data, "mode", path="$.permissions"),
             scope=tuple(
                 _non_empty_string(x, path="$.permissions.scope[]")
                 for x in _sequence(data.get("scope", []), path="$.permissions.scope")
@@ -539,19 +564,31 @@ class Permissions:
                 _non_empty_string(x, path="$.permissions.forbid[]")
                 for x in _sequence(data.get("forbid", []), path="$.permissions.forbid")
             ),
-            require_confirmation=bool(data.get("require_confirmation", False)),
-            require_review=bool(data.get("require_review", False)),
-            require_logging=bool(data.get("require_logging", False)),
-            limits=_mapping(data.get("limits", {}), path="$.permissions.limits"),
-            authorization_ref=(
-                data.get("authorization_ref")
-                if isinstance(data.get("authorization_ref"), str)
-                else None
+            require_confirmation=_optional_bool(
+                data,
+                "require_confirmation",
+                path="$.permissions",
             ),
-            expires_at=(
-                data.get("expires_at")
-                if isinstance(data.get("expires_at"), str)
-                else None
+            require_review=_optional_bool(
+                data,
+                "require_review",
+                path="$.permissions",
+            ),
+            require_logging=_optional_bool(
+                data,
+                "require_logging",
+                path="$.permissions",
+            ),
+            limits=_mapping(data.get("limits", {}), path="$.permissions.limits"),
+            authorization_ref=_optional_string(
+                data,
+                "authorization_ref",
+                path="$.permissions",
+            ),
+            expires_at=_optional_string(
+                data,
+                "expires_at",
+                path="$.permissions",
             ),
             delegation=(
                 Delegation.from_mapping(delegation)
