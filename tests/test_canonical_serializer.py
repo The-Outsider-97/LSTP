@@ -64,6 +64,53 @@ def test_bidi_control_is_not_canonical() -> None:
         canonical_loads(json.dumps(data, ensure_ascii=False))
 
 
+
+def test_october_candidate_pragmatics_field_fails_closed() -> None:
+    data = json.loads(canonical_dumps(_packet()))
+    data["pragmatics"] = {"act": "request"}
+    with pytest.raises(CanonicalizationError, match="unknown canonical field"):
+        canonical_loads(json.dumps(data))
+
+
+def test_october_candidate_permission_fields_fail_closed() -> None:
+    data = json.loads(canonical_dumps(_packet()))
+    data["permissions"] = {
+        "capabilities": ["commit"],
+        "resources": [{"id": "urn:door:front"}],
+        "profile": "COMMIT",
+    }
+    with pytest.raises(CanonicalizationError, match="unknown canonical field"):
+        canonical_loads(json.dumps(data))
+
+
+def test_context_whitepaper_fields_round_trip() -> None:
+    packet = PacketEnvelope(
+        Octad(
+            Pragmatics("inform", speech_act="statement"),
+            (),
+            (),
+            Context(
+                "t1",
+                parent_packet_id="p0",
+                timezone="Europe/Amsterdam",
+                window={"turns": 4},
+            ),
+            1.0,
+            Permissions(),
+            (),
+            Output("NL"),
+        ),
+        "p1",
+        "0.1",
+        carrier={},
+        audit={},
+    )
+    encoded = canonical_dumps(packet)
+    decoded = canonical_loads(encoded, require_canonical_bytes=True)
+    assert decoded.octad.context.parent_packet_id == "p0"
+    assert decoded.octad.context.timezone == "Europe/Amsterdam"
+    assert decoded.octad.context.window["turns"] == 4
+
 def test_pathological_decimal_exponent_fails_before_expansion() -> None:
     packet = PacketEnvelope(
         Octad(
