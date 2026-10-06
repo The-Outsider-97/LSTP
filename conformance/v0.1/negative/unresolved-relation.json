@@ -1,1 +1,1 @@
-{"audit":{},"atoms":[],"carrier":{},"confidence":1,"context":{"references":[],"thread_id":"t1"},"evidence":[],"id":"p1","output":{"format":"NL"},"permissions":{"capabilities":[],"resources":[]},"pragmatics":{"act":"assert"},"relations":[{"arguments":["a0"],"id":"r0","type":"is"}],"version":"0.1"}
+{"audit":{},"atoms":[],"carrier":{},"confidence":1,"context":{"references":[],"thread_id":"t1"},"evidence":[],"id":"p1","output":{"format":"NL"},"permissions":{},"pragmatics":{"type":"assert"},"relations":[{"arguments":["a0"],"id":"r0","type":"is"}],"version":"0.1"}
