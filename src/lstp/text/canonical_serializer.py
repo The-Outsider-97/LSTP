@@ -275,21 +275,6 @@ def _context(octad: Octad) -> str:
 def _permissions(octad: Octad) -> str:
     value = octad.permissions
     _no_extensions(value.extensions, "$.permissions.extensions")
-    if value.authorization_ref is not None:
-        raise _error(
-            "authorization_ref has no frozen canonical Lattice syntax",
-            "$.permissions.authorization_ref",
-        )
-    if value.expires_at is not None:
-        raise _error(
-            "expires_at has no frozen canonical Lattice syntax",
-            "$.permissions.expires_at",
-        )
-    if value.delegation is not None:
-        raise _error(
-            "delegation has no frozen canonical Lattice syntax",
-            "$.permissions.delegation",
-        )
     entries: list[str] = []
     if value.mode is not None:
         entries.append("MODE=" + value.mode)
