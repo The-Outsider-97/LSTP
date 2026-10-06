@@ -1,6 +1,6 @@
 # LSTP v0.1 Permissions and Safety
 
-Status: normative profile subordinate to `spec/CANONICAL-v0.1.md`.
+Status: implementation candidate under Whitepaper-first reconciliation. The Level-1 Whitepaper permission mode/scope model governs where this capability-oriented profile conflicts with it.
 
 ## 1. Principle
 
