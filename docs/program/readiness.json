@@ -4,11 +4,7 @@
   "blockers": [
     {
       "id": "VERIFY-001",
-      "summary": "Run tools/run_release_checks.py successfully from a clean checkout, covering the schema gate, Ruff, formatting, strict mypy, full pytest/property/conformance suite, build, independent JavaScript interoperability, and wheel/sdist smoke checks. GitHub-hosted jobs still fail before workflow steps start, so executable Python/package evidence remains the primary engineering blocker."
-    },
-    {
-      "id": "SLAI-001",
-      "summary": "Implement and verify the SLAI v2.3 integration target: pinned LSTP under SLAI/model/LSTP, SLAI-root run_lstp.py adapter, validation/conversion boundary, and end-to-end human/LANTRA/agent smoke tests."
+      "summary": "Run tools/run_release_checks.py successfully from a clean LSTP checkout and obtain executable smoke evidence for the merged SLAI v2.3 adapter pinned to LSTP. The LSTP GitHub Actions jobs still fail before workflow steps start and SLAI PR #31 has no attached workflow, so clean Python/package/cross-repository execution remains the principal engineering blocker."
     },
     {
       "id": "DOC-001",
@@ -60,6 +56,10 @@
     "shared-conformance-negative-semantics",
     "release-mutation-property-tests",
     "release-resource-limit-tests",
-    "pretraining-conformance-corpus-reviewed"
+    "pretraining-conformance-corpus-reviewed",
+    "slai-v2.3-pinned-submodule-integration",
+    "slai-root-run-lstp-adapter",
+    "slai-language-frame-octad-boundary",
+    "slai-zero-authority-language-boundary"
   ]
 }
