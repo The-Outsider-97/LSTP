@@ -4,11 +4,7 @@
   "blockers": [
     {
       "id": "VERIFY-001",
-      "summary": "A unified cross-platform engineering runner now exists at tools/run_release_checks.py and normal CI is separated from the intentionally failing final readiness gate. VERIFY-001 remains open until the full runner succeeds from a clean checkout on supported environments."
-    },
-    {
-      "id": "TEST-001",
-      "summary": "Python and independent JavaScript conformance now share one manifest; canonical byte ordering was corrected for the minimal positive vector; the JS implementation passed the shared positive/negative JSON and canonical-Lattice cases. TEST-001 remains open for broader mutation/fuzz/resource/migration coverage and final production corpus review."
+      "summary": "Run tools/run_release_checks.py successfully from a clean checkout, covering the schema gate, Ruff, formatting, strict mypy, full pytest/property/conformance suite, build, independent JavaScript interoperability, and wheel/sdist smoke checks. GitHub-hosted jobs still fail before workflow steps start, so executable Python/package evidence remains the primary engineering blocker."
     },
     {
       "id": "SLAI-001",
@@ -60,6 +56,10 @@
     "release-permission-property-tests",
     "dead-scaffold-cleanup",
     "independent-js-interop-executed",
-    "shared-conformance-manifest"
+    "shared-conformance-manifest",
+    "shared-conformance-negative-semantics",
+    "release-mutation-property-tests",
+    "release-resource-limit-tests",
+    "pretraining-conformance-corpus-reviewed"
   ]
 }
