@@ -16,6 +16,26 @@
     {
       "path": "negative/missing-commit-scope.json",
       "failure": "semantic"
+    },
+    {
+      "path": "negative/duplicate-atom-id.json",
+      "failure": "semantic"
+    },
+    {
+      "path": "negative/unknown-relation.json",
+      "failure": "semantic"
+    },
+    {
+      "path": "negative/context-packet-id-mismatch.json",
+      "failure": "semantic"
+    },
+    {
+      "path": "negative/duplicate-evidence-id.json",
+      "failure": "semantic"
+    },
+    {
+      "path": "negative/unresolved-evidence-support.json",
+      "failure": "semantic"
     }
   ],
   "positive_lattice": [
