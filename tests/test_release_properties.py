@@ -8,8 +8,11 @@ from hypothesis import strategies as st
 
 from lstp import (
     CanonicalizationError,
+    InputLimits,
     LatticeSyntaxError,
+    ResourceLimitError,
     SemanticValidationError,
+    canonical_dumps,
     canonical_loads,
 )
 from lstp.packet.compiler import CompilerOptions, compile_lattice
@@ -128,3 +131,113 @@ def test_canonical_octad_segment_reordering_is_rejected(mutated: str) -> None:
     assert parse_canonical_lattice(BASE_CANONICAL).packets
     with pytest.raises(LatticeSyntaxError):
         parse_canonical_lattice(mutated)
+
+
+def _minimal_packet_mapping() -> dict[str, object]:
+    return {
+        "id": "p1",
+        "version": "0.1",
+        "pragmatics": {"type": "inform"},
+        "atoms": [],
+        "relations": [],
+        "context": {"thread_id": "t1", "references": []},
+        "confidence": 1,
+        "permissions": {},
+        "evidence": [],
+        "output": {"format": "NL"},
+        "carrier": {},
+        "audit": {},
+    }
+
+
+UNKNOWN_FIELD = st.from_regex(
+    r"x_[a-z]{1,12}",
+    fullmatch=True,
+)
+
+
+@settings(max_examples=120, derandomize=True)
+@given(UNKNOWN_FIELD, st.integers() | st.text(max_size=20))
+def test_unknown_top_level_fields_always_fail_closed(
+    field: str,
+    value: object,
+) -> None:
+    packet = _minimal_packet_mapping()
+    packet[field] = value
+    with pytest.raises(CanonicalizationError, match="unknown canonical field"):
+        canonical_loads(json.dumps(packet, separators=(",", ":")))
+
+
+@settings(max_examples=120, derandomize=True)
+@given(UNKNOWN_FIELD, st.integers() | st.text(max_size=20))
+def test_unknown_permission_fields_always_fail_closed(
+    field: str,
+    value: object,
+) -> None:
+    packet = _minimal_packet_mapping()
+    permissions = packet["permissions"]
+    assert isinstance(permissions, dict)
+    permissions[field] = value
+    with pytest.raises(CanonicalizationError, match="unknown canonical field"):
+        canonical_loads(json.dumps(packet, separators=(",", ":")))
+
+
+@pytest.mark.parametrize(
+    ("container", "legacy_field", "value"),
+    [
+        ("pragmatics", "act", "inform"),
+        ("context", "parent_id", "p0"),
+        ("permissions", "capabilities", ["read"]),
+        ("permissions", "resources", ["urn:test:x"]),
+        ("permissions", "profile", "RO"),
+    ],
+)
+def test_legacy_candidate_fields_are_not_silently_migrated(
+    container: str,
+    legacy_field: str,
+    value: object,
+) -> None:
+    packet = _minimal_packet_mapping()
+    target = packet[container]
+    assert isinstance(target, dict)
+    target[legacy_field] = value
+    with pytest.raises(CanonicalizationError, match="unknown canonical field"):
+        canonical_loads(json.dumps(packet, separators=(",", ":")))
+
+
+def test_canonical_decoder_enforces_resource_limits_before_acceptance() -> None:
+    packet = _minimal_packet_mapping()
+    source = json.dumps(packet, separators=(",", ":"))
+    with pytest.raises(ResourceLimitError):
+        canonical_loads(
+            source,
+            limits=InputLimits(max_bytes=len(source.encode("utf-8")) - 1),
+        )
+
+
+def test_strict_canonical_byte_mode_rejects_whitespace_mutation() -> None:
+    packet = canonical_loads(
+        json.dumps(_minimal_packet_mapping(), separators=(",", ":"))
+    )
+    canonical = canonical_dumps(packet)
+    mutated = canonical.replace(b"{", b"{ ", 1)
+    assert mutated != canonical
+    with pytest.raises(CanonicalizationError, match="not canonical byte form"):
+        canonical_loads(mutated, require_canonical_bytes=True)
+
+
+@settings(max_examples=120, derandomize=True)
+@given(st.sampled_from(MODES), SAFE_RESOURCE)
+def test_compact_to_canonical_json_round_trip_preserves_permissions(
+    mode: str,
+    resource: str,
+) -> None:
+    packet = compile_lattice(
+        f'!inspect @target {{mode={mode}, scope=["{resource}"]}} -> JSON',
+        options=CompilerOptions(packet_id="p1", thread_id="t1"),
+    )
+    restored = canonical_loads(
+        canonical_dumps(packet),
+        require_canonical_bytes=True,
+    )
+    assert restored.octad.permissions == packet.octad.permissions

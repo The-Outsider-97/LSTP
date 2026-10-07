@@ -1,22 +1,47 @@
 # LSTP v0.1 conformance vectors
 
-These fixtures are executable evidence for the reconciled v0.1 contract.
+These fixtures are executable evidence for the reconciled and frozen v0.1
+contract. Both the Python reference implementation and the independent
+JavaScript verifier consume `manifest.json`.
 
-- `positive/` contains canonical byte representations that MUST decode, validate, and re-encode byte-for-byte identically.
-- `negative/` contains packets that MUST be rejected structurally or semantically.
+## Vector classes
 
-The suite is intentionally small in this increment. It establishes the harness and covers canonical byte stability, unknown-field rejection, unresolved semantic references, and permission profile widening. Additional vectors should be added for every fixed regression and every normative cross-field rule.
+- `positive/` — canonical JSON bytes that MUST decode, validate, and re-encode
+  byte-for-byte identically.
+- `negative/` — structural or semantic failures that MUST fail closed.
+- `lattice/canonical/positive/` — canonical ordered-Octad Lattice that MUST
+  parse and validate.
+- `lattice/canonical/negative/` — canonical Lattice syntax/ordering failures.
+- `lattice/canonical/unrepresentable/` — valid semantics that MUST NOT be
+  silently dropped when a canonical-Lattice syntax is not governed.
 
-A vector passing JSON syntax alone is not conformance. Positive vectors must pass typed construction and semantic validation. Negative vectors must fail closed and must not be silently migrated or normalized into a different protocol meaning.
+The manifest also freezes the non-core permission fields that canonical v0.1
+must reject.
 
+A vector passing JSON syntax alone is not conformance. Positive vectors must
+pass typed construction and semantic validation. Negative vectors must fail at
+their intended layer and must not be silently migrated.
+
+## Property/adversarial coverage
+
+The release suite supplements static fixtures with deterministic Hypothesis and
+resource-limit tests covering:
+
+- compact permission mode/scope preservation;
+- forbid attenuation;
+- unknown-field mutation at packet and permission boundaries;
+- legacy candidate-field rejection;
+- strict canonical-byte mutation;
+- compact-to-canonical round trips;
+- byte/depth/string/collection/node/number resource limits;
+- arbitrary byte fuzz and pathological numeric inputs.
 
 ## Independent implementation
 
-`interop/js/verify.mjs` is a dependency-free JavaScript implementation of the
-frozen canonical JSON byte profile. It does not import or invoke the Python
-package. It consumes every JSON file in `positive/`, validates the frozen v0.1
-top-level/permission boundary, independently re-encodes the packet, and requires
-byte-for-byte equality.
+`interop/js/verify.mjs` is dependency-free and does not import, spawn, or
+invoke the Python implementation. It consumes the same manifest, reproduces
+canonical JSON bytes, validates the frozen permission boundary and core
+reference rules, and checks canonical-Lattice Octad ordering.
 
 Run:
 
@@ -24,4 +49,11 @@ Run:
 node interop/js/verify.mjs
 ```
 
-The unified engineering gate runs this automatically.
+Recorded execution evidence is stored under `docs/program/evidence/`.
+
+## Release responsibility
+
+Corpus completeness is tracked separately from execution. TEST-001 covers the
+breadth and review of the conformance corpus; VERIFY-001 requires the full suite
+to execute successfully from a clean checkout before the release/training
+freeze is approved.

@@ -1,0 +1,57 @@
+{
+  "id": "TEST-001-REVIEW-2026-10-07",
+  "date": "2026-10-07",
+  "contract_version": "0.1",
+  "shared_manifest": "conformance/v0.1/manifest.json",
+  "coverage": {
+    "canonical_json_positive_bytes": [
+      "positive/minimal.json",
+      "positive/rich.json"
+    ],
+    "canonical_json_negative_semantics": [
+      "unknown top-level field",
+      "unresolved relation reference",
+      "side-effect mode without scope",
+      "duplicate atom id",
+      "unknown unnamespaced relation",
+      "context/envelope packet-id mismatch",
+      "duplicate evidence id",
+      "unresolved evidence support"
+    ],
+    "canonical_lattice": [
+      "Whitepaper-style positive packet",
+      "wrong segment order rejection"
+    ],
+    "permission_security": [
+      "six-mode compact preservation",
+      "forbid never widens scope",
+      "non-core permission channel rejection",
+      "side-effect explicit-scope rule"
+    ],
+    "property_mutation": [
+      "unknown top-level field fuzz",
+      "unknown permission field fuzz",
+      "legacy candidate field rejection",
+      "strict canonical-byte whitespace mutation"
+    ],
+    "resource_limits": [
+      "canonical decoder max-bytes enforcement",
+      "bounded JSON byte/depth/string/item/node/number limits",
+      "10,000-level adversarial depth rejection",
+      "arbitrary byte fuzz"
+    ],
+    "migration": [
+      "pragmatics.act rejected",
+      "context.parent_id rejected",
+      "permissions.capabilities/resources/profile rejected"
+    ],
+    "round_trip": [
+      "canonical JSON byte stability",
+      "canonical Lattice semantic round trip",
+      "compact-to-canonical permission preservation"
+    ]
+  },
+  "review_result": "sufficient pre-training conformance/adversarial baseline",
+  "production_note": "Further application-specific load/stress profiles may be added without changing the frozen protocol contract.",
+  "execution_gate": "VERIFY-001 remains responsible for proving the complete Python suite and package checks pass from a clean checkout."
+}

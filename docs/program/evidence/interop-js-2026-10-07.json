@@ -1,0 +1,22 @@
+{
+  "id": "INTEROP-JS-2026-10-07",
+  "date": "2026-10-07",
+  "branch": "release/2026-10-07-shared-conformance",
+  "head_commit": "b4fbcec2fe1176e178a50d53103693a688e79d48",
+  "implementation": "interop/js/verify.mjs",
+  "runtime": "Node.js v22.16.0",
+  "command": "node interop/js/verify.mjs",
+  "result": {
+    "implementation": "independent-js-v0.1",
+    "manifest": "0.1",
+    "positive_json": 2,
+    "negative_json": 8,
+    "positive_lattice": 1,
+    "negative_lattice": 1,
+    "canonical_bytes": 1078,
+    "noncore_permission_fields": 6,
+    "status": "passed"
+  },
+  "independence": "The JavaScript verifier does not import, spawn, or invoke the Python LSTP package.",
+  "note": "Executed twice in the isolated runtime. The final run consumed the expanded shared manifest with eight negative JSON semantic cases; GitHub-hosted Actions still fail before workflow steps start."
+}
