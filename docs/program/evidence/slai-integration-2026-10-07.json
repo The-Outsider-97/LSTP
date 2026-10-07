@@ -1,0 +1,26 @@
+{
+  "id": "SLAI-001-2026-10-07",
+  "date": "2026-10-07",
+  "status": "implemented-and-merged",
+  "slai_repository": "The-Outsider-97/SLAI",
+  "slai_pull_request": 31,
+  "slai_merge_commit": "ec55660b02db84305409cc14aa5ba230052927f5",
+  "slai_integration_branch_head": "de0b47627c9df2482976bcad5cf8c24200a944dd",
+  "lstp_repository": "The-Outsider-97/LSTP",
+  "lstp_pinned_commit": "7f4c1dab1255d3b36364adc7227e7743679087fb",
+  "layout": [
+    "SLAI/run_lstp.py",
+    "SLAI/model/LSTP"
+  ],
+  "integration": [
+    "real Git submodule pin under model/LSTP",
+    "editable local package installation through requirements.txt",
+    "root run_lstp.py launcher",
+    "LanguageAgent.process() -> LinguisticFrame -> LSTP Octad mapping",
+    "canonical semantic validation and canonical JSON output",
+    "zero-authority language boundary",
+    "deterministic mapping and canonical round-trip tests",
+    "real LanguageAgent -> LSTP smoke test"
+  ],
+  "execution_note": "SLAI PR #31 has no GitHub workflow run attached. Full cross-repository executable release proof remains part of VERIFY-001 / REL-001 rather than reopening the integration architecture."
+}
