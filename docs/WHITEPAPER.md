@@ -1,14 +1,14 @@
 # LSTP
 ## Lattice Semantic Transport Protocol
-### A specification-first protocol for inspectable semantic communication between humans and AI systems
+### An executable, specification-first protocol for inspectable semantic communication between humans and AI systems
 
 **Protocol:** LSTP v0.1  
-**Document status:** Revised academic/technical whitepaper - draft protocol publication  
-**Whitepaper revision:** 2.0  
+**Document status:** Pre-training candidate protocol publication  
+**Whitepaper revision:** 3.0  
 **Project attribution:** LSTP project; Phase-1 protocol specification attributed in-repository to Garrick Montgomery  
-**Repository analysis date:** 21 September 2026  
-**LSTP state:** `main` @ `18d947a45f2db220267f70c7ddb07112fc3181d4`  
-**SLAI state:** `SLAI-v.2.3` @ `ce4cfe7b1939bc862725e3cb59f488a5b96b1423`
+**Repository analysis date:** 7 October 2026  
+**LSTP state:** reconciled v0.1 baseline on `main` @ `da804741bc34e3ff4dbe7178f022286b3f6c4893`  
+**SLAI state:** `main` @ `ec55660b02db84305409cc14aa5ba230052927f5`
 
 > **One meaning. Many carriers. Always inspectable.**
 >
@@ -16,30 +16,31 @@
 
 ---
 
+
 ## Abstract
 
-The Lattice Semantic Transport Protocol (LSTP) is a specification-first proposal for representing and transporting structured semantic content between humans, AI systems, and AI agents. The project addresses a recurring engineering problem in AI-mediated communication: natural-language messages often entangle communicative intent, entities, relations, context, uncertainty, evidence, authority, and output requirements in forms that are convenient for humans but difficult to validate or audit deterministically. LSTP proposes an explicit canonical semantic representation - the **Octad Packet** - together with a compact text carrier called **Lattice**, a JSON Schema, an operator table, and permission semantics.
+The Lattice Semantic Transport Protocol (LSTP) is a specification-first protocol for representing and transporting structured semantic content between humans, AI systems, and AI agents. It addresses a recurring engineering problem in AI-mediated communication: natural-language messages often entangle communicative intent, entities, relations, context, uncertainty, evidence, requested authority, and output requirements in forms that are convenient for humans but difficult to validate, replay, or audit deterministically.
 
-This whitepaper revises earlier project documentation against the repository state rather than treating prior prose as authoritative. At the analyzed LSTP commit, the formal Phase-1 specification is substantive, but the Python parser, compiler, validator, serializer, runtime, command-line interface, carrier modules, and examples are scaffolds rather than a working reference implementation. No executable conformance test suite or benchmark corpus is present. Accordingly, claims about reduced ambiguity, token efficiency, latency, reasoning quality, hallucination reduction, or interoperability are treated as design hypotheses that require future empirical evaluation.
+LSTP v0.1 defines an eight-domain **Octad Packet** - pragmatics, atoms, relations, context, confidence, permissions, evidence, and output - while packet identity, protocol version, carrier metadata, audit metadata, and extensions remain outside Octad semantic equality. The project now includes an executable Python reference implementation with immutable typed models, semantic validation, canonical JSON serialization, canonical and compact Lattice parsing/compilation, a command-line interface, permission-aware host authorization, replay protection, versioned conformance fixtures, property/adversarial tests, and a dependency-free JavaScript interoperability verifier.
 
-The current canonical representation contains eight fields: pragmatics, atoms, relations, context, confidence, permissions, evidence, and output. Packet identity, versioning, carrier metadata, and audit-envelope information are conceptually outside the Octad. Permission declarations express requested authority; they do not authenticate a sender, authorize an operation, or enforce policy. The effective authorization boundary remains the consuming runtime.
+The Whitepaper-first contract reconciliation completed on 7 October 2026. Canonical requested permissions use the six Whitepaper modes `RO <= SUGGEST <= PREVIEW <= RW <= EXEC <= COMMIT` together with explicit scope, forbids, limits, confirmation, review, and logging constraints. Concrete execution capabilities, trusted authorization references, expiry, delegation identity, and replay state remain host-security concerns outside canonical v0.1 packet semantics.
 
-A mandatory integration analysis against current SLAI v2.3 also shows that LSTP is not yet integrated into SLAI. The required target layout places LSTP at `SLAI/model/LSTP/` and a launcher/adapter at `SLAI/run_lstp.py`, but neither `SLAI/model/` nor `SLAI/run_lstp.py` exists at the analyzed SLAI commit. The present paper therefore distinguishes current repository evidence, specification-level requirements, integration targets, and future work throughout.
+SLAI v2.3 integration is also implemented. SLAI pins LSTP as a Git submodule at `SLAI/model/LSTP/` and exposes `SLAI/run_lstp.py`, which maps the real LanguageAgent `LinguisticFrame` into a validated canonical Octad without inferring execution authority from language intent.
 
-**Keywords:** semantic transport; semantic representation; AI-agent communication; domain-specific language; structured context; permissions; provenance; inspectability; Lattice; Octad Packet; SLAI; LANTRA.
+The current evidence establishes executable protocol structure, canonical round trips, fail-closed behavior, and independent cross-language agreement on the shared v0.1 fixture corpus. It does **not** establish claims about reduced hallucination, reasoning quality, token efficiency, latency, or human usability; those remain empirical research questions. The project is therefore best described as a reconciled pre-training candidate with remaining clean-execution and final-release evidence gates, not as a finished production standard.
 
----
+**Keywords:** semantic transport; semantic representation; AI-agent communication; domain-specific language; structured context; permissions; provenance; inspectability; Lattice; Octad Packet; SLAI.
 
 ## Reader's guide and status vocabulary
 
 This paper uses four status terms deliberately:
 
-- **Implemented** means executable repository code demonstrates the capability at the analyzed commit.
-- **Specified** means a current formal artifact such as the EBNF grammar, JSON Schema, or protocol specification defines the capability, even if executable code does not yet realize it.
-- **Proposed / experimental** means the repository documents a design direction whose behavior is not yet a verified implementation contract.
-- **Future work** means the capability is a planned or academically motivated extension rather than a present feature.
+- **Implemented** means executable repository code realizes the described behavior.
+- **Verified** means the behavior has direct executable evidence such as conformance fixtures, property tests, or independent implementation output.
+- **Specified** means a normative artifact defines the behavior even where broader empirical validation is still pending.
+- **Future work** means the capability is outside the frozen v0.1 implementation or still requires empirical/operational evaluation.
 
-This distinction is essential because LSTP is presently specification-led. The paper therefore avoids calling empty Python modules a reference implementation and avoids presenting proposed performance benefits as measured outcomes.
+The protocol contract and implementation are now materially aligned. Maturity claims therefore distinguish protocol correctness evidence from broader production evidence: a working reference implementation and interoperability corpus do not by themselves establish performance, usability, security assurance, or production readiness.
 
 ---
 
@@ -91,7 +92,7 @@ The current LSTP v0.1 scope comprises:
 - output requirements;
 - an architecture in which semantic content is conceptually separable from transport carrier.
 
-The present repository does **not** yet provide a working parser/compiler/serializer/runtime stack or demonstrated SLAI integration. This whitepaper treats those as implementation targets.
+The present repository provides a working parser/compiler/validator/serializer stack and a pinned SLAI v2.3 integration. Release readiness remains gated by clean executable verification and final release evidence.
 
 ## 1.3 Objectives
 
@@ -102,7 +103,7 @@ The technical objectives of LSTP are to investigate whether a compact protocol c
 3. make context, evidence, confidence, permissions, and output requirements explicit;
 4. preserve a clear boundary between permission representation and runtime enforcement;
 5. enable future human-to-agent and agent-to-agent integration without binding semantics to one model architecture;
-6. support conformance testing and semantic round-trip evaluation once a reference implementation exists.
+6. support executable conformance testing, semantic round-trip evaluation, and independent implementation checks.
 
 These are objectives and hypotheses. No current benchmark demonstrates that LSTP achieves them better than alternative representations.
 
@@ -237,37 +238,58 @@ The current repository represents a useful transition from exploratory notation 
 
 ![Figure 1. Current LSTP v0.1 specification architecture.](figures/fig01_architecture.svg)
 
-**Figure 1. Current LSTP v0.1 specification architecture.** Solid elements are substantive specification artifacts. The dashed implementation layer is represented by repository module paths but is not operational at the analyzed commit.
+**Figure 1. Current LSTP v0.1 architecture.** The specification, canonical/compact carrier profiles, typed reference implementation, validation layer, host authorization boundary, and conformance evidence are all present; external policy and execution remain host responsibilities.
 
 ## 5.1 Semantic layer
 
 The semantic layer is the Octad. It defines the project-specific dimensions that LSTP considers canonical for a message. This is the primary conceptual contract.
 
-## 5.2 Lattice carrier
 
-Lattice is the compact textual carrier. Its EBNF defines an ordered Octad core as:
+## 5.2 Lattice carriers
+
+LSTP v0.1 distinguishes two explicit textual surfaces with one semantic Octad.
+
+The **canonical Lattice** profile is defined by `spec/grammar.ebnf` and encodes the fixed ordered core:
 
 ```text
 pragmatics | atoms | relations | context | confidence | permissions | evidence | output
 ```
 
-Packets may be atomic, framed, named, or streamed according to the grammar. The operator table additionally defines a compact surface notation with directive, interrogative, target, operation, output, confidence, macro, zoom, and context-reference tokens. The relationship between the compact operator notation and the fully expanded canonical Octad syntax requires implementation-level tests in a future compiler.
+It supports atomic, framed, named, and named-stream packet forms. The reference implementation exposes `parse_canonical_lattice()`, `compile_canonical_lattice()`, `canonical_lattice_dumps()`, and `canonical_lattice_document_dumps()`.
+
+The **compact Lattice** profile is defined separately by `spec/compact-grammar.ebnf` and the operator table. It provides directive, interrogative, target, output, confidence, macro, zoom, and context-reference shorthand. `compile_lattice()` maps supported compact syntax deterministically into the canonical Octad and fails on ambiguous or unmappable input rather than inventing authority or context.
 
 ## 5.3 JSON representation
 
-`spec/octad_schema.json` defines the canonical JSON shape using JSON Schema Draft 2020-12. It constrains object properties, enumerations, numeric ranges, identifiers, and required fields. The schema is currently the most machine-checkable artifact in the repository, although the project does not bundle or invoke a validator.
+`spec/octad_schema.json` defines the canonical JSON shape using JSON Schema Draft 2020-12. The Python typed model and strict canonical decoder enforce the same frozen field boundary, including rejection of obsolete candidate fields and non-core permission channels.
+
+The canonical JSON byte profile additionally defines UTF-8 encoding, recursive UTF-16 code-unit key ordering, NFC string requirements, forbidden bidirectional controls, deterministic number formatting, and duplicate-key rejection. Canonical positive fixtures must decode and re-encode byte-for-byte identically.
 
 ## 5.4 Validation and diagnostics
 
-The repository names `validator.py`, `diagnostics.py`, `errors.py`, `span.py`, and schema modules, suggesting an intended diagnostic architecture. These files are currently scaffolds. A future validator should preserve source spans, emit stable diagnostic codes, and distinguish lexical, syntactic, schema, semantic, and policy errors.
+The reference implementation performs layered validation:
+
+1. bounded UTF-8/JSON input validation;
+2. structural/canonical field checks;
+3. typed model construction;
+4. semantic reference and vocabulary validation;
+5. RFC 3339 and structural BCP 47 validation where applicable;
+6. permission invariants such as explicit scope for side-effect-capable modes;
+7. host-side authorization immediately before concrete operations.
+
+Diagnostics use stable codes and fail closed where the implementation cannot safely infer meaning.
 
 ## 5.5 Compilation and normalization
 
-A compiler is expected to map Lattice syntax into the canonical Octad representation. Compilation should avoid “helpful” semantic invention. If source syntax is insufficient to determine a relation, permission, or context binding, the compiler should preserve uncertainty or emit a diagnostic.
+Compact Lattice compiles into the typed canonical Octad. Relative context syntax must resolve to a stable packet identifier before canonical transport, storage, replay, or hashing. Unresolved references are rejected rather than serialized as ambiguous canonical state.
+
+Canonical Lattice parsing and semantic validation are intentionally separable: syntactically valid packets can be inspected, while `compile_canonical_lattice()` additionally enforces semantic validity.
 
 ## 5.6 Serialization
 
-A serializer should encode a canonical packet into a selected carrier while preserving defined invariants. Deterministic byte serialization has not been specified as a current guarantee; therefore the project should define canonical ordering, numeric formatting, Unicode normalization, and extension behavior before relying on hashes or signatures over serialized bytes.
+LSTP v0.1 defines deterministic canonical JSON bytes through `spec/canonical-json-v0.1.md` and the Python serializer/deserializer. The governed canonical-Lattice surface also has a deterministic encoder and semantic round-trip tests.
+
+The canonical-Lattice encoder fails closed on semantic fields for which v0.1 has no frozen textual representation instead of silently dropping information. This distinction is important for richer evidence metadata and extensions.
 
 ---
 
@@ -315,7 +337,7 @@ Output describes requested response representation. The grammar supports `NL`, `
 
 ## 6.9 Invariants
 
-The JSON Schema requires all eight Octad fields and disallows unspecified top-level properties. Important future implementation invariants should include:
+The JSON Schema requires all eight Octad fields and disallows unspecified top-level properties. The reference implementation enforces or tests the following key invariants:
 
 - every relation argument referring to an atom must resolve to an existing atom ID unless it is an allowed special reference;
 - context parent links must not create invalid cycles where a host forbids them;
@@ -324,7 +346,7 @@ The JSON Schema requires all eight Octad fields and disallows unspecified top-le
 - confidence values must remain in the allowed range;
 - decode/encode paths must preserve semantic equality under a defined canonicalization function.
 
-Some of these are semantic invariants and are not fully enforceable by JSON Schema alone.
+Several are semantic invariants and are therefore enforced by typed/semantic validation rather than JSON Schema alone.
 
 ---
 
@@ -433,11 +455,11 @@ A semantic packet describes meaning as represented by the Octad. A carrier deter
 
 ### Lattice text
 
-Lattice is specified by EBNF and operator semantics. It is compact and human-inspectable for technically trained users, but no parser proves conformance yet.
+Canonical and compact Lattice are specified by separate EBNF profiles and implemented by separate parser/compiler paths. Versioned positive/negative fixtures and semantic round-trip tests provide executable conformance evidence.
 
 ### Canonical JSON
 
-Canonical JSON is constrained by JSON Schema. JSON itself is a standardized, language-independent interchange syntax (Bray, 2017). The LSTP schema adds project-specific semantics but should not imply that generic JSON systems understand those semantics automatically.
+Canonical JSON is constrained by JSON Schema and a deterministic byte profile. The Python implementation and independent JavaScript verifier reproduce shared canonical bytes for the current v0.1 fixtures. JSON itself remains only a carrier; generic JSON systems do not automatically understand LSTP semantics.
 
 ## 8.3 Conceptual carriers
 
@@ -464,7 +486,7 @@ The current repository does not implement carrier negotiation. A future protocol
 
 ## 9.2 Context references
 
-The operator table defines stack-depth references such as `↑0`, `↑2`, and `↑2@agent_risk`. These are parseable references whose meaning depends on a host-managed context namespace. Phase-2 parsing may preserve them without resolving them; semantic resolution belongs to later runtime work.
+The operator table defines stack-depth references such as `↑0`, `↑2`, and `↑2@agent_risk`. These are parseable references whose meaning depends on a host-managed context namespace. The compact compiler may accept these authoring references only when a host resolver can convert them to stable packet identifiers; canonical compilation fails closed when resolution is unavailable.
 
 ## 9.3 State ownership
 
@@ -472,7 +494,7 @@ LSTP should not own all conversation state. A protocol packet can reference stat
 
 ## 9.4 Context drift
 
-Structured references reduce repetition but can make stale references dangerous. A future resolver should verify existence, version, namespace, and access rights. For mutable context, references may require snapshot IDs or content hashes if deterministic replay is a requirement.
+Structured references reduce repetition but can make stale references dangerous. A host resolver should verify existence, version, namespace, and access rights. For mutable context, references may require snapshot IDs or content hashes if deterministic replay is a requirement.
 
 ---
 
@@ -535,167 +557,200 @@ The project should avoid claiming that structured permissions make an AI system 
 
 ---
 
+
 # 11. Integration with SLAI v2.3
 
-![Figure 4. Required LSTP integration target in current SLAI v2.3.](figures/fig04_slai.svg)
+![Figure 4. Implemented LSTP integration in SLAI v2.3.](figures/fig04_slai.svg)
 
-**Figure 4. Required SLAI integration target.** Dashed elements are required target additions. At the analyzed SLAI commit, neither the root `model/` directory nor `run_lstp.py` exists.
+**Figure 4. Implemented SLAI integration boundary.** SLAI pins LSTP as an independently versioned Git submodule and maps LanguageAgent semantic output into a validated Octad without granting action authority.
 
 ## 11.1 Repository-grounded current state
 
-The current SLAI branch was inspected at commit `ce4cfe7b1939bc862725e3cb59f488a5b96b1423`. The root contains established SLAI directories such as `src/`, `checkpointing/`, `applications/`, `data/`, `deployment/`, `tests/`, and `training/`. It does **not** contain a root `model/` directory. A direct lookup for `run_lstp.py` also returns no file.
-
-The current `src/agents/language_agent.py` contains SLAI language processing and LANTRA-facing logic, including tokenization, entity/intent processing, context handling, response generation, safety/ethics checks, and configurable LANTRA use. It contains no LSTP adapter or import. Therefore, no current evidence supports describing LSTP as part of SLAI's live language path.
-
-## 11.2 Required installation architecture
-
-The required target is:
+SLAI `main` was integrated through PR #31 and merge commit `ec55660b02db84305409cc14aa5ba230052927f5`. The repository now contains:
 
 ```text
 SLAI/
 ├── run_lstp.py
-├── model/
-│   └── LSTP/
-│       ├── README.md
-│       ├── LICENSE
-│       ├── docs/
-│       ├── spec/
-│       ├── src/
-│       └── examples/
-├── src/
-├── checkpointing/
-├── applications/
-├── data/
-├── deployment/
-└── ...
+└── model/
+    └── LSTP/    # Git submodule
 ```
 
-LSTP should therefore be cloned to `SLAI/model/LSTP/`, while the integration launcher resides at `SLAI/run_lstp.py` rather than inside the LSTP clone.
+The gitlink is pinned to LSTP commit `7f4c1dab1255d3b36364adc7227e7743679087fb`. LSTP is therefore versioned independently rather than copied into SLAI or imported by mutating `sys.path`.
 
-## 11.3 Human-to-SLAI flow
+## 11.2 Implemented installation architecture
 
-A future defensible flow is:
+SLAI declares the LSTP submodule in `.gitmodules` and installs the pinned local package through `-e ./model/LSTP`. Clones intended to use LSTP must initialize submodules, for example through `git clone --recurse-submodules` or `git submodule update --init --recursive`.
+
+Moving the gitlink is an explicit compatibility change and should be accompanied by the integration smoke tests.
+
+## 11.3 Human-to-LSTP flow
+
+The implemented adapter uses SLAI's existing language stack rather than replacing it:
 
 ```text
-human input
-   -> SLAI/run_lstp.py adapter
-   -> LSTP parse/compile/validate
-   -> canonical Octad
-   -> SLAI language/task boundary
-   -> SLAI safety/policy/runtime
+human natural language
+   -> SLAI LanguageAgent.process()
+   -> LinguisticFrame
+   -> deterministic frame_to_lstp()
+   -> typed LSTP Octad
+   -> LSTP semantic validation
+   -> canonical LSTP JSON
 ```
 
-This flow should be optional. Natural language may remain a first-class input path; LSTP should not require users to author formal packets manually.
+The mapping uses frame intent, entities, propositional content, speech-act class, confidence, and session identity. Entity ordering is deterministic.
 
-## 11.4 Agent-to-agent flow
+## 11.4 Permission boundary
 
-A future SLAI message envelope could carry a canonical LSTP packet between agents. The receiver should validate version/schema and apply local policy before interpreting requested authority. The packet should complement, not replace, SLAI's task/message metadata unless a migration plan proves equivalence.
+Language interpretation never grants execution authority. The adapter emits empty `Permissions()`, including for directive speech acts. Write, execute, and commit authority must be established separately by a trusted host through LSTP's authorization boundary.
 
-## 11.5 Relationship with LANTRA
+This prevents a linguistic classification such as "command" from being confused with permission to act.
 
-LANTRA and LSTP occupy different architectural roles. LANTRA is part of SLAI's language/model infrastructure. LSTP is a proposed semantic representation and transport protocol. A future adapter may use LANTRA to help derive or render semantic packets, but model output must not be treated as automatically schema-valid or authorized. Conversely, an LSTP packet does not improve LANTRA's reasoning merely by existing.
+## 11.5 Relationship with the SLAI language stack
 
-## 11.6 Safety interactions
+LSTP is an interchange/validation boundary, not a replacement for `LanguageAgent`, NLU/NLG, or model training. The current SLAI repository does not expose a separate module literally named LANTRA at this boundary; the integration therefore uses the actual v2.3 public `LanguageAgent.process()` / `LinguisticFrame` interface.
 
-LSTP `permissions` should be passed into SLAI policy as requested authority. Existing SLAI safety/ethics checks and future authorization components remain authoritative. If LSTP and SLAI policy disagree, the runtime should choose the more restrictive result or reject the request according to explicit policy.
+Future language-model implementations may help derive or render Octads, but model output must still pass canonical validation and independent authorization.
 
-## 11.7 Context interactions
+## 11.6 Agent-to-agent use
 
-LSTP context fields should map to SLAI context only through an adapter that defines ownership and lifecycle. `thread_id` should not be assumed to equal a SLAI task ID, conversation ID, or agent-memory key unless the adapter explicitly establishes the mapping.
+The current merged integration demonstrates the language-to-LSTP boundary. Broader agent-to-agent adoption remains an application integration task: receivers should validate protocol version and semantics, preserve packet identity/context, and apply their own local policy before interpreting requested authority.
 
-## 11.8 Configuration and launcher behavior
+## 11.7 Integration evidence
 
-Because `run_lstp.py` is not present, no CLI flags or configuration keys are documented here. When implemented, the launcher should:
+SLAI includes tests for:
 
-1. locate `model/LSTP/` relative to the SLAI root;
-2. refuse incompatible protocol versions rather than guessing;
-3. expose diagnostics clearly;
-4. avoid modifying global import paths in fragile or order-dependent ways;
-5. keep protocol parsing separate from policy enforcement;
-6. be covered by SLAI-side integration tests.
+- deterministic frame-to-Octad mapping;
+- zero-authority behavior for directives;
+- strict canonical JSON round trip;
+- entity-order determinism;
+- a real `LanguageAgent -> LSTP` smoke path.
+
+The final release gate still requires clean executable cross-repository evidence; the integration architecture itself is implemented and merged.
 
 ---
 
+
 # 12. Implementation State
 
-## 12.1 Formal artifacts that currently exist
+## 12.1 Normative artifacts
 
-The repository contains substantive versions of:
+The reconciled v0.1 repository contains:
 
-- `spec/lstp-v0.1.md`;
-- `spec/grammar.ebnf`;
-- `spec/operator-table.md`;
+- `spec/CANONICAL-v0.1.md`;
 - `spec/octad_schema.json`;
-- `spec/permissions-safety.md`.
+- `spec/grammar.ebnf` for canonical Lattice;
+- `spec/compact-grammar.ebnf` for compact Lattice;
+- `spec/operator-table.md`;
+- `spec/permissions-safety.md`;
+- `spec/vocabulary.md`;
+- `spec/canonical-json-v0.1.md`.
 
-`spec/vocabulary.md` is currently minimal and should not be described as a mature vocabulary specification.
+The Whitepaper remains Level 1 authority; the technical artifacts refine it without overriding it.
 
-## 12.2 Python module scaffolds
+## 12.2 Reference implementation
 
-`src/lstp/` contains intended module paths including `packet.py`, `parser.py`, `compiler.py`, `serializer.py`, `validator.py`, `runtime.py`, `diagnostics.py`, `errors.py`, `span.py`, `audit.py`, `canonical.py`, `codes.py`, `cli.py`, and carrier/format/schema directories. At the analyzed commit, these files contain no substantive executable implementation.
+`src/lstp/` contains executable implementations for:
 
-This means phrases such as “the parser does,” “the serializer guarantees,” or “the CLI supports” would be inaccurate in a present-tense capability description.
+- immutable typed Octad and packet-envelope models;
+- bounded JSON input;
+- canonical JSON serialization/deserialization;
+- canonical and compact Lattice parsing/compilation;
+- structural and semantic validation;
+- RFC 3339 and BCP 47 format checks;
+- host authorization and permission attenuation;
+- replay/idempotency storage with in-process and SQLite implementations;
+- public package exports and CLI.
 
-## 12.3 Packaging
+The runtime deliberately separates semantic packet validity from host authorization. Sender-controlled fields cannot authenticate themselves or become bearer capabilities.
 
-`pyproject.toml` is empty. The repository therefore does not currently define a Python package name, dependencies, console script, build backend, supported Python versions, or installation contract. Documentation should not invent `pip install` commands until this metadata exists.
+## 12.3 Packaging and release checks
 
-## 12.4 Examples and tests
+`pyproject.toml` defines package `lstp` version `0.1.0a1`, Python support from 3.11 through 3.14, a `lstp` console script, and development dependencies for pytest, Hypothesis, JSON Schema, build, Ruff, and mypy.
 
-An `examples/` scaffold exists, but there is no repository `tests/` directory at the analyzed commit. No current conformance corpus demonstrates parser correctness, schema validity across examples, or carrier round-trip behavior.
+`tools/run_release_checks.py` provides the single release/pre-training verification entry point. It runs schema drift checks, Ruff, format checks, strict mypy, the full pytest/property/conformance suite, package build, independent JavaScript interoperability verification, and wheel/sdist installation smoke checks.
 
-## 12.5 Repository inconsistencies
+At the publication baseline, GitHub-hosted Actions jobs are being created but terminate before executing step 1 (`steps:null`), so the project does not claim a complete clean-run release result yet.
 
-Several inconsistencies are relevant to implementation quality:
+## 12.4 Conformance and tests
 
-1. the protocol prose references `spec/octad-schema.json`, while the repository file is `spec/octad_schema.json`;
-2. the schema `$id` uses `https://example.org/...`, which is appropriate as a placeholder but not a stable project identifier;
-3. prior whitepaper prose describes runtime components more concretely than repository code supports;
-4. the root README previously used illustrative syntax that does not match the current canonical EBNF packet form;
-5. specification and operator-table layers include both canonical Octad syntax and compact notation, but the compiler mapping between them has not yet been executable-tested.
+The repository contains a shared v0.1 conformance manifest used by both Python and the independent JavaScript verifier. Positive and negative fixtures cover canonical JSON and canonical Lattice, while deterministic property/adversarial tests cover field mutation, permission preservation, migration-field rejection, resource limits, arbitrary byte fuzz, pathological depth/numbers, and canonical round trips.
 
-These are correctable maturity issues, not evidence that the protocol concept is invalid.
+Independent JavaScript execution on Node.js v22.16.0 passed the current shared manifest with 2 positive JSON cases, 8 negative JSON semantic cases, 1 positive and 1 negative canonical-Lattice case, exact reproduction of 1,078 canonical bytes, and rejection of all 6 non-core permission channels.
+
+## 12.5 Current maturity
+
+The protocol contract is reconciled (`contract_reconciled=true`). The remaining blockers are not unresolved core semantics. They are:
+
+1. clean executable release verification;
+2. Whitepaper/publication synchronization;
+3. final release/pre-training audit and sign-off.
+
+This distinction is important: LSTP is no longer a scaffold-only specification, but it is also not yet a production-ready released standard.
 
 ---
 
 # 13. Evaluation and Validation
 
+
 ## 13.1 Current evidence
 
-No benchmark suite, parser conformance run, round-trip corpus, interoperability trial, or human usability study is present in the analyzed repository. Therefore this whitepaper reports **no performance results**.
+The repository now contains executable correctness evidence but still reports no performance or human-usability result.
+
+Current protocol evidence includes:
+
+- canonical JSON byte-stability fixtures;
+- canonical and compact Lattice parser/compiler tests;
+- typed semantic round trips;
+- negative semantic/reference/permission fixtures;
+- deterministic property and mutation tests;
+- bounded-resource and arbitrary-byte adversarial tests;
+- host-authorization and replay tests;
+- one independent dependency-free JavaScript verifier consuming the same conformance manifest;
+- a pinned SLAI v2.3 integration and smoke-test path.
+
+The independent JavaScript run recorded on 7 October 2026 passed the shared manifest. GitHub-hosted Python release jobs have not supplied usable execution evidence because the jobs terminate before their first step.
+
+No benchmark currently establishes improved reasoning, hallucination rate, model quality, token efficiency, end-to-end latency, or human inspectability.
 
 ## 13.2 Evaluation framework
 
-A defensible validation program should separate syntactic correctness, semantic preservation, interoperability, usability, security-relevant behavior, and computational cost.
+Validation remains separated into protocol correctness, interoperability, usability, security-relevant behavior, and computational cost.
 
-| Dimension | Metric | Method | Current result |
-|---|---|---|---|
-| Parsing | Valid-input parse success | Versioned positive fixture corpus | Not measured |
-| Rejection | Invalid-input rejection precision | Negative/mutation corpus | Not measured |
-| Schema | Octad schema conformance | JSON Schema 2020-12 validator | Not measured |
-| Round trip | Semantic equality after encode/decode | Canonical packet comparator | Not measured |
-| Permissions | Authority preservation | Transformation and policy fixtures | Not measured |
-| Context | Reference resolution accuracy | Synthetic/real conversation graphs | Not measured |
-| Interoperability | Cross-implementation agreement | Independent implementations | Not measured |
-| Inspectability | Human comprehension/error detection | Controlled user study | Not measured |
-| Ambiguity | Explicit unresolved alternatives | Comparative annotation study | Not measured |
-| Overhead | Parse/serialize latency and bytes | Reproducible microbenchmarks | Not measured |
+| Dimension | Method | Current result |
+|---|---|---|
+| Parsing | Versioned canonical/compact fixture corpus | Implemented; clean full-suite release run pending |
+| Rejection | Negative + mutation/property corpus | Implemented |
+| Schema | Draft 2020-12 + structural drift gate | Implemented |
+| Round trip | JSON byte equality and Lattice semantic equality | Implemented |
+| Permissions | Property tests + host authorization fixtures | Implemented |
+| Context | Stable-reference and fail-closed resolution tests | Implemented for protocol boundary |
+| Interoperability | Independent JavaScript implementation | Passed shared v0.1 manifest |
+| SLAI integration | Pinned submodule + real LanguageAgent smoke path | Implemented; clean release execution pending |
+| Inspectability | Controlled user study | Not measured |
+| Ambiguity | Comparative annotation study | Not measured |
+| Performance | Reproducible benchmarks | Not measured |
 
-## 13.3 Parse and schema validation
+## 13.3 Parse, schema, and adversarial validation
 
-The first evaluation phase should create a versioned fixture corpus. Positive fixtures should cover every grammar production and schema branch. Negative fixtures should include malformed delimiters, invalid atom references, out-of-range confidence, duplicate/conflicting permission fields, invalid identifiers, and unsupported extensions.
+The v0.1 fixture corpus includes positive canonical bytes and negative cases for unknown fields, unresolved references, missing side-effect scope, duplicate identifiers, vocabulary violations, packet/context identity mismatch, and evidence-reference failures. Property tests mutate top-level and permission fields, reject obsolete candidate representations, exercise compact-to-canonical permission preservation, and enforce bounded decoding.
 
-## 13.4 Semantic round-trip integrity
+These tests are release evidence only when executed successfully from a clean checkout; `VERIFY-001` remains the gate for that complete run.
 
-A canonical comparator should define semantic equivalence. Tests should then verify:
+## 13.4 Semantic round-trip and interoperability
+
+The implementation tests:
 
 ```text
-Octad -> JSON -> Octad
-Octad -> Lattice -> Octad
-Lattice -> Octad -> Lattice -> Octad
+Octad -> canonical JSON -> Octad
+Octad -> canonical Lattice -> Octad
+compact Lattice -> Octad -> canonical JSON -> Octad
 ```
 
-The final comparison should occur on canonical semantics, not formatting, unless byte-canonical serialization is itself a requirement.
+Canonical JSON byte equality is stronger than semantic equality and is governed by the canonical byte profile.
+
+The independent JavaScript verifier does not import or invoke the Python package. It independently checks canonical JSON bytes, frozen packet shape, permission boundaries, semantic references, and canonical-Lattice Octad ordering against the same manifest. Its successful shared-vector run is the current interoperability evidence.
+
+---
 
 ## 13.5 Ambiguity evaluation
 
@@ -759,7 +814,7 @@ W3C PROV offers a mature conceptual framework for provenance. LSTP's evidence fi
 
 ## 15.1 Implementation maturity
 
-The largest limitation is straightforward: the current repository does not contain a working reference implementation. Specification quality can be evaluated, but runtime behavior cannot yet be benchmarked.
+The reference implementation is working and the protocol contract is reconciled, but the project has not yet produced a clean full release-check execution covering every supported Python version and built artifact. Operational production claims therefore remain premature.
 
 ## 15.2 Semantic normalization
 
@@ -775,7 +830,7 @@ Interoperability requires more than syntax agreement. Domain vocabularies, stabl
 
 ## 15.5 Schema evolution
 
-The project has not yet established compatibility rules, extension namespaces, migration mechanisms, or version negotiation. These become essential once multiple implementations exist.
+v0.1 now has a strict version boundary, namespaced extensions, and explicit rejection of superseded candidate fields. A broader multi-version negotiation and long-term migration policy remains future release-governance work.
 
 ## 15.6 Context drift
 
@@ -791,7 +846,7 @@ Permission fields are not security boundaries. They do not provide authenticatio
 
 ## 15.9 Carrier maturity
 
-Only Lattice grammar and JSON Schema are substantively specified. Additional carriers remain conceptual until mappings and tests exist.
+Canonical JSON and canonical/compact Lattice are implemented and tested. Additional carriers remain conceptual until they have explicit mappings, loss models, fixtures, and round-trip evidence.
 
 ## 15.10 Benchmarking gap
 
@@ -799,51 +854,49 @@ The project has no empirical evidence for claims about token reduction, model qu
 
 ## 15.11 SLAI integration gap
 
-The required `SLAI/model/LSTP/` layout and `SLAI/run_lstp.py` launcher are target architecture, not current SLAI v2.3 features.
+The required `SLAI/model/LSTP/` gitlink and root `SLAI/run_lstp.py` launcher are implemented and merged. The remaining limitation is final clean executable cross-repository release evidence.
 
 ---
 
+
 # 16. Future Work and Roadmap
 
-## 16.1 Stabilize v0.1
+## 16.1 Freeze v0.1 rather than expand it
 
-Before expanding the language, the project should resolve file-name inconsistencies, replace placeholder schema identifiers, complete the core vocabulary, and align canonical and compact syntax mappings.
+The v0.1 semantic contract is reconciled. Until the pre-training release audit is complete, new core fields, modes, carriers, or authority mechanisms should not be added unless a demonstrated defect requires a versioned correction.
 
-## 16.2 Implement parser and diagnostics
+## 16.2 Complete clean executable verification
 
-A tokenizer/parser should be generated or hand-built against the EBNF with explicit source spans and stable diagnostic codes. The parser must reject undefined core syntax rather than infer meaning.
+Run `tools/run_release_checks.py` from a clean checkout and archive the results. The final evidence should include schema drift checks, Ruff, formatting, strict mypy, pytest/property/conformance tests, package build, independent JavaScript interoperability, wheel installation, sdist installation, and CLI smoke checks.
 
-## 16.3 Implement canonical packet model and compiler
+## 16.3 Complete cross-repository SLAI smoke evidence
 
-A typed packet model should encode Octad invariants. The compiler should map compact Lattice forms into canonical fields and preserve unresolved constructs as explicit extensions or diagnostics.
+Initialize the pinned SLAI submodule, install the local LSTP package normally, and execute the real `LanguageAgent -> LinguisticFrame -> Octad -> canonical JSON` smoke test from a clean SLAI checkout.
 
-## 16.4 Implement validation and serialization
+## 16.4 Publish reproducible documentation
 
-Validation should combine JSON Schema checks with semantic checks that schemas cannot express. Serializers should define canonicalization before deterministic-hash or signature features are considered.
+The Whitepaper source, source figures, and PDF build command should live in the repository. Publication generation must fail if referenced figure assets are missing and should produce a visually inspected PDF.
 
-## 16.5 Establish packaging and CLI
+## 16.5 Final release and pre-training audit
 
-A populated `pyproject.toml` should define package metadata, dependencies, Python support, and CLI entry points. CLI commands should be documented only after tests verify them.
+The final audit should review package provenance, compatibility/migration notes, canonical fixtures, independent interoperability evidence, SLAI pinning, publication synchronization, supported Python versions, and release identifiers before `training_ready=true` is set.
 
-## 16.6 Build conformance corpus and CI
+## 16.6 Empirical research after protocol freeze
 
-Every grammar production, schema branch, diagnostic, and permission transformation should receive fixtures. CI should run parser, schema, round-trip, and mutation tests.
+Performance and human-facing claims remain research work. Future studies may measure:
 
-## 16.7 Integrate with SLAI
+- natural-language versus LSTP ambiguity recovery;
+- human error-detection and workload;
+- tokenization by model/tokenizer;
+- parse/serialize latency and memory;
+- downstream reasoning or hallucination outcomes;
+- larger multi-agent interoperability exercises.
 
-Create `SLAI/model/LSTP/` as the clone target and implement `SLAI/run_lstp.py` as an adapter/launcher in the SLAI root. Integration should begin with validation and conversion boundaries rather than direct side-effect execution.
+These studies should report datasets, protocol versions, model/tokenizer versions, hardware, and statistical methods sufficient for reproduction.
 
-## 16.8 Evaluate empirically
+## 16.7 Later-version extension governance
 
-Run the evaluation program in Section 13. Results should be published with datasets, versions, tokenizers, hardware, and statistical methods sufficient for reproduction.
-
-## 16.9 Define extension governance
-
-A protocol registry should eventually define core versus extension identifiers, compatibility rules, deprecation, version negotiation, and namespace ownership.
-
-## 16.10 Additional carriers
-
-Natural-language, binary, multimodal, or specialized carriers should be added only after canonical round-trip behavior is stable. Each new carrier should include an explicit loss model if full semantic preservation is impossible.
+A later protocol version may standardize additional carriers, richer evidence syntax, negotiation, or host-security metadata only through an explicit versioned process. v0.1 should remain stable enough to support pre-training and interoperability baselines.
 
 ---
 
@@ -871,23 +924,26 @@ The Octad is intentionally project-specific. This provides focus but means exter
 
 ## 17.6 Specification-first development: strength and risk
 
-The current repository's strongest asset is that it has begun stabilizing grammar and semantic contracts before a large runtime exists. This can reduce implementation drift. The corresponding risk is documentation outrunning code, which has already occurred in the older whitepaper. Maintaining explicit maturity labels is therefore not cosmetic; it is part of protocol quality.
+The project followed a specification-first path and now has a reference implementation substantial enough to expose specification defects through executable tests and independent vectors. The principal lesson is that documentation, schema, grammar, implementation, and conformance evidence must be versioned together; the earlier Whitepaper drift demonstrated the risk of allowing any one layer to outrun the others.
 
 ## 17.7 SLAI fit
 
-The current SLAI Language Agent already performs language interpretation, context handling, response generation, and safety-related checks. LSTP should enter that architecture as a transport/representation boundary rather than duplicate language intelligence. LANTRA can remain a model capability, while LSTP can become a schema-controlled interchange form. This separation is architecturally coherent, but it remains to be implemented and tested.
+The current SLAI Language Agent already performs language interpretation, context handling, response generation, and safety-related checks. LSTP should enter that architecture as a transport/representation boundary rather than duplicate language intelligence. LANTRA can remain a model capability, while LSTP can become a schema-controlled interchange form. This separation is now implemented through the pinned SLAI adapter; final clean cross-repository execution remains part of release verification.
 
 ---
 
+
 # 18. Conclusion
 
-LSTP v0.1 is best characterized as a **promising but early specification for structured semantic transport**, not as a completed AI communication runtime. Its current repository provides a meaningful canonical model, formal Lattice grammar, JSON Schema, operator semantics, and a thoughtful permission boundary. The eight-field Octad - pragmatics, atoms, relations, context, confidence, permissions, evidence, and output - creates a concrete basis for making important communication dimensions explicit.
+LSTP v0.1 has progressed from a specification-only design into an executable pre-training candidate for structured semantic transport. The reconciled protocol provides the eight-field Octad, canonical JSON with deterministic bytes, canonical and compact Lattice carriers, typed validation, requested-authority semantics, host-side authorization and replay controls, a shared conformance corpus, an independent JavaScript verifier, and a pinned SLAI v2.3 integration.
 
-The project's credibility depends on preserving the distinction between what is specified and what is implemented. At the analyzed commit, the Python runtime modules are scaffolds, packaging is undefined, conformance tests are absent, and no benchmark validates claims about ambiguity, token efficiency, reasoning, hallucination, latency, or interoperability. The revised documentation therefore removes those implications and replaces them with measurable evaluation questions.
+The central architectural boundary remains unchanged: a packet represents semantics and requested authority, not authenticated authority. The six permission modes are interpreted together with explicit scope and constraints, while concrete execution capability, trusted authorization metadata, delegation identity, and replay protection are enforced by the consuming host.
 
-Integration with SLAI v2.3 is similarly a target rather than a present feature. The required architecture places the LSTP repository at `SLAI/model/LSTP/` and an adapter/launcher at `SLAI/run_lstp.py`; current SLAI contains neither. A future integration should maintain clear boundaries among semantic representation, LANTRA/model capability, SLAI context, and host safety/authorization.
+Current evidence is sufficient to demonstrate executable structure, fail-closed behavior on the tested boundary, semantic round trips, and shared-vector cross-language agreement. It is not sufficient to claim general improvements in reasoning quality, hallucination rate, token efficiency, latency, human usability, or safety outcomes.
 
-The most valuable next step is not to expand LSTP's claims. It is to implement the smallest conforming parser/compiler/validator/serializer stack, create a rigorous fixture corpus, integrate it through explicit SLAI boundaries, and publish reproducible evaluation results. If those steps demonstrate semantic preservation, usable inspectability, safe permission handling, and cross-implementation agreement, LSTP can progress from an interesting protocol design to a technically validated interoperability mechanism.
+The remaining path to pre-training readiness is therefore finite rather than architectural: obtain a clean full release-check run, verify the merged cross-repository SLAI smoke path in that release environment, synchronize the publication artifacts, and complete the final compatibility/provenance/freeze audit. Only after those gates pass should `training_ready=true` be set.
+
+LSTP should now prefer stability over feature growth. Further semantic expansion belongs in explicitly versioned future work so that v0.1 can serve as a reproducible training and interoperability baseline.
 
 ---
 
@@ -929,11 +985,11 @@ SLAI project. (2026). *SLAI v2.3 repository*, branch `SLAI-v.2.3`, analyzed at c
 |---|---|
 | LSTP repository | `The-Outsider-97/LSTP` |
 | LSTP branch | `main` |
-| LSTP commit | `18d947a45f2db220267f70c7ddb07112fc3181d4` |
+| LSTP reconciled baseline | `da804741bc34e3ff4dbe7178f022286b3f6c4893` |
 | SLAI repository | `The-Outsider-97/SLAI` |
-| SLAI branch | `SLAI-v.2.3` |
-| SLAI commit | `ce4cfe7b1939bc862725e3cb59f488a5b96b1423` |
-| Analysis date | 21 September 2026 |
+| SLAI branch | `main` |
+| SLAI integration merge | `ec55660b02db84305409cc14aa5ba230052927f5` |
+| Analysis date | 7 October 2026 |
 | Protocol version discussed | LSTP v0.1 |
-| Whitepaper revision | 2.0 |
+| Whitepaper revision | 3.0 |
 
