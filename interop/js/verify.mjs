@@ -45,6 +45,25 @@ const PERMISSION_ALLOWED = new Set([
 const MODES = new Set(["RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"]);
 const SIDE_EFFECT_MODES = new Set(["RW", "EXEC", "COMMIT"]);
 const SPECIAL_ARGUMENTS = new Set(["SELF", "NOW", "USER", "SYSTEM"]);
+const CORE_RELATIONS = new Set([
+  "is",
+  "has",
+  "part_of",
+  "located_at",
+  "causes",
+  "requires",
+  "references",
+  "produces",
+  "requests",
+  "answers",
+  "outcome.success",
+  "outcome.failure",
+  "outcome.partial",
+  "outcome.refused",
+  "outcome.unsupported",
+  "outcome.needs_confirmation",
+  "outcome.needs_context",
+]);
 const OCTAD_SEGMENTS = ["π", "A", "R", "C", "κ", "Π", "E", "Ω"];
 
 function assert(condition, message) {
@@ -160,19 +179,55 @@ function validateFrozenShape(packet) {
     );
   }
 
-  const atoms = new Set();
+  if (Object.hasOwn(packet.context, "packet_id")) {
+    assert(
+      packet.context.packet_id === packet.id,
+      "context.packet_id must match envelope id",
+    );
+  }
+
+  const atoms = new Map();
   for (const atom of packet.atoms) {
     assert(typeof atom?.id === "string", "atom id required");
     assert(!atoms.has(atom.id), `duplicate atom id ${atom.id}`);
-    atoms.add(atom.id);
+    atoms.set(atom.id, atom);
   }
+
+  const relationIds = new Set();
   for (const relation of packet.relations) {
+    assert(typeof relation?.type === "string", "relation type required");
+    assert(
+      CORE_RELATIONS.has(relation.type) || relation.type.includes("."),
+      `unknown unnamespaced relation ${relation.type}`,
+    );
+    if (relation.id !== undefined) {
+      assert(!relationIds.has(relation.id), `duplicate relation id ${relation.id}`);
+      relationIds.add(relation.id);
+    }
     assert(Array.isArray(relation?.arguments), "relation arguments must be array");
     for (const argument of relation.arguments) {
       assert(
         SPECIAL_ARGUMENTS.has(argument) || atoms.has(argument),
         `unresolved relation argument ${argument}`,
       );
+    }
+  }
+
+  const evidenceIds = new Set();
+  for (const evidence of packet.evidence) {
+    assert(typeof evidence?.id === "string", "evidence id required");
+    assert(!evidenceIds.has(evidence.id), `duplicate evidence id ${evidence.id}`);
+    evidenceIds.add(evidence.id);
+    for (const support of evidence.supports ?? []) {
+      if (support.startsWith("r")) {
+        assert(relationIds.has(support), `unresolved evidence relation ${support}`);
+      } else {
+        assert(atoms.has(support), `unresolved evidence atom ${support}`);
+        assert(
+          atoms.get(support).kind === "proposition",
+          `evidence atom support is not proposition ${support}`,
+        );
+      }
     }
   }
 }
