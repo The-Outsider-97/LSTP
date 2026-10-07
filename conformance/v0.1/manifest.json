@@ -1,0 +1,38 @@
+{
+  "version": "0.1",
+  "positive_json": [
+    "positive/minimal.json",
+    "positive/rich.json"
+  ],
+  "negative_json": [
+    {
+      "path": "negative/unknown-field.json",
+      "failure": "canonicalization"
+    },
+    {
+      "path": "negative/unresolved-relation.json",
+      "failure": "semantic"
+    },
+    {
+      "path": "negative/missing-commit-scope.json",
+      "failure": "semantic"
+    }
+  ],
+  "positive_lattice": [
+    "lattice/canonical/positive/whitepaper-style.lstp"
+  ],
+  "negative_lattice": [
+    {
+      "path": "lattice/canonical/negative/wrong-segment-order.lstp",
+      "failure": "syntax"
+    }
+  ],
+  "noncanonical_permission_fields": [
+    "authorization_ref",
+    "expires_at",
+    "delegation",
+    "capabilities",
+    "resources",
+    "profile"
+  ]
+}
