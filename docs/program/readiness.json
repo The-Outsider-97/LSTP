@@ -4,17 +4,11 @@
   "blockers": [
     {
       "id": "VERIFY-001",
-
       "summary": "A unified cross-platform engineering runner now exists at tools/run_release_checks.py and normal CI is separated from the intentionally failing final readiness gate. VERIFY-001 remains open until the full runner succeeds from a clean checkout on supported environments."
     },
     {
       "id": "TEST-001",
-      "summary": "Executable example pairs, canonical JSON/Lattice vectors, permission/segment adversarial checks, and Hypothesis permission-preservation tests exist. TEST-001 remains open for broader mutation/fuzz/resource/migration coverage and final production corpus review."
-    },
-    {
-      "id": "INTEROP-001",
-      "summary": "A dependency-free independent JavaScript canonical JSON implementation now consumes multiple shared byte vectors and rejects non-core permission channels. INTEROP-001 remains open until its execution is recorded successfully alongside the Python conformance suite."
-
+      "summary": "Python and independent JavaScript conformance now share one manifest; canonical byte ordering was corrected for the minimal positive vector; the JS implementation passed the shared positive/negative JSON and canonical-Lattice cases. TEST-001 remains open for broader mutation/fuzz/resource/migration coverage and final production corpus review."
     },
     {
       "id": "SLAI-001",
@@ -59,13 +53,13 @@
     "canonical-lattice-unrepresentable-vectors",
     "whitepaper-contract-reconciled",
     "gov-ext-host-security-boundary",
-
     "canonical-permissions-whitepaper-only",
     "executable-example-pairs",
     "unified-release-check-runner",
     "independent-js-canonical-json-implementation",
     "release-permission-property-tests",
-    "dead-scaffold-cleanup"
-
+    "dead-scaffold-cleanup",
+    "independent-js-interop-executed",
+    "shared-conformance-manifest"
   ]
 }
