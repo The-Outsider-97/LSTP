@@ -1,0 +1,1 @@
+{"atoms":[{"id":"a0","kind":"entity"}],"audit":{},"carrier":{},"confidence":1,"context":{"references":[],"thread_id":"t1"},"evidence":[],"id":"p1","output":{"format":"NL"},"permissions":{},"pragmatics":{"type":"inform"},"relations":[{"arguments":["a0"],"type":"customrelation"}],"version":"0.1"}
