@@ -65,11 +65,36 @@ const CORE_RELATIONS = new Set([
   "outcome.needs_context",
 ]);
 const OCTAD_SEGMENTS = ["π", "A", "R", "C", "κ", "Π", "E", "Ω"];
+const ATOM_KINDS = new Set(["entity", "concept", "value", "event", "time", "location", "resource", "proposition", "unknown"]);
+const EVIDENCE_TYPES = new Set(["user", "sensor", "model", "tool", "retrieved", "inferred"]);
+const OUTPUT_FORMATS = new Set(["NL", "LATTICE", "JSON", "YAML", "TABLE", "CODE", "FILE", "NONE"]);
+const ATOM_ID = /^a(?:0|[1-9][0-9]*)$/u;
+const RELATION_ID = /^r(?:0|[1-9][0-9]*)$/u;
+const EVIDENCE_ID = /^e(?:0|[1-9][0-9]*)$/u;
+const QUALIFIED = /^[A-Za-z_][A-Za-z0-9_-]*(?:\.[A-Za-z_][A-Za-z0-9_-]*)*$/u;
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function record(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+function scopedString(value, label) {
+  assert(typeof value === "string" && value.length > 0, `invalid ${label}`);
+}
+function identifier(value, label) {
+  assert(typeof value === "string" && QUALIFIED.test(value), `invalid ${label}`);
+}
+function uniqueStringArray(value, label) {
+  assert(Array.isArray(value), `${label} must be an array`);
+  const seen = new Set();
+  for (const item of value) {
+    scopedString(item, label);
+    assert(!seen.has(item), `duplicate ${label}`);
+    seen.add(item);
+  }
+}
 function utf16Compare(left, right) {
   return left < right ? -1 : left > right ? 1 : 0;
 }
@@ -144,9 +169,16 @@ function validateFrozenShape(packet) {
   }
   assert(packet.version === "0.1", "unsupported protocol version");
   assert(typeof packet.id === "string" && packet.id.length > 0, "invalid packet id");
-  assert(typeof packet.pragmatics?.type === "string", "missing pragmatics.type");
-  assert(typeof packet.context?.thread_id === "string", "missing context.thread_id");
-  assert(Array.isArray(packet.context?.references), "context.references must be array");
+  assert(record(packet.pragmatics), "pragmatics must be object");
+  identifier(packet.pragmatics.type, "pragmatics.type");
+  assert(record(packet.carrier) && record(packet.audit), "carrier/audit must be objects");
+  assert(record(packet.context), "context must be object");
+  scopedString(packet.context.thread_id, "context.thread_id");
+  assert(Array.isArray(packet.context.references), "context.references must be array");
+  for (const reference of packet.context.references) {
+    assert(record(reference), "context reference must be object");
+    scopedString(reference.packet_id, "context.references[].packet_id");
+  }
   assert(
     typeof packet.confidence === "number" &&
       packet.confidence >= 0 &&
@@ -156,7 +188,12 @@ function validateFrozenShape(packet) {
   assert(Array.isArray(packet.atoms), "atoms must be array");
   assert(Array.isArray(packet.relations), "relations must be array");
   assert(Array.isArray(packet.evidence), "evidence must be array");
-  assert(typeof packet.output?.format === "string", "missing output.format");
+  assert(record(packet.output), "output must be object");
+  assert(OUTPUT_FORMATS.has(packet.output.format), "unsupported output format");
+  if (Object.hasOwn(packet.output, "max_bytes")) {
+    assert(Number.isSafeInteger(packet.output.max_bytes) && packet.output.max_bytes >= 1,
+      "invalid output.max_bytes");
+  }
 
   const permissions = packet.permissions ?? {};
   assert(
@@ -169,8 +206,12 @@ function validateFrozenShape(packet) {
   if (Object.hasOwn(permissions, "mode")) {
     assert(MODES.has(permissions.mode), "unknown permission mode");
   }
-  if (Object.hasOwn(permissions, "scope")) {
-    assert(Array.isArray(permissions.scope), "permission scope must be array");
+  if (Object.hasOwn(permissions, "scope")) uniqueStringArray(permissions.scope, "permission scope");
+  if (Object.hasOwn(permissions, "forbid")) uniqueStringArray(permissions.forbid, "permission forbid");
+  for (const flag of ["require_confirmation", "require_review", "require_logging"]) {
+    if (Object.hasOwn(permissions, flag)) {
+      assert(typeof permissions[flag] === "boolean", `permission ${flag} must be boolean`);
+    }
   }
   if (SIDE_EFFECT_MODES.has(permissions.mode)) {
     assert(
@@ -188,14 +229,20 @@ function validateFrozenShape(packet) {
 
   const atoms = new Map();
   for (const atom of packet.atoms) {
-    assert(typeof atom?.id === "string", "atom id required");
+    assert(record(atom), "atom must be object");
+    assert(ATOM_ID.test(atom.id), "invalid atom id");
+    assert(ATOM_KINDS.has(atom.kind), "invalid atom kind");
+    if (Object.hasOwn(atom, "role")) identifier(atom.role, "atom.role");
+    if (Object.hasOwn(atom, "attributes")) assert(record(atom.attributes), "atom.attributes must be object");
     assert(!atoms.has(atom.id), `duplicate atom id ${atom.id}`);
     atoms.set(atom.id, atom);
   }
 
   const relationIds = new Set();
   for (const relation of packet.relations) {
-    assert(typeof relation?.type === "string", "relation type required");
+    assert(record(relation), "relation must be object");
+    identifier(relation.type, "relation type");
+    if (Object.hasOwn(relation, "id")) assert(RELATION_ID.test(relation.id), "invalid relation id");
     assert(
       CORE_RELATIONS.has(relation.type) || relation.type.includes("."),
       `unknown unnamespaced relation ${relation.type}`,
@@ -204,7 +251,8 @@ function validateFrozenShape(packet) {
       assert(!relationIds.has(relation.id), `duplicate relation id ${relation.id}`);
       relationIds.add(relation.id);
     }
-    assert(Array.isArray(relation?.arguments), "relation arguments must be array");
+    assert(Array.isArray(relation.arguments) && relation.arguments.length > 0,
+      "relation arguments must be nonempty array");
     for (const argument of relation.arguments) {
       assert(
         SPECIAL_ARGUMENTS.has(argument) || atoms.has(argument),
@@ -215,7 +263,14 @@ function validateFrozenShape(packet) {
 
   const evidenceIds = new Set();
   for (const evidence of packet.evidence) {
-    assert(typeof evidence?.id === "string", "evidence id required");
+    assert(record(evidence), "evidence must be object");
+    assert(EVIDENCE_ID.test(evidence.id), "invalid evidence id");
+    assert(EVIDENCE_TYPES.has(evidence.source_type), "invalid evidence source_type");
+    if (Object.hasOwn(evidence, "source_ref")) scopedString(evidence.source_ref, "evidence.source_ref");
+    if (Object.hasOwn(evidence, "input_hash")) scopedString(evidence.input_hash, "evidence.input_hash");
+    if (Object.hasOwn(evidence, "supports")) {
+      assert(Array.isArray(evidence.supports), "evidence.supports must be array");
+    }
     assert(!evidenceIds.has(evidence.id), `duplicate evidence id ${evidence.id}`);
     evidenceIds.add(evidence.id);
     for (const support of evidence.supports ?? []) {
