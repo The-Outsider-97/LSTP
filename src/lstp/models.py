@@ -278,13 +278,14 @@ class Atom:
     @classmethod
     def from_mapping(cls, value: object) -> "Atom":
         data = _mapping(value, path="$.atoms[]")
+        _reject_unknown_keys(data, allowed={"id", "kind", "value", "role", "datatype", "language", "attributes", "extensions"}, path="$.atoms[]")
         return cls(
             id=_non_empty_string(data.get("id"), path="$.atoms[].id"),
             kind=_non_empty_string(data.get("kind"), path="$.atoms[].kind"),
             value=data.get("value"),
-            role=data.get("role") if isinstance(data.get("role"), str) else None,
-            datatype=data.get("datatype") if isinstance(data.get("datatype"), str) else None,
-            language=data.get("language") if isinstance(data.get("language"), str) else None,
+            role=_optional_string(data, "role", path="$.atoms[]"),
+            datatype=_optional_string(data, "datatype", path="$.atoms[]"),
+            language=_optional_string(data, "language", path="$.atoms[]"),
             attributes=_mapping(data.get("attributes", {}), path="$.atoms[].attributes"),
             extensions=_mapping(data.get("extensions", {}), path="$.atoms[].extensions"),
         )
@@ -316,10 +317,11 @@ class Relation:
     @classmethod
     def from_mapping(cls, value: object) -> "Relation":
         data = _mapping(value, path="$.relations[]")
+        _reject_unknown_keys(data, allowed={"type", "arguments", "id", "confidence", "attributes", "extensions"}, path="$.relations[]")
         return cls(
             type=_non_empty_string(data.get("type"), path="$.relations[].type"),
             arguments=tuple(_non_empty_string(x, path="$.relations[].arguments[]") for x in _sequence(data.get("arguments"), path="$.relations[].arguments")),
-            id=data.get("id") if isinstance(data.get("id"), str) else None,
+            id=_optional_string(data, "id", path="$.relations[]"),
             confidence=None if data.get("confidence") is None else _bounded_confidence(data["confidence"], path="$.relations[].confidence"),
             attributes=_mapping(data.get("attributes", {}), path="$.relations[].attributes"),
             extensions=_mapping(data.get("extensions", {}), path="$.relations[].extensions"),
@@ -345,14 +347,15 @@ class ContextReference:
     @classmethod
     def from_mapping(cls, value: object) -> "ContextReference":
         data = _mapping(value, path="$.context.references[]")
+        _reject_unknown_keys(data, allowed={"packet_id", "depth", "agent", "label", "extensions"}, path="$.context.references[]")
         depth = data.get("depth")
         if depth is not None and (isinstance(depth, bool) or not isinstance(depth, int)):
             raise TypeError("context reference depth must be an integer")
         return cls(
             packet_id=_non_empty_string(data.get("packet_id"), path="$.context.references[].packet_id"),
             depth=depth,
-            agent=data.get("agent") if isinstance(data.get("agent"), str) else None,
-            label=data.get("label") if isinstance(data.get("label"), str) else None,
+            agent=_optional_string(data, "agent", path="$.context.references[]"),
+            label=_optional_string(data, "label", path="$.context.references[]"),
             extensions=_mapping(data.get("extensions", {}), path="$.context.references[].extensions"),
         )
 
@@ -576,14 +579,15 @@ class EvidenceItem:
     @classmethod
     def from_mapping(cls, value: object) -> "EvidenceItem":
         data = _mapping(value, path="$.evidence[]")
+        _reject_unknown_keys(data, allowed={"id", "source_type", "source_ref", "input_hash", "span", "supports", "description", "confidence", "extensions"}, path="$.evidence[]")
         return cls(
             id=_non_empty_string(data.get("id"), path="$.evidence[].id"),
             source_type=_non_empty_string(data.get("source_type"), path="$.evidence[].source_type"),
-            source_ref=data.get("source_ref") if isinstance(data.get("source_ref"), str) else None,
-            input_hash=data.get("input_hash") if isinstance(data.get("input_hash"), str) else None,
+            source_ref=_optional_string(data, "source_ref", path="$.evidence[]"),
+            input_hash=_optional_string(data, "input_hash", path="$.evidence[]"),
             span=data.get("span"),
             supports=tuple(_non_empty_string(x, path="$.evidence[].supports[]") for x in _sequence(data.get("supports", []), path="$.evidence[].supports")),
-            description=data.get("description") if isinstance(data.get("description"), str) else None,
+            description=_optional_string(data, "description", path="$.evidence[]"),
             confidence=None if data.get("confidence") is None else _bounded_confidence(data["confidence"], path="$.evidence[].confidence"),
             extensions=_mapping(data.get("extensions", {}), path="$.evidence[].extensions"),
         )
@@ -612,13 +616,14 @@ class Output:
     @classmethod
     def from_mapping(cls, value: object) -> "Output":
         data = _mapping(value, path="$.output")
+        _reject_unknown_keys(data, allowed={"format", "schema", "channel", "target", "language", "max_bytes", "requirements", "extensions"}, path="$.output")
         return cls(
             format=_non_empty_string(data.get("format"), path="$.output.format"),
-            schema=data.get("schema") if isinstance(data.get("schema"), str) else None,
-            channel=data.get("channel") if isinstance(data.get("channel"), str) else None,
-            target=data.get("target") if isinstance(data.get("target"), str) else None,
-            language=data.get("language") if isinstance(data.get("language"), str) else None,
-            max_bytes=data.get("max_bytes") if isinstance(data.get("max_bytes"), int) and not isinstance(data.get("max_bytes"), bool) else None,
+            schema=_optional_string(data, "schema", path="$.output"),
+            channel=_optional_string(data, "channel", path="$.output"),
+            target=_optional_string(data, "target", path="$.output"),
+            language=_optional_string(data, "language", path="$.output"),
+            max_bytes=_optional_non_negative_int(data, "max_bytes", path="$.output"),
             requirements=tuple(_non_empty_string(x, path="$.output.requirements[]") for x in _sequence(data.get("requirements", []), path="$.output.requirements")),
             extensions=_mapping(data.get("extensions", {}), path="$.output.extensions"),
         )
@@ -679,6 +684,7 @@ class PacketEnvelope:
     @classmethod
     def from_mapping(cls, value: object) -> "PacketEnvelope":
         data = _mapping(value, path="$")
+        _reject_unknown_keys(data, allowed={"id", "version", "pragmatics", "atoms", "relations", "context", "confidence", "permissions", "evidence", "output", "carrier", "audit", "extensions"}, path="$")
         return cls(
             octad=Octad.from_mapping(data),
             packet_id=_non_empty_string(data.get("id"), path="$.id"),
