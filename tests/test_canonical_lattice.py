@@ -212,3 +212,18 @@ def test_versioned_negative_canonical_lattice_fixture_fails_parse() -> None:
     )
     with pytest.raises(LatticeSyntaxError):
         parse_canonical_lattice(source)
+
+
+def test_positive_fixture_is_strict_canonical_without_terminal_newline() -> None:
+    raw = (ROOT / "positive" / "whitepaper-style.lstp").read_bytes()
+    assert raw.endswith(b"]")
+    assert not raw.endswith((b"\n", b"\r"))
+    assert compile_canonical_lattice(raw.decode("utf-8")).packets
+
+
+def test_framed_canonical_packet_rejects_terminal_linebreak() -> None:
+    # Canonical grammar does not include trailing stream separators.
+    source = WHITEPAPER_EXAMPLE
+    assert parse_canonical_lattice(source).packets
+    with pytest.raises(LatticeSyntaxError, match="trailing_input|unexpected input"):
+        parse_canonical_lattice(source + "\n")
