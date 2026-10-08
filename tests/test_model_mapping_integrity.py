@@ -65,3 +65,50 @@ def test_valid_optional_identity_and_provenance_survive() -> None:
     assert relation.id == "r0"
     assert evidence.source_ref == "tool:search"
     assert evidence.input_hash == "abc"
+
+
+@pytest.mark.parametrize(
+    ("factory", "payload"),
+    [
+        (Atom.from_mapping, {"id": "a0", "kind": "entity", "role": None}),
+        (Atom.from_mapping, {"id": "a0", "kind": "entity", "language": None}),
+        (Relation.from_mapping, {"type": "is", "arguments": ["a0"], "id": None}),
+        (Relation.from_mapping, {"type": "is", "arguments": ["a0"], "confidence": None}),
+        (ContextReference.from_mapping, {"packet_id": "p1", "depth": None}),
+        (ContextReference.from_mapping, {"packet_id": "p1", "agent": None}),
+        (EvidenceItem.from_mapping, {"id": "e0", "source_type": "tool", "source_ref": None}),
+        (EvidenceItem.from_mapping, {"id": "e0", "source_type": "tool", "confidence": None}),
+        (Output.from_mapping, {"format": "JSON", "target": None}),
+        (Output.from_mapping, {"format": "JSON", "max_bytes": None}),
+    ],
+)
+def test_explicit_null_cannot_erase_optional_semantic_data(factory, payload) -> None:
+    with pytest.raises((TypeError, ValueError)):
+        factory(payload)
+
+
+def test_omitted_optional_fields_keep_documented_defaults() -> None:
+    from lstp.models import Pragmatics
+
+    assert Atom.from_mapping({"id": "a0", "kind": "entity"}).language is None
+    assert Relation.from_mapping({"type": "is", "arguments": ["a0"]}).id is None
+    assert ContextReference.from_mapping({"packet_id": "p1"}).depth is None
+    assert EvidenceItem.from_mapping({"id": "e0", "source_type": "tool"}).source_ref is None
+    assert Output.from_mapping({"format": "JSON"}).max_bytes is None
+    assert Pragmatics.from_mapping({"type": "inform"}).urgency is None
+
+
+def test_present_null_urgency_is_not_silently_removed() -> None:
+    from lstp.models import Pragmatics
+
+    with pytest.raises((TypeError, ValueError)):
+        Pragmatics.from_mapping({"type": "inform", "urgency": None})
+
+
+def test_valid_numeric_optionals_preserved() -> None:
+    from lstp.models import Pragmatics
+
+    assert Pragmatics.from_mapping({"type": "inform", "urgency": 0.6}).urgency == 0.6
+    assert Relation.from_mapping({"type": "is", "arguments": ["a0"], "confidence": 0.4}).confidence == 0.4
+    assert ContextReference.from_mapping({"packet_id": "p1", "depth": 2}).depth == 2
+    assert Output.from_mapping({"format": "JSON", "max_bytes": 512}).max_bytes == 512
