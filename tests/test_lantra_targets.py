@@ -90,3 +90,61 @@ def test_missing_split_and_empty_file_are_rejected(tmp_path: Path) -> None:
     path.write_bytes(b"")
     with pytest.raises(TrainingTargetError, match="no supervision"):
         verify_targets([path])
+
+
+def test_training_target_preserves_real_entity_relation_provenance(tmp_path: Path) -> None:
+    from lstp.models import (
+        Atom, Context, EvidenceItem, Octad, Output, PacketEnvelope,
+        Permissions, Pragmatics, Relation,
+    )
+
+    original = PacketEnvelope(
+        octad=Octad(
+            pragmatics=Pragmatics(type="request", speech_act="command"),
+            atoms=(
+                Atom(id="a0", kind="entity", value="document-19", role="target"),
+                Atom(id="a1", kind="proposition", value="summarize document"),
+            ),
+            relations=(Relation(type="requests", arguments=("a0",), id="r0"),),
+            context=Context(thread_id="pilot-thread"),
+            confidence=0.8,
+            permissions=Permissions(),
+            evidence=(
+                EvidenceItem(
+                    id="e0",
+                    source_type="tool",
+                    source_ref="search-result-19",
+                    supports=("r0", "a1"),
+                ),
+            ),
+            output=Output(format="JSON"),
+        ),
+        packet_id="pilot-packet-19",
+        protocol_version="0.1",
+    )
+    target = canonical_dumps(original).decode("utf-8")
+    path = tmp_path / "targets.jsonl"
+    _write(path, [
+        _row("pilot-train", "train", "summarize document nineteen", target),
+        _row("pilot-validation", "validation", "summarize record nineteen", target),
+        _row("pilot-test", "test", "summarize source nineteen", target),
+    ])
+    assert verify_targets([path], require_all_splits=True)["samples"] == 3
+
+    result = canonical_loads(target, require_canonical_bytes=True)
+    assert result == original
+    assert result.octad.atoms[0].value == "document-19"
+    assert result.octad.relations[0].arguments == ("a0",)
+    assert result.octad.relations[0].id == "r0"
+    assert result.octad.evidence[0].source_ref == "search-result-19"
+    assert result.octad.evidence[0].supports == ("r0", "a1")
+    assert result.octad.permissions.mode is None
+
+
+def test_training_target_rejects_deleted_relation_atom(tmp_path: Path) -> None:
+    path = tmp_path / "targets.jsonl"
+    packet = json.loads(_target())
+    packet["relations"] = [{"type": "requests", "arguments": ["a9"], "id": "r0"}]
+    _write(path, [_row("broken-relation", "train", "inspect", json.dumps(packet))])
+    with pytest.raises(TrainingTargetError, match="canonical/semantic"):
+        verify_targets([path])
