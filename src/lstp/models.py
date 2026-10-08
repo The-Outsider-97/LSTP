@@ -132,7 +132,7 @@ def _optional_string(
     *,
     path: str,
 ) -> str | None:
-    if key not in data or data[key] is None:
+    if key not in data:
         return None
     return _non_empty_string(data[key], path=f"{path}.{key}")
 
@@ -158,7 +158,7 @@ def _optional_non_negative_int(
     *,
     path: str,
 ) -> int | None:
-    if key not in data or data[key] is None:
+    if key not in data:
         return None
     value = data[key]
     if isinstance(value, bool) or not isinstance(value, int):
@@ -166,6 +166,17 @@ def _optional_non_negative_int(
     if value < 0:
         raise ValueError(f"value at {path}.{key} must be non-negative")
     return value
+
+
+def _optional_confidence(
+    data: Mapping[str, Any],
+    key: str,
+    *,
+    path: str,
+) -> float | None:
+    if key not in data:
+        return None
+    return _bounded_confidence(data[key], path=f"{path}.{key}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -238,14 +249,7 @@ class Pragmatics:
                 "register",
                 path="$.pragmatics",
             ),
-            urgency=(
-                None
-                if data.get("urgency") is None
-                else _bounded_confidence(
-                    data["urgency"],
-                    path="$.pragmatics.urgency",
-                )
-            ),
+            urgency=_optional_confidence(data, "urgency", path="$.pragmatics"),
             extensions=_mapping(
                 data.get("extensions", {}),
                 path="$.pragmatics.extensions",
@@ -322,7 +326,7 @@ class Relation:
             type=_non_empty_string(data.get("type"), path="$.relations[].type"),
             arguments=tuple(_non_empty_string(x, path="$.relations[].arguments[]") for x in _sequence(data.get("arguments"), path="$.relations[].arguments")),
             id=_optional_string(data, "id", path="$.relations[]"),
-            confidence=None if data.get("confidence") is None else _bounded_confidence(data["confidence"], path="$.relations[].confidence"),
+            confidence=_optional_confidence(data, "confidence", path="$.relations[]"),
             attributes=_mapping(data.get("attributes", {}), path="$.relations[].attributes"),
             extensions=_mapping(data.get("extensions", {}), path="$.relations[].extensions"),
         )
@@ -348,9 +352,9 @@ class ContextReference:
     def from_mapping(cls, value: object) -> "ContextReference":
         data = _mapping(value, path="$.context.references[]")
         _reject_unknown_keys(data, allowed={"packet_id", "depth", "agent", "label", "extensions"}, path="$.context.references[]")
-        depth = data.get("depth")
-        if depth is not None and (isinstance(depth, bool) or not isinstance(depth, int)):
-            raise TypeError("context reference depth must be an integer")
+        depth = _optional_non_negative_int(
+            data, "depth", path="$.context.references[]"
+        )
         return cls(
             packet_id=_non_empty_string(data.get("packet_id"), path="$.context.references[].packet_id"),
             depth=depth,
@@ -588,7 +592,7 @@ class EvidenceItem:
             span=data.get("span"),
             supports=tuple(_non_empty_string(x, path="$.evidence[].supports[]") for x in _sequence(data.get("supports", []), path="$.evidence[].supports")),
             description=_optional_string(data, "description", path="$.evidence[]"),
-            confidence=None if data.get("confidence") is None else _bounded_confidence(data["confidence"], path="$.evidence[].confidence"),
+            confidence=_optional_confidence(data, "confidence", path="$.evidence[]"),
             extensions=_mapping(data.get("extensions", {}), path="$.evidence[].extensions"),
         )
 
