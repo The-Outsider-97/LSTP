@@ -424,6 +424,25 @@ for (const field of MANIFEST.noncanonical_permission_fields) {
   expectFailure(() => validateFrozenShape(injected), `non-core permission ${field}`);
 }
 
+// Independent semantic mutation probes guard against a verifier that only
+// recognizes the checked-in negative fixture patterns.
+const mutationCases = [
+  ["unknown atom kind", p => { p.atoms = [{ id: "a0", kind: "invalid" }]; }],
+  ["invalid atom id", p => { p.atoms = [{ id: "bad", kind: "entity" }]; }],
+  ["empty relation arguments", p => { p.relations = [{ type: "is", arguments: [] }]; }],
+  ["non-string permission scope", p => { p.permissions = { mode: "COMMIT", scope: [42] }; }],
+  ["empty context thread", p => { p.context.thread_id = ""; }],
+  ["unknown evidence source", p => { p.evidence = [{ id: "e0", source_type: "bad" }]; }],
+  ["unknown output format", p => { p.output.format = "BAD"; }],
+  ["non-object carrier", p => { p.carrier = "bad"; }],
+  ["invalid relation namespace", p => { p.relations = [{ type: ".", arguments: ["SELF"] }]; }],
+];
+for (const [label, mutate] of mutationCases) {
+  const modified = structuredClone(baseline);
+  mutate(modified);
+  expectFailure(() => validateFrozenShape(modified), label);
+}
+
 process.stdout.write(
   JSON.stringify({
     implementation: "independent-js-v0.1",
@@ -434,6 +453,7 @@ process.stdout.write(
     negative_lattice: negativeLattice,
     canonical_bytes: canonicalBytes,
     noncore_permission_fields: MANIFEST.noncanonical_permission_fields.length,
+    semantic_mutation_cases: mutationCases.length,
     status: "passed",
   }) + "\n",
 );
