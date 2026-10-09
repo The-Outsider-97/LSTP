@@ -67,27 +67,27 @@
     },
     "identifier": {
       "type": "string",
-      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(?![\\s\\S])",
       "maxLength": 128
     },
     "qualifiedIdentifier": {
       "type": "string",
-      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(?:\\.[A-Za-z_][A-Za-z0-9_-]*)*$",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(?:\\.[A-Za-z_][A-Za-z0-9_-]*)*(?![\\s\\S])",
       "maxLength": 256
     },
     "atomId": {
       "type": "string",
-      "pattern": "^a(?:0|[1-9][0-9]*)$",
+      "pattern": "^a(?:0|[1-9][0-9]*)(?![\\s\\S])",
       "maxLength": 64
     },
     "relationId": {
       "type": "string",
-      "pattern": "^r(?:0|[1-9][0-9]*)$",
+      "pattern": "^r(?:0|[1-9][0-9]*)(?![\\s\\S])",
       "maxLength": 64
     },
     "evidenceId": {
       "type": "string",
-      "pattern": "^e(?:0|[1-9][0-9]*)$",
+      "pattern": "^e(?:0|[1-9][0-9]*)(?![\\s\\S])",
       "maxLength": 64
     },
     "confidence": {
@@ -98,7 +98,7 @@
     "extensions": {
       "type": "object",
       "propertyNames": {
-        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$"
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"
       },
       "additionalProperties": {
         "type": "object"

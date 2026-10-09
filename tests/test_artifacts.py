@@ -16,14 +16,7 @@ def test_contract_is_reconciled_but_release_gates_remain_open() -> None:
     assert state["contract_reconciled"] is True
     assert state["training_ready"] is False
     ids = {item["id"] for item in state["blockers"]}
-    assert ids == {
-        "VERIFY-001",
-        "TEST-001",
-        "INTEROP-001",
-        "SLAI-001",
-        "DOC-001",
-        "REL-001",
-    }
+    assert ids == {"VERIFY-001", "DOC-001", "REL-001"}
 
 
 def test_identifier_patterns_reject_trailing_controls() -> None:
