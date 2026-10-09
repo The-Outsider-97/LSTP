@@ -1,0 +1,3 @@
+# Canonical protocol fixtures are byte-sensitive on every operating system.
+conformance/v0.1/lattice/canonical/positive/*.lstp text eol=lf
+conformance/v0.1/lattice/canonical/negative/*.lstp text eol=lf
