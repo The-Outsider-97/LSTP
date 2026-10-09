@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 GRAMMAR = Path("spec/compact-grammar.ebnf")
 
@@ -13,7 +14,7 @@ def test_expression_numbers_are_unsigned_so_minus_has_one_owner() -> None:
     text = _grammar()
     primary = text.split("primary_expression =", 1)[1].split(";", 1)[0]
     assert "unsigned_number" in primary
-    assert not __import__("re").search(r"(?<![A-Za-z_])signed_number(?![A-Za-z_])", primary)
+    assert not re.search(r"(?<![A-Za-z_])signed_number(?![A-Za-z_])", primary)
     assert "signed_period" not in primary
     assert 'unary_expression = [ "-", horizontal_space_opt ], postfix_expression' in text
 
