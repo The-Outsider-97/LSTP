@@ -102,37 +102,38 @@ def _clean_distribution_smoke(results: list[CheckResult]) -> None:
             raise SystemExit("source distribution must contain one top-level directory")
 
         sdist_env = temp / "sdist-env"
-        results.append(
-            _run(
-                "create sdist venv",
-                _python("-m", "venv", "--system-site-packages", str(sdist_env)),
-            )
-        )
+        results.append(_run("create sdist venv", _python("-m", "venv", str(sdist_env))))
         sdist_python = _venv_python(sdist_env)
+        source_dir = extracted[0]
         results.append(
             _run(
-                "install sdist",
-                [
-                    str(sdist_python),
-                    "-m",
-                    "pip",
-                    "install",
-                    "--no-deps",
-                    "--no-build-isolation",
-                    str(sdists[0]),
-                ],
-                cwd=temp,
+                "install extracted sdist with test dependencies",
+                [str(sdist_python), "-m", "pip", "install", ".[dev]"],
+                cwd=source_dir,
             )
         )
         results.append(
             _run(
                 "sdist import smoke",
-                [
-                    str(sdist_python),
-                    "-c",
-                    "import lstp; print(lstp.__version__)",
-                ],
+                [str(sdist_python), "-c", "import lstp; print(lstp.__version__)"],
                 cwd=temp,
+            )
+        )
+        results.append(
+            _run(
+                "sdist tests",
+                [str(sdist_python), "-m", "pytest"],
+                cwd=source_dir,
+            )
+        )
+        node = shutil.which("node")
+        if node is None:
+            raise SystemExit("node is required for sdist interoperability verification")
+        results.append(
+            _run(
+                "sdist independent JS interoperability",
+                [node, "interop/js/verify.mjs"],
+                cwd=source_dir,
             )
         )
 
