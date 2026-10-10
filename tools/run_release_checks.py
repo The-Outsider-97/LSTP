@@ -61,13 +61,56 @@ def _venv_script(directory: Path, name: str) -> Path:
     return directory / "bin" / name
 
 
+_WINDOWS_DEVICES = {"CON", "PRN", "AUX", "NUL"} | {
+    f"{prefix}{i}" for prefix in ("COM", "LPT") for i in range(1, 10)
+}
+
+
 def _safe_extract_sdist(archive: tarfile.TarFile, destination: Path) -> None:
+    """Reject unsafe or ambiguous members before data-filtered extraction."""
     root = destination.resolve()
-    for member in archive.getmembers():
-        candidate = (destination / member.name).resolve()
-        if root != candidate and root not in candidate.parents:
-            raise SystemExit("source distribution contains path traversal")
-    archive.extractall(destination)
+    folded: set[str] = set()
+    files: set[str] = set()
+    parents: set[str] = set()
+    total = 0
+    members = archive.getmembers()
+    if len(members) > 20_000:
+        raise SystemExit("unsafe source distribution: too many members")
+    for member in members:
+        name = member.name.removesuffix("/") if member.isdir() else member.name
+        parts = name.split("/")
+        if (
+            not name
+            or name.startswith("/")
+            or "\\" in name
+            or any(
+                part in {"", ".", ".."}
+                or ":" in part
+                or part.endswith((" ", "."))
+                or part.split(".", 1)[0].upper() in _WINDOWS_DEVICES
+                for part in parts
+            )
+            or not (member.isfile() or member.isdir())
+            or name.casefold() in folded
+        ):
+            raise SystemExit(f"unsafe source distribution member: {member.name!r}")
+        candidate = (destination / name).resolve()
+        if candidate == root or root not in candidate.parents:
+            raise SystemExit(f"unsafe source distribution path: {member.name!r}")
+        if member.isfile():
+            if member.size < 0 or member.size > 128 * 1024 * 1024:
+                raise SystemExit("unsafe source distribution: file too large")
+            total += member.size
+            files.add(name)
+        elif member.size != 0:
+            raise SystemExit("unsafe source distribution: directory contains data")
+        folded.add(name.casefold())
+        parents.update("/".join(parts[:i]) for i in range(1, len(parts)))
+    if total > 512 * 1024 * 1024 or files & parents:
+        raise SystemExit("unsafe source distribution: size or parent collision")
+    if not hasattr(tarfile, "data_filter"):
+        raise SystemExit("secure tar extraction is unavailable in this Python runtime")
+    archive.extractall(destination, filter="data")
 
 
 def _clean_distribution_smoke(results: list[CheckResult]) -> None:
