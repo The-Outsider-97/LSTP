@@ -37,7 +37,7 @@ Canonical v0.1 now has:
 - one replay-store interface with in-process and durable SQLite reference implementations;
 - positive and negative executable conformance fixtures.
 
-The repository is **not yet production-ready or training-ready**, but the remaining work is finite and explicitly gated. The six release blockers are clean executable verification, production conformance/adversarial coverage, independent interoperability, SLAI integration, Whitepaper publication synchronization, and the final release/pre-training audit.
+The repository is **not yet production-ready or training-ready**. The active readiness ledger contains three blocking gates: VERIFY-001 (clean executable verification, including conformance, interoperability and SLAI integration evidence), DOC-001 (Whitepaper publication reproducibility), and REL-001 (final release/pre-training acceptance).
 
 Implemented engineering/runtime foundation includes:
 
