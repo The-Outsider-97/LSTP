@@ -101,11 +101,11 @@ def _safe_extract_sdist(archive: tarfile.TarFile, destination: Path) -> None:
             if member.size < 0 or member.size > 128 * 1024 * 1024:
                 raise SystemExit("unsafe source distribution: file too large")
             total += member.size
-            files.add(name)
+            files.add(name.casefold())
         elif member.size != 0:
             raise SystemExit("unsafe source distribution: directory contains data")
         folded.add(name.casefold())
-        parents.update("/".join(parts[:i]) for i in range(1, len(parts)))
+        parents.update("/".join(parts[:i]).casefold() for i in range(1, len(parts)))
     if total > 512 * 1024 * 1024 or files & parents:
         raise SystemExit("unsafe source distribution: size or parent collision")
     if not hasattr(tarfile, "data_filter"):
@@ -191,23 +191,33 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--skip-build-smoke",
         action="store_true",
-        help="skip wheel/sdist clean-install smoke checks",
+        help="skip wheel/sdist clean-install smoke checks in engineering mode",
+    )
+    parser.add_argument(
+        "--distribution-only",
+        action="store_true",
+        help="build and verify wheel/sdist in isolation without repeating source lint/tests",
     )
     args = parser.parse_args(argv)
+    if args.final and args.distribution_only:
+        parser.error("--final and --distribution-only are mutually exclusive")
+    if args.skip_build_smoke and (args.final or args.distribution_only):
+        parser.error("clean-install smoke cannot be skipped for final or distribution verification")
 
     results: list[CheckResult] = []
-    results.append(
-        _run(
-            "schema contract",
-            _python("tools/check_schema_contract.py"),
+    if not args.distribution_only:
+        results.append(
+            _run(
+                "schema contract",
+                _python("tools/check_schema_contract.py"),
+            )
         )
-    )
-    results.append(_run("ruff", _python("-m", "ruff", "check", ".")))
-    results.append(
-        _run("ruff format", _python("-m", "ruff", "format", "--check", "."))
-    )
-    results.append(_run("mypy", _python("-m", "mypy")))
-    results.append(_run("pytest", _python("-m", "pytest")))
+        results.append(_run("ruff", _python("-m", "ruff", "check", ".")))
+        results.append(
+            _run("ruff format", _python("-m", "ruff", "format", "--check", "."))
+        )
+        results.append(_run("mypy", _python("-m", "mypy")))
+        results.append(_run("pytest", _python("-m", "pytest")))
 
     dist = ROOT / "dist"
     if dist.exists():
@@ -238,7 +248,7 @@ def main(argv: list[str] | None = None) -> int:
     print(
         json.dumps(
             {
-                "mode": "final" if args.final else "engineering",
+                "mode": "final" if args.final else ("distribution" if args.distribution_only else "engineering"),
                 "checks": [asdict(item) for item in results],
                 "status": "passed",
             },
