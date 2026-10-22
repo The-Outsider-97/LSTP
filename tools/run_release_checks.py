@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import unicodedata
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -27,10 +28,12 @@ class CheckResult:
     returncode: int
 
 
-def _run(name: str, command: list[str], *, cwd: Path = ROOT) -> CheckResult:
+def _run(
+    name: str, command: list[str], *, cwd: Path = ROOT, stdin: str | None = None
+) -> CheckResult:
     print(f"==> {name}")
     print(" ".join(command))
-    result = subprocess.run(command, cwd=cwd, check=False)
+    result = subprocess.run(command, cwd=cwd, check=False, input=stdin, text=True)
     if result.returncode:
         raise SystemExit(
             json.dumps(
@@ -82,6 +85,8 @@ def _safe_extract_sdist(archive: tarfile.TarFile, destination: Path) -> None:
         if (
             not name
             or name.startswith("/")
+            or unicodedata.normalize("NFC", name) != name
+            or any(unicodedata.category(char) in {"Cc", "Cf", "Cs"} for char in name)
             or "\\" in name
             or any(
                 part in {"", ".", ".."}
@@ -135,6 +140,9 @@ def _clean_distribution_smoke(results: list[CheckResult]) -> None:
         cli = _venv_script(wheel_env, "lstp")
         results.append(_run("wheel CLI version", [str(cli), "--version"], cwd=temp))
         results.append(_run("wheel CLI help", [str(cli), "--help"], cwd=temp))
+        results.append(
+            _run("wheel CLI JSON check", [str(cli), "json-check"], cwd=temp, stdin="{}")
+        )
 
         source_root = temp / "source"
         source_root.mkdir()
