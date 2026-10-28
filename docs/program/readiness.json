@@ -4,7 +4,7 @@
   "blockers": [
     {
       "id": "VERIFY-001",
-      "summary": "Run tools/run_release_checks.py successfully from a clean LSTP checkout and obtain executable smoke evidence for the merged SLAI v2.3 adapter pinned to LSTP. The LSTP GitHub Actions jobs still fail before workflow steps start and SLAI PR #31 has no attached workflow, so clean Python/package/cross-repository execution remains the principal engineering blocker."
+      "summary": "Run tools/run_release_checks.py successfully from a clean LSTP checkout; capture executed Python/JS/package evidence. Latest main GitHub Actions run 40105378500 failed with zero job steps recorded, so no test results can be inferred. Reconcile SLAI v2.4 submodule gitlink 7f4c1dab1255d3b36364adc7227e7743679087fb versus model/lstp.lock.json pin 56e9677de80cb60211f666e26bf0316159bd360e, missing tracked root run_lstp.py/setup_lstp.py, and execute the real v2.4 integration and LANTRA 100M-scale pilot."
     },
     {
       "id": "DOC-001",
@@ -12,7 +12,7 @@
     },
     {
       "id": "REL-001",
-      "summary": "Perform the final clean release/pre-training audit: compatibility/migration statement, package provenance, clean install evidence, conformance/interop/SLAI evidence, version freeze, and explicit training-ready sign-off."
+      "summary": "Perform independent clean release and LANTRA pre-training audits: supported Python/OS matrix, conformance and separate JS implementation, wheel/sdist provenance, verified SLAI-v2.4 tokenizer/model/optimizer/scheduler/RNG checkpoint contract, pilot forward/backward/resume/evaluation, version freeze and explicit separate production/training decisions. Neither release nor full training is authorized."
     }
   ],
   "implemented_nonblockers": [

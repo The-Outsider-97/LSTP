@@ -34,9 +34,21 @@ correctness, model learnability or training authorization.
 
 ## Training integration boundary
 
-The existing SLAI `run_lstp.py` is a `LanguageAgent →
-LinguisticFrame → Octad` adapter. It is not a LANTRA training pipeline. The
-LANTRA training owner MUST define and test the following against its real
+Inspected SLAI branch `SLAI-v.2.4` at
+`2919fadef80c814855162b5dff08f794fc0f5c0d`: the tracked
+`src/integrations/lstp_adapter.py` maps a `LinguisticFrame` to an Octad.
+It is not a LANTRA training pipeline. The root `run_lstp.py` and
+`setup_lstp.py` described by earlier v2.3 integration documents are not
+tracked at this inspected v2.4 commit. The `model/LSTP` submodule gitlink
+(`7f4c1dab1255d3b36364adc7227e7743679087fb`) disagrees with the
+`model/lstp.lock.json` commit
+(`56e9677de80cb60211f666e26bf0316159bd360e`). Do not assume either
+pin is correct without resolving this discrepancy and executing integration
+tests. SLAI v2.4 contains `LanguageTokenizer`, `LanguageTransformer`,
+and `LantraRuntime`, but no tracked `train_lantra.py` was found in the
+inspected tree; a real end-to-end 100M training/resume pipeline remains unverified.
+
+The LANTRA training owner MUST define and test the following against its real
 model/tokenizer implementation before training:
 
 1. Pin an exact LSTP commit, dataset schema/profile and tokenizer revision.
@@ -54,9 +66,9 @@ model/tokenizer implementation before training:
 8. Keep the language model at **zero trusted execution authority**. Tool
    execution requires host-side authorization of a concrete operation.
 
-Do not substitute `modules/model_trainer.py` from the currently connected
-SLAI `main`: that module operates classical scikit-learn models, not the
-LANTRA_42M–1B transformer family.
+Do not substitute `modules/model_trainer.py` for a LANTRA training pilot:
+that module operates classical scikit-learn models, not the LANTRA transformer
+family. The v2.4 neural model/runtime code must be tested with a real trainer.
 
 ## Pilot acceptance
 
@@ -92,7 +104,9 @@ MUST NOT reinterpret protocol fields or introduce divergent wire formats.
   floating `main` at training time.
 - Tokenizer revision: immutable tokenizer artifact digest, recorded with its
   vocabulary size, special-token mapping, normalizer and pre-tokenizer.
-- Dataset digest: SHA-256 over original JSONL bytes in their read order,
+- Dataset digest: SHA-256 over the unmodified JSONL file bytes, concatenated
+  in the exact order of input paths. No record-length prefixes, newline
+  normalization or other preprocessing may be applied before hashing;
   recorded alongside train/validation/test split counts.
 - Examples must pass the existing `tools/check_lantra_targets.py` preflight.
 - Changes to canonical semantic fields or their interpretation require a new
@@ -123,9 +137,11 @@ labels are `-100` for prompt/padding and target token IDs for the answer
 once by the model/trainer and that labels are aligned with target tokens.
 
 Tokenizer special tokens, exact prompt template, EOS behavior and maximum
-length are integration-specific and **not frozen here** because the real
-LANTRA tokenizer/trainer is absent from the connected SLAI `main`. Do not
-invent reserved token IDs or claim tokenizer compatibility prematurely.
+length are integration-specific and **not frozen here**. While SLAI v2.4
+contains tokenizer and transformer implementations, their specific 100M
+training configuration, loss masking and resume behavior have not been
+independently exercised with this representation. Do not invent reserved
+token IDs or claim tokenizer compatibility prematurely.
 Any truncated target is invalid; fail preflight rather than training against
 partial canonical JSON.
 
