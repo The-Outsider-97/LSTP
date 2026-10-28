@@ -108,7 +108,9 @@ def verify_targets(paths: list[Path], *, require_all_splits: bool = False) -> di
                 counts[obj["split"]] += 1
                 total_input_bytes += len(obj["input"].encode("utf-8"))
                 total_target_bytes += len(target)
-                digest.update(len(raw).to_bytes(8, "big"))
+                # Hash exactly the bytes the trainer will read, in path order.
+                # Do not prefix record lengths: that would not be SHA-256 of
+                # the original JSONL stream specified by the training contract.
                 digest.update(raw)
 
     if not sum(counts.values()):

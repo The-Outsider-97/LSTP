@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -148,3 +149,24 @@ def test_training_target_rejects_deleted_relation_atom(tmp_path: Path) -> None:
     _write(path, [_row("broken-relation", "train", "inspect", json.dumps(packet))])
     with pytest.raises(TrainingTargetError, match="canonical/semantic"):
         verify_targets([path])
+
+
+def test_dataset_digest_matches_raw_jsonl_bytes(tmp_path: Path) -> None:
+    """The reported digest must match an independently computed file SHA-256."""
+    path = tmp_path / "targets.jsonl"
+    _write(path, [_row("001", "train", "alpha"), _row("002", "validation", "beta")])
+    expected = hashlib.sha256(path.read_bytes()).hexdigest()
+    assert verify_targets([path])["dataset_sha256"] == expected
+
+
+def test_dataset_digest_preserves_line_endings_and_file_order(tmp_path: Path) -> None:
+    """No implicit newline normalization or hidden record-length framing."""
+    first = tmp_path / "part-a.jsonl"
+    second = tmp_path / "part-b.jsonl"
+    _write(first, [_row("001", "train", "first")])
+    _write(second, [_row("002", "test", "second")])
+    first.write_bytes(first.read_bytes().replace(b"\n", b"\r\n"))
+    raw_stream = first.read_bytes() + second.read_bytes()
+    expected = hashlib.sha256(raw_stream).hexdigest()
+    assert verify_targets([first, second])["dataset_sha256"] == expected
+    assert verify_targets([second, first])["dataset_sha256"] != expected
