@@ -316,3 +316,21 @@ See:
 ## License
 
 MIT License, Copyright (c) 2026 J.E. Remy. See [`LICENSE`](LICENSE).
+
+## Optional host extensions (experimental)
+
+Optional, non-normative host integrations are available without changing the
+LSTP v0.1 packet contract:
+
+- `lstp.ontology`: a versioned, extensible upper ontology registry with explicit
+  domain/range checks, asserted subclass reasoning, and stable snapshot digests.
+  This is **not** a complete universal ontology or an OWL reasoner.
+- `lstp.consensus`: an optional etcd v3-backed host coordination interface for
+  revisioned ontology-version pointers and multi-node replay reservations.
+  Raft quorum and durability are supplied by a separately deployed etcd cluster,
+  **not** reimplemented in LSTP. No distributed production test is yet claimed.
+
+See [the optional ontology and consensus engineering profile](docs/integration/OPTIONAL-ONTOLOGY-CONSENSUS-v0.1.md)
+for configuration, security boundaries, examples, and required external tests.
+These experimental integrations do not imply that LSTP is production-ready or
+LANTRA training-ready and do not alter existing readiness gates.
