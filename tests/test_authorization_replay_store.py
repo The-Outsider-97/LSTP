@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 from lstp.models import Context, Octad, Output, PacketEnvelope, Permissions, Pragmatics
-from lstp.packet.authorization import Authority, HostPolicy, OperationRequest, PrincipalContext, authorize_operation
+from lstp.packet.authorization import (
+    Authority,
+    HostPolicy,
+    OperationRequest,
+    PrincipalContext,
+    authorize_operation,
+)
 from lstp.packet.replay import SQLiteReplayStore
 
 RESOURCE = "urn:test:document:1"

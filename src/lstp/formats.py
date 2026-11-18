@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 _RFC3339_RE = re.compile(
     r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])-(?P<day>0[1-9]|[12]\d|3[01])"
@@ -78,7 +78,7 @@ def parse_rfc3339(value: str) -> datetime:
 
     zone = match.group("zone")
     if zone.lower() == "z":
-        tz = timezone.utc
+        tz = UTC
     else:
         sign = 1 if zone[0] == "+" else -1
         offset_hours = int(zone[1:3])
@@ -103,7 +103,7 @@ def parse_rfc3339(value: str) -> datetime:
         raise ValueError("invalid RFC 3339 calendar date-time") from exc
     if leap_second:
         parsed += timedelta(seconds=1)
-    return parsed.astimezone(timezone.utc)
+    return parsed.astimezone(UTC)
 
 
 def is_well_formed_bcp47(value: str) -> bool:
@@ -158,10 +158,7 @@ def is_well_formed_bcp47(value: str) -> bool:
     variants: set[str] = set()
     while index < len(parts):
         part = parts[index]
-        is_variant = (
-            5 <= len(part) <= 8
-            or (len(part) == 4 and part[0].isdigit())
-        )
+        is_variant = 5 <= len(part) <= 8 or (len(part) == 4 and part[0].isdigit())
         if not is_variant:
             break
         key = part.lower()

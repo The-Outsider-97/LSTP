@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 CANONICAL = Path("spec/grammar.ebnf")
 COMPACT = Path("spec/compact-grammar.ebnf")
 

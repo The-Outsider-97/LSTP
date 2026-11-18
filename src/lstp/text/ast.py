@@ -88,14 +88,14 @@ class TargetReference:
 
 @dataclass(frozen=True, slots=True)
 class ListExpression:
-    items: tuple["Expression", ...]
+    items: tuple[Expression, ...]
     span: SourceSpan
 
 
 @dataclass(frozen=True, slots=True)
 class CallExpression:
     name: str
-    arguments: tuple["Expression", ...]
+    arguments: tuple[Expression, ...]
     span: SourceSpan
 
 
@@ -108,32 +108,32 @@ class MacroReference:
 @dataclass(frozen=True, slots=True)
 class UnaryExpression:
     operator: str
-    operand: "Expression"
+    operand: Expression
     span: SourceSpan
 
 
 @dataclass(frozen=True, slots=True)
 class ApproximationExpression:
-    operand: "Expression"
+    operand: Expression
     span: SourceSpan
 
 
 @dataclass(frozen=True, slots=True)
 class CompositionExpression:
-    items: tuple["Expression", ...]
+    items: tuple[Expression, ...]
     span: SourceSpan
 
 
 @dataclass(frozen=True, slots=True)
 class AlternativeExpression:
-    items: tuple["Expression", ...]
+    items: tuple[Expression, ...]
     span: SourceSpan
 
 
 @dataclass(frozen=True, slots=True)
 class AnnotationExpression:
     label: str
-    value: "Expression"
+    value: Expression
     span: SourceSpan
 
 

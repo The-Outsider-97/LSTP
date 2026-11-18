@@ -1,4 +1,5 @@
 """Regression tests for lossless public typed-model mapping."""
+
 from __future__ import annotations
 
 import pytest
@@ -45,10 +46,17 @@ def test_envelope_mapping_rejects_unknown_top_level_field() -> None:
 
     packet = PacketEnvelope(
         Octad(
-            Pragmatics(type="inform"), (), (), Context(thread_id="t"),
-            1.0, Permissions(), (), Output(format="JSON"),
+            Pragmatics(type="inform"),
+            (),
+            (),
+            Context(thread_id="t"),
+            1.0,
+            Permissions(),
+            (),
+            Output(format="JSON"),
         ),
-        "p", "0.1",
+        "p",
+        "0.1",
     )
     payload = packet_to_mapping(packet)
     payload["unrecognized"] = "silently lost before fix"
@@ -58,10 +66,14 @@ def test_envelope_mapping_rejects_unknown_top_level_field() -> None:
 
 def test_valid_optional_identity_and_provenance_survive() -> None:
     relation = Relation.from_mapping({"type": "is", "arguments": ["a0"], "id": "r0"})
-    evidence = EvidenceItem.from_mapping({
-        "id": "e0", "source_type": "tool",
-        "source_ref": "tool:search", "input_hash": "abc",
-    })
+    evidence = EvidenceItem.from_mapping(
+        {
+            "id": "e0",
+            "source_type": "tool",
+            "source_ref": "tool:search",
+            "input_hash": "abc",
+        }
+    )
     assert relation.id == "r0"
     assert evidence.source_ref == "tool:search"
     assert evidence.input_hash == "abc"
@@ -109,6 +121,9 @@ def test_valid_numeric_optionals_preserved() -> None:
     from lstp.models import Pragmatics
 
     assert Pragmatics.from_mapping({"type": "inform", "urgency": 0.6}).urgency == 0.6
-    assert Relation.from_mapping({"type": "is", "arguments": ["a0"], "confidence": 0.4}).confidence == 0.4
+    assert (
+        Relation.from_mapping({"type": "is", "arguments": ["a0"], "confidence": 0.4}).confidence
+        == 0.4
+    )
     assert ContextReference.from_mapping({"packet_id": "p1", "depth": 2}).depth == 2
     assert Output.from_mapping({"format": "JSON", "max_bytes": 512}).max_bytes == 512

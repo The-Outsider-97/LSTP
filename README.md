@@ -118,14 +118,14 @@ from lstp import (
 )
 
 document = parse_canonical_lattice(
-    '[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)'
+    "[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)"
     '|A=(a0:ENT("door"){ROLE=TARGET})'
-    '|R=(OPEN(a0))'
+    "|R=(OPEN(a0))"
     '|C=(THREAD="t1")'
-    '|κ=0.95'
+    "|κ=0.95"
     '|Π=(MODE=EXEC,SCOPE=["door"])'
     '|E=(USER("open the door"))'
-    '|Ω=(FORMAT=NL)]'
+    "|Ω=(FORMAT=NL)]"
 )
 ```
 

@@ -36,11 +36,14 @@ def _row(sample_id: str, split: str, prompt: str, target: str | None = None) -> 
 
 def test_real_canonical_targets_validate_in_all_splits(tmp_path: Path) -> None:
     path = tmp_path / "targets.jsonl"
-    _write(path, [
-        _row("001", "train", "one"),
-        _row("002", "validation", "two"),
-        _row("003", "test", "three"),
-    ])
+    _write(
+        path,
+        [
+            _row("001", "train", "one"),
+            _row("002", "validation", "two"),
+            _row("003", "test", "three"),
+        ],
+    )
     report = verify_targets([path], require_all_splits=True)
     assert report["status"] == "passed"
     assert report["samples"] == 3
@@ -95,8 +98,15 @@ def test_missing_split_and_empty_file_are_rejected(tmp_path: Path) -> None:
 
 def test_training_target_preserves_real_entity_relation_provenance(tmp_path: Path) -> None:
     from lstp.models import (
-        Atom, Context, EvidenceItem, Octad, Output, PacketEnvelope,
-        Permissions, Pragmatics, Relation,
+        Atom,
+        Context,
+        EvidenceItem,
+        Octad,
+        Output,
+        PacketEnvelope,
+        Permissions,
+        Pragmatics,
+        Relation,
     )
 
     original = PacketEnvelope(
@@ -125,11 +135,14 @@ def test_training_target_preserves_real_entity_relation_provenance(tmp_path: Pat
     )
     target = canonical_dumps(original).decode("utf-8")
     path = tmp_path / "targets.jsonl"
-    _write(path, [
-        _row("pilot-train", "train", "summarize document nineteen", target),
-        _row("pilot-validation", "validation", "summarize record nineteen", target),
-        _row("pilot-test", "test", "summarize source nineteen", target),
-    ])
+    _write(
+        path,
+        [
+            _row("pilot-train", "train", "summarize document nineteen", target),
+            _row("pilot-validation", "validation", "summarize record nineteen", target),
+            _row("pilot-test", "test", "summarize source nineteen", target),
+        ],
+    )
     assert verify_targets([path], require_all_splits=True)["samples"] == 3
 
     result = canonical_loads(target, require_canonical_bytes=True)

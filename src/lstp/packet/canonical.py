@@ -12,7 +12,11 @@ from lstp.json_input import InputLimits, loads_json
 from lstp.models import PacketEnvelope
 from lstp.packet.serializer import (
     canonical_dumps as _canonical_dumps,
+)
+from lstp.packet.serializer import (
     canonical_loads as _canonical_loads,
+)
+from lstp.packet.serializer import (
     packet_to_mapping,
 )
 from lstp.packet.structural import validate_canonical_json_types
@@ -54,7 +58,9 @@ def _preflight(value: object, path: str = "$") -> None:
     if isinstance(value, Decimal):
         if not value.is_finite():
             raise _error("non_finite_number", "canonical numbers must be finite", path)
-        if abs(value.as_tuple().exponent) > _MAX_DECIMAL_EXPONENT:
+        exponent = value.as_tuple().exponent
+        assert isinstance(exponent, int)  # finite Decimal
+        if abs(exponent) > _MAX_DECIMAL_EXPONENT:
             raise _error(
                 "number_exponent_limit",
                 "canonical decimal exponent exceeds implementation safety limit",

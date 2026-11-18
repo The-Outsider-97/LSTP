@@ -7,7 +7,6 @@ import pytest
 from lstp.errors import LatticeSyntaxError, SemanticValidationError
 from lstp.text.canonical import compile_canonical_lattice, parse_canonical_lattice
 
-
 ROOT = Path(__file__).resolve().parents[1] / "conformance" / "v0.1" / "lattice" / "canonical"
 
 
@@ -45,10 +44,7 @@ def test_exact_whitepaper_example_parses_to_ordered_octad() -> None:
 
 
 def test_atomic_packet_is_unframed_octad_core() -> None:
-    source = (
-        'π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
-        'Π=()|E=()|Ω=(FORMAT=JSON)'
-    )
+    source = 'π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=JSON)'
     document = parse_canonical_lattice(source)
     assert len(document.packets) == 1
     assert document.packets[0].label is None
@@ -56,10 +52,7 @@ def test_atomic_packet_is_unframed_octad_core() -> None:
 
 
 def test_named_packet_label_is_carrier_metadata_not_octad_identity() -> None:
-    source = (
-        'alpha:[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
-        'Π=()|E=()|Ω=(FORMAT=NL)]'
-    )
+    source = 'alpha:[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'
     document = parse_canonical_lattice(source)
     packet = document.packets[0]
     assert packet.label == "alpha"
@@ -69,8 +62,8 @@ def test_named_packet_label_is_carrier_metadata_not_octad_identity() -> None:
 def test_stream_packet_requires_named_packets_and_line_break_separator() -> None:
     source = (
         'one:[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
-        'Π=()|E=()|Ω=(FORMAT=NL)]\n'
-        'two:[π=(TYPE=QUESTION,SPEECH_ACT=QUESTION)|A=()|R=()|'
+        "Π=()|E=()|Ω=(FORMAT=NL)]\n"
+        "two:[π=(TYPE=QUESTION,SPEECH_ACT=QUESTION)|A=()|R=()|"
         'C=(THREAD="t1")|κ=0.8|Π=(MODE=RO)|E=()|Ω=(FORMAT=NL)]'
     )
     document = parse_canonical_lattice(source)
@@ -79,19 +72,13 @@ def test_stream_packet_requires_named_packets_and_line_break_separator() -> None
 
 
 def test_canonical_segment_order_is_strict() -> None:
-    source = (
-        '[π=(TYPE=INFORM)|R=()|A=()|C=(THREAD="t1")|κ=1|'
-        'Π=()|E=()|Ω=(FORMAT=NL)]'
-    )
+    source = '[π=(TYPE=INFORM)|R=()|A=()|C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'
     with pytest.raises(LatticeSyntaxError):
         parse_canonical_lattice(source)
 
 
 def test_duplicate_named_field_fails_closed() -> None:
-    source = (
-        '[π=(TYPE=INFORM,TYPE=REQUEST)|A=()|R=()|C=(THREAD="t1")|κ=1|'
-        'Π=()|E=()|Ω=(FORMAT=NL)]'
-    )
+    source = '[π=(TYPE=INFORM,TYPE=REQUEST)|A=()|R=()|C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'
     with pytest.raises(LatticeSyntaxError, match="duplicate canonical field"):
         parse_canonical_lattice(source)
 
@@ -107,7 +94,7 @@ def test_unknown_canonical_permission_field_is_rejected() -> None:
 
 def test_context_whitepaper_fields_parse_without_aliases() -> None:
     source = (
-        '[π=(TYPE=INFORM)|A=()|R=()|'
+        "[π=(TYPE=INFORM)|A=()|R=()|"
         'C=(THREAD="t1",PARENT="p0",TIMEZONE="Europe/Amsterdam",'
         'WINDOW={"turns":4})|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'
     )
@@ -119,16 +106,11 @@ def test_context_whitepaper_fields_parse_without_aliases() -> None:
 
 def test_compact_syntax_is_not_accepted_by_canonical_parser() -> None:
     with pytest.raises(LatticeSyntaxError):
-        parse_canonical_lattice(
-            '!open @door {mode=COMMIT, scope=["door"]} -> NL %0.95'
-        )
+        parse_canonical_lattice('!open @door {mode=COMMIT, scope=["door"]} -> NL %0.95')
 
 
 def test_parse_does_not_hide_semantic_reference_errors() -> None:
-    source = (
-        '[π=(TYPE=INFORM)|A=()|R=(is(a9))|C=(THREAD="t1")|κ=1|'
-        'Π=()|E=()|Ω=(FORMAT=NL)]'
-    )
+    source = '[π=(TYPE=INFORM)|A=()|R=(is(a9))|C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'
     document = parse_canonical_lattice(source)
     assert document.packets[0].octad.relations[0].arguments == ("a9",)
     with pytest.raises(SemanticValidationError):
@@ -138,7 +120,7 @@ def test_parse_does_not_hide_semantic_reference_errors() -> None:
 def test_compile_rejects_side_effect_mode_without_scope() -> None:
     source = (
         '[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)|A=()|R=()|C=(THREAD="t1")|'
-        'κ=1|Π=(MODE=COMMIT)|E=()|Ω=(FORMAT=NONE)]'
+        "κ=1|Π=(MODE=COMMIT)|E=()|Ω=(FORMAT=NONE)]"
     )
     with pytest.raises(SemanticValidationError, match="explicit scope"):
         compile_canonical_lattice(source)
@@ -146,7 +128,7 @@ def test_compile_rejects_side_effect_mode_without_scope() -> None:
 
 def test_compile_accepts_semantically_valid_canonical_packet() -> None:
     source = (
-        '[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)|'
+        "[π=(TYPE=REQUEST,SPEECH_ACT=COMMAND)|"
         'A=(a0:RES("door"){ROLE=TARGET})|R=(requests(a0))|'
         'C=(THREAD="t1")|κ=1|Π=(MODE=COMMIT,SCOPE=["door"])|'
         'E=(USER("open the door"))|Ω=(FORMAT=NONE)]'
@@ -157,7 +139,7 @@ def test_compile_accepts_semantically_valid_canonical_packet() -> None:
 
 def test_atom_attributes_and_relation_metadata_are_preserved() -> None:
     source = (
-        '[π=(TYPE=INFORM)|'
+        "[π=(TYPE=INFORM)|"
         'A=(a0:ENT("door"){ROLE=TARGET,ATTRIBUTES={"locked":false}})|'
         'R=(is(a0){ID=r0,CONFIDENCE=0.75,ATTRIBUTES={"source":"sensor"}})|'
         'C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=JSON)]'
@@ -174,42 +156,32 @@ def test_relation_metadata_unknown_field_fails_closed() -> None:
     source = (
         '[π=(TYPE=INFORM)|A=(a0:ENT("door"))|'
         'R=(is(a0){PROFILE=fast})|C=(THREAD="t1")|κ=1|'
-        'Π=()|E=()|Ω=(FORMAT=NL)]'
+        "Π=()|E=()|Ω=(FORMAT=NL)]"
     )
     with pytest.raises(LatticeSyntaxError, match="unknown canonical relation metadata"):
         parse_canonical_lattice(source)
 
 
 def test_utf8_bom_is_accepted_by_canonical_parser() -> None:
-    source = (
-        '\ufeff[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
-        'Π=()|E=()|Ω=(FORMAT=NL)]'
-    )
+    source = '\ufeff[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'
     document = parse_canonical_lattice(source)
     assert document.packets[0].octad.pragmatics.type == "inform"
 
 
 def test_named_packet_rejects_line_break_before_frame() -> None:
-    source = (
-        'alpha:\n[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
-        'Π=()|E=()|Ω=(FORMAT=NL)]'
-    )
+    source = 'alpha:\n[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'
     with pytest.raises(LatticeSyntaxError, match="must use label"):
         parse_canonical_lattice(source)
 
 
 def test_versioned_positive_canonical_lattice_fixture_compiles() -> None:
-    source = (ROOT / "positive" / "whitepaper-style.lstp").read_text(
-        encoding="utf-8"
-    )
+    source = (ROOT / "positive" / "whitepaper-style.lstp").read_text(encoding="utf-8")
     document = compile_canonical_lattice(source)
     assert document.packets[0].octad.context.thread_id == "finance-review"
 
 
 def test_versioned_negative_canonical_lattice_fixture_fails_parse() -> None:
-    source = (ROOT / "negative" / "wrong-segment-order.lstp").read_text(
-        encoding="utf-8"
-    )
+    source = (ROOT / "negative" / "wrong-segment-order.lstp").read_text(encoding="utf-8")
     with pytest.raises(LatticeSyntaxError):
         parse_canonical_lattice(source)
 

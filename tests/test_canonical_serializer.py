@@ -12,8 +12,7 @@ from lstp.packet.compiler import CompilerOptions, compile_lattice
 
 def _packet():
     return compile_lattice(
-        '!open @door {mode=COMMIT, scope=["urn:door:front"], '
-        'confirm=true} -> JSON %0.50',
+        '!open @door {mode=COMMIT, scope=["urn:door:front"], confirm=true} -> JSON %0.50',
         options=CompilerOptions(packet_id="p1", thread_id="t1"),
     )
 
@@ -64,7 +63,6 @@ def test_bidi_control_is_not_canonical() -> None:
         canonical_loads(json.dumps(data, ensure_ascii=False))
 
 
-
 def test_october_candidate_pragmatics_field_fails_closed() -> None:
     data = json.loads(canonical_dumps(_packet()))
     data["pragmatics"] = {"act": "request"}
@@ -110,6 +108,7 @@ def test_context_whitepaper_fields_round_trip() -> None:
     assert decoded.octad.context.parent_packet_id == "p0"
     assert decoded.octad.context.timezone == "Europe/Amsterdam"
     assert decoded.octad.context.window["turns"] == 4
+
 
 def test_pathological_decimal_exponent_fails_before_expansion() -> None:
     packet = PacketEnvelope(

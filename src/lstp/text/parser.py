@@ -183,25 +183,18 @@ class Parser:
         while True:
             if self._current().kind is TokenKind.LBRACE:
                 constraints.append(self._parse_constraints())
-            elif (
-                self._current().kind is TokenKind.IDENTIFIER
-                and self._current().value in {"because", "assume", "challenge"}
-            ):
+            elif self._current().kind is TokenKind.IDENTIFIER and self._current().value in {
+                "because",
+                "assume",
+                "challenge",
+            }:
                 evidence.append(self._parse_evidence())
             else:
                 break
 
         output = self._parse_output() if self._current().kind is TokenKind.ARROW else None
-        confidence = (
-            self._parse_confidence()
-            if self._current().kind is TokenKind.PERCENT
-            else None
-        )
-        metadata = (
-            self._parse_metadata()
-            if self._current().kind is TokenKind.SEMICOLON
-            else None
-        )
+        confidence = self._parse_confidence() if self._current().kind is TokenKind.PERCENT else None
+        metadata = self._parse_metadata() if self._current().kind is TokenKind.SEMICOLON else None
         if self._current().kind not in {TokenKind.NEWLINE, TokenKind.EOF}:
             raise self._error(
                 "unexpected_clause_suffix",
@@ -249,10 +242,10 @@ class Parser:
 
     def _parse_scope_item(self) -> ScopeItem:
         start = self._current()
-        if (
-            start.kind is TokenKind.IDENTIFIER
-            and self._peek().kind in {TokenKind.EQUAL, TokenKind.COLON}
-        ):
+        if start.kind is TokenKind.IDENTIFIER and self._peek().kind in {
+            TokenKind.EQUAL,
+            TokenKind.COLON,
+        }:
             key = self._advance().value
             self._advance()
             return ScopeAssignment(key, self._parse_scope_value(), self._span(start))
@@ -486,20 +479,13 @@ class Parser:
         self._expect(TokenKind.EQUAL, "expected '=' in macro definition")
         self._expect(TokenKind.LBRACE, "expected '{' in macro definition")
         self._skip_layout()
-        body = (
-            None
-            if self._current().kind is TokenKind.RBRACE
-            else self._parse_expression()
-        )
+        body = None if self._current().kind is TokenKind.RBRACE else self._parse_expression()
         self._skip_layout()
         self._expect(TokenKind.RBRACE, "expected '}' in macro definition")
         return MacroDefinition(name.value, body, self._span(start))
 
     def _parse_expression(self) -> Expression:
-        if (
-            self._current().kind is TokenKind.IDENTIFIER
-            and self._peek().kind is TokenKind.COLON
-        ):
+        if self._current().kind is TokenKind.IDENTIFIER and self._peek().kind is TokenKind.COLON:
             label = self._advance()
             self._advance()
             return AnnotationExpression(

@@ -4,6 +4,7 @@
 // package. It consumes the same versioned manifest as the Python conformance
 // harness and independently checks the frozen JSON and canonical-Lattice surface.
 
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -383,6 +384,20 @@ for (const relative of MANIFEST.positive_json) {
     Buffer.compare(raw, reproduced) === 0,
     `${relative}: independent canonical bytes do not match`,
   );
+  const slots = REQUIRED_TOP.filter(key => key !== "version");
+  const frame = JSON.parse(fs.readFileSync(path.join(CONF, "compact", path.basename(relative)), "utf8"));
+  assert(frame[0] === "L1", "unknown compact fixture profile");
+  assert(frame.length === slots.length + (parsed.extensions ? 2 : 1), "compact length");
+  const restored = {version: "0.1"};
+  slots.forEach((key, index) => { restored[key] = frame[index + 1]; });
+  if (parsed.extensions) restored.extensions = frame.at(-1).extensions;
+  validateFrozenShape(restored);
+  assert(encode(restored) === text, "compact fixture did not restore canonical bytes");
+  if (relative === "positive/minimal.json") {
+    const delta = JSON.parse(fs.readFileSync(path.join(CONF, "compact", "same-minimal.json"), "utf8"));
+    assert(delta[0] === "D1" && delta[1] === createHash("sha256").update(raw).digest("hex")
+      && encode(delta[2]) === "{}", "invalid identity delta fixture");
+  }
   canonicalBytes += raw.length;
   positiveJson += 1;
 }

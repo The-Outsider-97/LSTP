@@ -25,9 +25,7 @@ from lstp.models import (
 from lstp.packet.validator import validate_octad
 
 _T = TypeVar("_T")
-_IDENTIFIER_RE = re.compile(
-    r"[A-Za-z_][A-Za-z0-9_-]*(?:\.[A-Za-z_][A-Za-z0-9_-]*)*"
-)
+_IDENTIFIER_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_-]*(?:\.[A-Za-z_][A-Za-z0-9_-]*)*")
 _ATOM_ID_RE = re.compile(r"a(?:0|[1-9][0-9]*)")
 _NUMBER_RE = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?")
 _UINT_RE = re.compile(r"(?:0|[1-9][0-9]*)")
@@ -246,19 +244,11 @@ class _Parser:
         if "TYPE" not in entries:
             raise self._error("missing_pragmatics_type", "π requires TYPE")
         type_token = str(entries["TYPE"])
-        type_value = (
-            type_token.lower()
-            if type_token in _CORE_PRAGMATIC_TYPES
-            else type_token
-        )
+        type_value = type_token.lower() if type_token in _CORE_PRAGMATIC_TYPES else type_token
         speech_act: str | None = None
         if "SPEECH_ACT" in entries:
             speech_token = str(entries["SPEECH_ACT"])
-            speech_act = (
-                speech_token.lower()
-                if speech_token in _CORE_SPEECH_ACTS
-                else speech_token
-            )
+            speech_act = speech_token.lower() if speech_token in _CORE_SPEECH_ACTS else speech_token
         return Pragmatics(
             type=type_value,
             speech_act=speech_act,
@@ -493,11 +483,7 @@ class _Parser:
             references=references,
             packet_id=str(entries["PACKET"]) if "PACKET" in entries else None,
             parent_packet_id=str(entries["PARENT"]) if "PARENT" in entries else None,
-            conversation_id=(
-                str(entries["CONVERSATION"])
-                if "CONVERSATION" in entries
-                else None
-            ),
+            conversation_id=(str(entries["CONVERSATION"]) if "CONVERSATION" in entries else None),
             turn=cast(int | None, entries.get("TURN")),
             speaker=str(entries["SPEAKER"]) if "SPEAKER" in entries else None,
             audience=cast(tuple[str, ...], entries.get("AUDIENCE", ())),
