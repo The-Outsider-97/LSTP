@@ -125,14 +125,14 @@ def test_every_field_and_literal_dictionary_survives() -> None:
         audit=literal,
         extensions={"test": literal},
     )
-    encoded = compact_dumps(rich)
+    encoded = compact_dumps(rich, profile="typed")
     assert canonical_dumps(compact_loads(encoded, require_compact_bytes=True)) == canonical_dumps(
         rich
     )
 
 
 @settings(max_examples=100, derandomize=True)
-@given(st.text(alphabet="abcXYZ_ 123é", min_size=1, max_size=100), st.booleans())
+@given(st.text(alphabet="abcXYZ_ 123Ã©", min_size=1, max_size=100), st.booleans())
 def test_unicode_and_permission_constraints_roundtrip(value: str, confirmation: bool) -> None:
     original = packet()
     original = replace(
@@ -143,7 +143,9 @@ def test_unicode_and_permission_constraints_roundtrip(value: str, confirmation: 
             permissions=replace(original.octad.permissions, require_confirmation=confirmation),
         ),
     )
-    assert canonical_dumps(compact_loads(compact_dumps(original))) == canonical_dumps(original)
+    assert canonical_dumps(
+        compact_loads(compact_dumps(original, profile="typed"))
+    ) == canonical_dumps(original)
 
 
 def test_decimal_serialization_is_independent_of_ambient_precision() -> None:
@@ -153,7 +155,7 @@ def test_decimal_serialization_is_independent_of_ambient_precision() -> None:
     with localcontext() as context:
         context.prec = 6
         wire = canonical_dumps(original)
-        restored = compact_loads(compact_dumps(original))
+        restored = compact_loads(compact_dumps(original, profile="typed"))
     assert b"0.123456789012345678901234567890123456789" in wire
     assert restored.carrier["precise"] == literal
 
@@ -165,7 +167,7 @@ def test_malformed_and_unknown_profiles_fail(source: bytes) -> None:
 
 
 def test_canonical_type_checks_and_duplicate_rejection_are_not_bypassed() -> None:
-    encoded = json.loads(compact_dumps(packet()))
+    encoded = json.loads(compact_dumps(packet(), profile="typed"))
     encoded[1].extend([None] * (9 - len(encoded[1])))
     encoded[1][8] = True
     with pytest.raises(CanonicalizationError):
@@ -175,7 +177,7 @@ def test_canonical_type_checks_and_duplicate_rejection_are_not_bypassed() -> Non
 
 
 def test_limits_apply_to_both_carrier_and_expansion() -> None:
-    encoded = compact_dumps(packet())
+    encoded = compact_dumps(packet(), profile="typed")
     with pytest.raises(ResourceLimitError):
         compact_loads(encoded, limits=InputLimits(max_bytes=len(encoded) - 1))
     with pytest.raises(ResourceLimitError):
@@ -183,7 +185,7 @@ def test_limits_apply_to_both_carrier_and_expansion() -> None:
 
 
 def test_deterministic_carrier_check() -> None:
-    encoded = compact_dumps(packet())
+    encoded = compact_dumps(packet(), profile="typed")
     assert compact_loads(b" " + encoded) == packet()
     with pytest.raises(CanonicalizationError, match="deterministic"):
         compact_loads(b" " + encoded, require_compact_bytes=True)
@@ -218,7 +220,7 @@ def test_delta_rejects_duplicate_noninteger_and_out_of_range_slots(changes: list
 def test_independent_small_messages_fall_back_to_self_contained_full_carrier() -> None:
     changed = replace(packet(), packet_id="p2")
     encoded = incremental_dumps(changed, base=packet())
-    assert len(encoded) <= len(compact_dumps(changed))
+    assert len(encoded) <= len(compact_dumps(changed, profile="typed"))
     assert incremental_loads(incremental_dumps(changed)) == changed
 
 

@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
+from unittest.mock import patch
 
 import pytest
 
 from lstp import CanonicalizationError, canonical_dumps, canonical_loads
 from lstp.models import Atom, Context, Octad, Output, PacketEnvelope, Permissions, Pragmatics
+from lstp.packet import serializer
 from lstp.packet.compiler import CompilerOptions, compile_lattice
 
 
@@ -26,6 +28,28 @@ def test_canonical_round_trip_is_byte_stable() -> None:
     assert b" " not in encoded
     assert b"\n" not in encoded
     assert b'"confidence":0.5' in encoded
+
+
+def test_public_and_serializer_decoders_share_one_strict_json_parse() -> None:
+    encoded = canonical_dumps(_packet())
+    for decoder in (canonical_loads, serializer.canonical_loads):
+        with patch.object(serializer, "loads_json", wraps=serializer.loads_json) as parse:
+            assert decoder(encoded) == _packet()
+        assert parse.call_count == 1
+        invalid = json.loads(encoded)
+        invalid["permissions"]["require_confirmation"] = "false"
+        with pytest.raises(CanonicalizationError, match="boolean"):
+            decoder(json.dumps(invalid))
+
+
+@pytest.mark.parametrize("exponent", ["1e999999", "1e-999999"])
+def test_decimal_exponent_guard_applies_to_both_public_decoders(exponent: str) -> None:
+    encoded = (
+        canonical_dumps(_packet()).decode().replace('"audit":{}', '"audit":{"x":' + exponent + "}")
+    )
+    for decoder in (canonical_loads, serializer.canonical_loads):
+        with pytest.raises(CanonicalizationError, match="exponent"):
+            decoder(encoded)
 
 
 def test_noncanonical_but_valid_json_is_rejected_when_requested() -> None:

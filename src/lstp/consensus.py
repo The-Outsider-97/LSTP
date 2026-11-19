@@ -8,7 +8,6 @@ No consensus about semantic truth, neural predictions or execution authority.
 from __future__ import annotations
 
 import base64
-import binascii
 import hashlib
 import json
 import re

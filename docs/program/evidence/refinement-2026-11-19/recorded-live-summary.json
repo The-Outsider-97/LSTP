@@ -1,0 +1,549 @@
+{
+  "kind": "RECORDED_LIVE_RESULTS_NOT_NEW_API_CALLS",
+  "source_report_sha256": "4ea8af93e3256232a0454275142102d7d17ed7e5828258a678fd64207e346926",
+  "metrics": {
+    "gemini/projection_object": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 189756,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.15103650",
+      "cost_complete": true,
+      "total_cost": "0.15103650",
+      "tokens_per_success": "189.756",
+      "cost_per_success": "0.0001510365",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.5027,
+        "median": 0.74135,
+        "p95": 1.1126,
+        "max": 2.2355
+      },
+      "model": "gemini-3.1-flash-lite"
+    },
+    "gemini/ordinary_json": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 282756,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.17428650",
+      "cost_complete": true,
+      "total_cost": "0.17428650",
+      "tokens_per_success": "282.756",
+      "cost_per_success": "0.0001742865",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.4551,
+        "median": 0.7442500000000001,
+        "p95": 1.1202,
+        "max": 2.5469
+      },
+      "model": "gemini-3.1-flash-lite"
+    },
+    "gemini/projection_tuple": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 134744,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.08101850",
+      "cost_complete": true,
+      "total_cost": "0.08101850",
+      "tokens_per_success": "134.744",
+      "cost_per_success": "0.0000810185",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.3842,
+        "median": 0.6658,
+        "p95": 1.035,
+        "max": 2.383
+      },
+      "model": "gemini-3.1-flash-lite"
+    },
+    "gemini/canonical_lstp": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 411841,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.20655775",
+      "cost_complete": true,
+      "total_cost": "0.20655775",
+      "tokens_per_success": "411.841",
+      "cost_per_success": "0.00020655775",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.5107,
+        "median": 0.74795,
+        "p95": 1.09,
+        "max": 2.1554
+      },
+      "model": "gemini-3.1-flash-lite"
+    },
+    "gemini/json_tuple_output": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 152756,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.08928650",
+      "cost_complete": true,
+      "total_cost": "0.08928650",
+      "tokens_per_success": "152.756",
+      "cost_per_success": "0.0000892865",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.4045,
+        "median": 0.67435,
+        "p95": 1.0424,
+        "max": 2.6459
+      },
+      "model": "gemini-3.1-flash-lite"
+    },
+    "gemini/canonical_minimal": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 281841,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.12155775",
+      "cost_complete": true,
+      "total_cost": "0.12155775",
+      "tokens_per_success": "281.841",
+      "cost_per_success": "0.00012155775",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.4247,
+        "median": 0.6668499999999999,
+        "p95": 1.0603,
+        "max": 2.501
+      },
+      "model": "gemini-3.1-flash-lite"
+    },
+    "gemini/json_minimal": {
+      "attempts": 1000,
+      "successful_tasks": 999,
+      "known_total_tokens": 193761,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.15204400",
+      "cost_complete": true,
+      "total_cost": "0.15204400",
+      "tokens_per_success": "193.9549549549549549549549550",
+      "cost_per_success": "0.0001521961961961961961961961962",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 0.999,
+      "latency_seconds": {
+        "min": 0.487,
+        "median": 0.7423,
+        "p95": 1.1191,
+        "max": 2.2089
+      },
+      "model": "gemini-3.1-flash-lite"
+    },
+    "gemini/json_tuple_control": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 134744,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.08101850",
+      "cost_complete": true,
+      "total_cost": "0.08101850",
+      "tokens_per_success": "134.744",
+      "cost_per_success": "0.0000810185",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.4144,
+        "median": 0.6661,
+        "p95": 1.0379,
+        "max": 1.8675
+      },
+      "model": "gemini-3.1-flash-lite"
+    },
+    "gemini/lossless_compact": {
+      "attempts": 1000,
+      "successful_tasks": 998,
+      "known_total_tokens": 488839,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.17330475",
+      "cost_complete": true,
+      "total_cost": "0.17330475",
+      "tokens_per_success": "489.8186372745490981963927856",
+      "cost_per_success": "0.0001736520541082164328657314629",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 0.998,
+      "latency_seconds": {
+        "min": 0.4379,
+        "median": 0.6890000000000001,
+        "p95": 1.0855,
+        "max": 2.1352
+      },
+      "model": "gemini-3.1-flash-lite"
+    },
+    "openai/projection_tuple": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 144984,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.0361684",
+      "cost_complete": true,
+      "total_cost": "0.0361684",
+      "tokens_per_success": "144.984",
+      "cost_per_success": "0.0000361684",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.842,
+        "median": 1.1801,
+        "p95": 2.2793,
+        "max": 7.5136
+      },
+      "model": "gpt-6-luna"
+    },
+    "openai/ordinary_json": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 281312,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.0647324",
+      "cost_complete": true,
+      "total_cost": "0.0647324",
+      "tokens_per_success": "281.312",
+      "cost_per_success": "0.0000647324",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.8863,
+        "median": 1.3761999999999999,
+        "p95": 1.9206,
+        "max": 3.8337
+      },
+      "model": "gpt-6-luna"
+    },
+    "openai/projection_object": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 176943,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.0489479",
+      "cost_complete": true,
+      "total_cost": "0.0489479",
+      "tokens_per_success": "176.943",
+      "cost_per_success": "0.0000489479",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.7673,
+        "median": 1.26545,
+        "p95": 1.9064,
+        "max": 25.8237
+      },
+      "model": "gpt-6-luna"
+    },
+    "openai/json_minimal": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 196798,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.0580754",
+      "cost_complete": true,
+      "total_cost": "0.0580754",
+      "tokens_per_success": "196.798",
+      "cost_per_success": "0.0000580754",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.8837,
+        "median": 1.3780000000000001,
+        "p95": 2.0383,
+        "max": 4.8759
+      },
+      "model": "gpt-6-luna"
+    },
+    "openai/json_tuple_output": {
+      "attempts": 1000,
+      "successful_tasks": 1000,
+      "known_total_tokens": 179716,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.0491344",
+      "cost_complete": true,
+      "total_cost": "0.0491344",
+      "tokens_per_success": "179.716",
+      "cost_per_success": "0.0000491344",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 1,
+      "latency_seconds": {
+        "min": 0.9068,
+        "median": 1.2459,
+        "p95": 1.9353,
+        "max": 10.8807
+      },
+      "model": "gpt-6-luna"
+    },
+    "openai/json_tuple_control": {
+      "attempts": 1000,
+      "successful_tasks": 999,
+      "known_total_tokens": 145171,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.0362619",
+      "cost_complete": true,
+      "total_cost": "0.0362619",
+      "tokens_per_success": "145.3163163163163163163163163",
+      "cost_per_success": "0.00003629819819819819819819819820",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 0.999,
+      "latency_seconds": {
+        "min": 0.8101,
+        "median": 1.1879499999999998,
+        "p95": 2.1037,
+        "max": 6.1499
+      },
+      "model": "gpt-6-luna"
+    },
+    "openai/canonical_minimal": {
+      "attempts": 1000,
+      "successful_tasks": 914,
+      "known_total_tokens": 381064,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.1008616",
+      "cost_complete": true,
+      "total_cost": "0.1008616",
+      "tokens_per_success": "416.9190371991247264770240700",
+      "cost_per_success": "0.0001103518599562363238512035011",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 0.914,
+      "latency_seconds": {
+        "min": 1.0149,
+        "median": 1.6991999999999998,
+        "p95": 3.6077,
+        "max": 24.604
+      },
+      "model": "gpt-6-luna"
+    },
+    "openai/lossless_compact": {
+      "attempts": 1000,
+      "successful_tasks": 979,
+      "known_total_tokens": 529849,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.1016541",
+      "cost_complete": true,
+      "total_cost": "0.1016541",
+      "tokens_per_success": "541.2145045965270684371807967",
+      "cost_per_success": "0.0001038346271705822267620020429",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 0.979,
+      "latency_seconds": {
+        "min": 1.2791,
+        "median": 1.76515,
+        "p95": 3.1968,
+        "max": 5.8856
+      },
+      "model": "gpt-6-luna"
+    },
+    "openai/canonical_lstp": {
+      "attempts": 1000,
+      "successful_tasks": 997,
+      "known_total_tokens": 440716,
+      "token_usage_complete": true,
+      "known_cost_lower_bound": "0.0954876",
+      "cost_complete": true,
+      "total_cost": "0.0954876",
+      "tokens_per_success": "442.0421263791374122367101304",
+      "cost_per_success": "0.00009577492477432296890672016048",
+      "completed_tasks": 1000,
+      "expected_tasks": 1000,
+      "all_tasks_responded": true,
+      "exact_match_rate": 0.997,
+      "latency_seconds": {
+        "min": 1.0069,
+        "median": 1.637,
+        "p95": 2.8291,
+        "max": 42.1213
+      },
+      "model": "gpt-6-luna"
+    }
+  },
+  "stops": {},
+  "targets": {
+    "gemini/projection_object_vs_canonical_lstp": {
+      "status": "OBSERVED_PASS",
+      "token_reduction": "0.5392493705094927411306790727",
+      "cost_reduction": "0.2687928678541473268371678138",
+      "observed_quality_nonregression": true
+    },
+    "gemini/projection_object_vs_ordinary_json": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "0.3289054874167126427025421211",
+      "cost_reduction": "0.1334010379461404067440679571",
+      "observed_quality_nonregression": true
+    },
+    "gemini/projection_object_vs_json_tuple_output": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-0.242216345020817512896383775",
+      "cost_reduction": "-0.691593913973557032698112257",
+      "observed_quality_nonregression": true
+    },
+    "gemini/projection_object_vs_json_tuple_control": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-0.408270498129786855073324230",
+      "cost_reduction": "-0.864222368965112906311521443",
+      "observed_quality_nonregression": true
+    },
+    "gemini/projection_tuple_vs_canonical_lstp": {
+      "status": "OBSERVED_PASS",
+      "token_reduction": "0.6728251922465223229353075580",
+      "cost_reduction": "0.6077682875612268239753773460",
+      "observed_quality_nonregression": true
+    },
+    "gemini/projection_tuple_vs_ordinary_json": {
+      "status": "OBSERVED_PASS",
+      "token_reduction": "0.5234619247690588351794480046",
+      "cost_reduction": "0.5351418497703493959658378589",
+      "observed_quality_nonregression": true
+    },
+    "gemini/projection_tuple_vs_json_tuple_output": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "0.1179135353112152714132341774",
+      "cost_reduction": "0.0926007851130910047991577674",
+      "observed_quality_nonregression": true
+    },
+    "gemini/projection_tuple_vs_json_tuple_control": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "0",
+      "cost_reduction": "0",
+      "observed_quality_nonregression": true
+    },
+    "gemini/lossless_compact_vs_canonical_lstp": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-0.189339180107247938394654213",
+      "cost_reduction": "0.1593050654927426694678293944",
+      "observed_quality_nonregression": false
+    },
+    "gemini/lossless_compact_vs_ordinary_json": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-0.732301479984683254100329562",
+      "cost_reduction": "0.0036402469025631195432149771",
+      "observed_quality_nonregression": false
+    },
+    "gemini/lossless_compact_vs_json_tuple_output": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-2.206542703884293240176443384",
+      "cost_reduction": "-0.944885891016183105684862358",
+      "observed_quality_nonregression": false
+    },
+    "gemini/lossless_compact_vs_json_tuple_control": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-2.635179579606877472810609642",
+      "cost_reduction": "-1.143362986332953990332226132",
+      "observed_quality_nonregression": false
+    },
+    "openai/projection_tuple_vs_canonical_lstp": {
+      "status": "OBSERVED_PASS",
+      "token_reduction": "0.6720131604026175586999337442",
+      "cost_reduction": "0.6223604447069567147985707045",
+      "observed_quality_nonregression": true
+    },
+    "openai/projection_tuple_vs_ordinary_json": {
+      "status": "OBSERVED_PASS",
+      "token_reduction": "0.4846149471049937436014105335",
+      "cost_reduction": "0.4412627988457094129060563180",
+      "observed_quality_nonregression": true
+    },
+    "openai/projection_tuple_vs_json_tuple_output": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "0.1932604776425026152373745242",
+      "cost_reduction": "0.2638884366146732228336969618",
+      "observed_quality_nonregression": true
+    },
+    "openai/projection_tuple_vs_json_tuple_control": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "0.0022868479241721831495271093",
+      "cost_reduction": "0.0035758854334714948747859324",
+      "observed_quality_nonregression": true
+    },
+    "openai/projection_object_vs_canonical_lstp": {
+      "status": "OBSERVED_PASS",
+      "token_reduction": "0.5997146212073081077156263898",
+      "cost_reduction": "0.4889278157582764673109388025",
+      "observed_quality_nonregression": true
+    },
+    "openai/projection_object_vs_ordinary_json": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "0.3710079911272892731202366056",
+      "cost_reduction": "0.2438423417021460659576966094",
+      "observed_quality_nonregression": true
+    },
+    "openai/projection_object_vs_json_tuple_output": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "0.0154299005096930712902579626",
+      "cost_reduction": "0.0037957113549773681982480706",
+      "observed_quality_nonregression": true
+    },
+    "openai/projection_object_vs_json_tuple_control": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-0.217640279394644935972060536",
+      "cost_reduction": "-0.348493931647266138839939441",
+      "observed_quality_nonregression": true
+    },
+    "openai/lossless_compact_vs_canonical_lstp": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-0.224350513897243320487273560",
+      "cost_reduction": "-0.084152531732606957151672435",
+      "observed_quality_nonregression": false
+    },
+    "openai/lossless_compact_vs_ordinary_json": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-0.923894126793478658703435320",
+      "cost_reduction": "-0.604059592577785263052227986",
+      "observed_quality_nonregression": false
+    },
+    "openai/lossless_compact_vs_json_tuple_output": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-2.011498723522263284499882018",
+      "cost_reduction": "-1.113277605314855310373222079",
+      "observed_quality_nonregression": false
+    },
+    "openai/lossless_compact_vs_json_tuple_control": {
+      "status": "OBSERVED_FAIL",
+      "token_reduction": "-2.724389100384584671654418692",
+      "cost_reduction": "-1.860600038702099022258625192",
+      "observed_quality_nonregression": false
+    }
+  }
+}

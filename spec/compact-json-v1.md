@@ -1,4 +1,11 @@
-# L1 compact carrier and D1 transport delta
+# Typed compact carrier and transport delta
+
+This document defines `profile="typed"`, selected explicitly with
+`compact_dumps(..., profile="typed")` or `incremental_dumps`.
+The default `compact_dumps` profile is [flat](compact-carrier-v1.md).
+Both decoders accept the two existing profiles by disjoint frame arity:
+typed L1/D1 have 2/5 elements; flat L1/D1 have 12-or-13/3 elements.
+No existing fixture marker or slot order changes. Unknown arities fail closed.
 
 Status: optional reference-implementation profile for canonical LSTP v0.1. This document does not replace the canonical contract or the Whitepaper. Signing, replay protection and host authorization consume restored canonical packets. An inference projection is a different type and is never accepted as a protocol packet.
 
@@ -34,11 +41,11 @@ D1 is network/storage compression. It must be expanded before inference unless t
 
 ## Action-extraction inference view
 
-The explicit SLAI action-extraction profile has seven nonempty strings in this order: action, resource, project, stage, permission_mode, output_format, source. It accepts exactly one a0 resource/TARGET atom, one a1 concept/ACTION atom, request/command pragmatics with goal formed by slai. followed by the action string, no relations, confidence=1, one e0 user source reference, an output format without additional requirements, scope exactly equal to the target resource, and context containing only its thread plus project/stage bindings. Inverse reconstruction must reproduce the complete source canonical bytes. Envelope id, thread and nonsemantic carrier/audit metadata are retained by the host.
+The explicit SLAI action-extraction profile has seven nonempty strings in this order: action, resource, project, stage, permission_mode, output_format, source. It accepts exactly one a0 resource/TARGET atom, one a1 concept/ACTION atom, request/command pragmatics with goal formed by slai. followed by the action string, no relations, confidence=1, one e0 user source reference, an output format without additional requirements, scope exactly equal to the target resource, and context containing only its thread plus project/stage bindings. Inverse reconstruction must reproduce the complete normalized canonical state. Canonical byte identity is verified on the paired corpus. Envelope id, thread and nonsemantic carrier/audit metadata are retained by the host.
 
-Additional permission constraints, evidence metadata, uncertainty, context, relations, output requirements or extensions reject the view. The general request preparer falls back to full canonical/L1 candidates rather than dropping these fields. ActionProjection retains its immutable source and validates its own construction. Result decoding rejects duplicate keys, invalid JSON, extra/missing fields and nonstring/empty values. validate_response also compares every extracted fact with the source. These checks do not authorize execution.
+Additional permission constraints, evidence metadata, uncertainty, context, relations, output requirements or extensions reject the view. The general request preparer falls back to complete canonical input rather than dropping these fields. A typed L1 model input additionally requires allow_compact=True. ActionProjection retains a normalized source copy and its canonical digest, so later mutation of caller-owned sequences cannot alter the validated view. Result decoding rejects duplicate keys, invalid JSON, extra/missing fields and nonstring/empty values. validate_response also compares every extracted fact with the source. These checks do not authorize execution.
 
-prepare_action_input requires a host-supplied token counter for the complete system and user messages. It compares each representation with its own full schema/instruction cost. It makes no byte-to-token conversion, assumes no tokenizer or pricing, and has no hidden schema state. Compact syntax can lose on total request cost; canonical JSON remains an eligible fallback. Model output can use seven-position arrays and deterministic host reconstruction without regenerating a full protocol envelope.
+prepare_action_input requires a host-supplied token counter for the complete system and user messages. It compares eligible representations with their full instruction cost. Schema-heavy typed L1 input is opt-in (allow_compact=True); the recorded live experiment found it increased tokens and errors. The default output is a seven-string tuple for supported projections and a named JSON object for canonical fallback. ModelInput.tuple_output identifies the decoding contract; an explicit tuple_output argument overrides automatic selection. It makes no byte-to-token conversion, assumes no tokenizer or pricing, and has no hidden schema state. Compact syntax can lose on total request cost; canonical JSON remains an eligible fallback. Model output can use seven-position arrays and deterministic host reconstruction without regenerating a full protocol envelope.
 
 For pure extraction of these already structured fields, project_action(...).as_mapping() performs the task without a language model. Ordinary JSON can do the same. This is deterministic processing, not measured model inference or a protocol-specific competitive advantage.
 

@@ -48,7 +48,7 @@ from lstp.packet.authorization import (
     validate_delegation,
 )
 from lstp.packet.canonical import canonical_dumps, canonical_loads, packet_to_mapping
-from lstp.packet.compact import compact_dumps, compact_loads
+from lstp.packet.compact import compact_dumps, compact_loads, incremental_dumps, incremental_loads
 from lstp.packet.compiler import CompilerOptions, compile_lattice
 from lstp.packet.replay import ReplayGuard, ReplayStore, SQLiteReplayStore
 from lstp.packet.validator import ValidationResult, validate_packet
@@ -118,8 +118,6 @@ __all__ = [
     "canonical_lattice_document_dumps",
     "canonical_lattice_dumps",
     "canonical_loads",
-    "compact_dumps",
-    "compact_loads",
     "compile_canonical_lattice",
     "compile_lattice",
     "effective_authority",

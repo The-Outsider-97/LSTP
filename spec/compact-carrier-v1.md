@@ -1,4 +1,13 @@
-# Optional compact carrier for canonical v0.1
+# Flat compact carrier for canonical v0.1
+
+This document defines `profile="flat"`, the default of `compact_dumps`.
+The nested typed profile is specified in [compact-json-v1.md](compact-json-v1.md)
+and is selected with `profile="typed"` or `incremental_dumps`.
+The two previously merged profiles share tags but have disjoint frame arities:
+flat L1 has 12 or 13 elements, typed L1 has exactly 2; flat D1 has 3,
+typed D1 has 5. `compact_loads` and `incremental_loads` recognize both.
+All other arities are rejected. Profile selection is explicit when encoding;
+canonical JSON entry points never auto-detect compact carriers.
 
 A sender and receiver explicitly select this carrier out of band. The default
 interchange remains canonical v0.1 JSON. Existing canonical JSON and Lattice

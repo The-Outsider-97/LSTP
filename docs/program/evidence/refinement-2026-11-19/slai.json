@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "command": "python -m pytest -q benchmarks/lstp/test_benchmark.py benchmarks/lstp/test_optimization.py",
+  "summary": "16 passed in 6.12s",
+  "scope": "Existing snapshot benchmark/adapter tests with refined LSTP on PYTHONPATH; not a full SLAI/LANTRA training pilot",
+  "api_calls": 0
+}

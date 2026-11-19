@@ -1,0 +1,77 @@
+{
+  "label": "refined-20261119",
+  "python": "3.12.10",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "implementation_sha256": "9f0ce48d38d5e3860a1ccdc6547e2f79721fa2ea6e10519d386232bd56b3493f",
+  "corpus_sha256": "60729f5b1e135ba07ee02dce095a53edad1fb43b8692da3161251b8df559874e",
+  "canonical_payloads_sha256": "768dc5a8ce58d9c9f43d56442ea8ffc3f7d855854fe8d48a5078271fbf815bdc",
+  "typed_payloads_sha256": "33eb455661da6a0a402217627658ea2853fc979adc96aff2e3a62718b4718736",
+  "cases": 1000,
+  "repeats": 5,
+  "verified_exact_projections": 1000,
+  "verified_lossless_carriers": 1000,
+  "selector_counter": "UTF-8 byte length for CPU timing only; not model tokens",
+  "api_calls": 0,
+  "timings": {
+    "canonical_encode": {
+      "median_us_per_packet": 230.97,
+      "runs_us": [
+        231.97889999999998,
+        220.8975,
+        236.3982,
+        230.97,
+        211.7407
+      ]
+    },
+    "canonical_decode": {
+      "median_us_per_packet": 239.5327,
+      "runs_us": [
+        245.2388,
+        231.6769,
+        236.4474,
+        239.5327,
+        240.0944
+      ]
+    },
+    "typed_encode": {
+      "median_us_per_packet": 163.2427,
+      "runs_us": [
+        166.1265,
+        162.5553,
+        175.1756,
+        163.2427,
+        160.4528
+      ]
+    },
+    "typed_decode": {
+      "median_us_per_packet": 482.4345,
+      "runs_us": [
+        482.4345,
+        481.58209999999997,
+        476.45759999999996,
+        484.7305,
+        489.4812
+      ]
+    },
+    "projection": {
+      "median_us_per_packet": 309.2205,
+      "runs_us": [
+        309.2205,
+        322.5013,
+        323.3311,
+        301.7328,
+        304.316
+      ]
+    },
+    "prepare_action_input": {
+      "median_us_per_packet": 306.4686,
+      "runs_us": [
+        306.4686,
+        287.3897,
+        319.4028,
+        299.085,
+        307.57890000000003
+      ]
+    }
+  }
+}

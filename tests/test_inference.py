@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 from dataclasses import replace
+from unittest.mock import patch
 
 import pytest
 from test_compact_carrier import packet
@@ -12,10 +13,13 @@ from lstp import (
     ActionProjection,
     ProjectionError,
     Relation,
+    canonical_dumps,
     decode_action_result,
     prepare_action_input,
     project_action,
 )
+from lstp.inference import TUPLE_INPUT_INSTRUCTION, TYPED_COMPACT_INSTRUCTION
+from lstp.packet import serializer
 
 
 def test_projection_is_exact_and_source_bound() -> None:
@@ -50,7 +54,9 @@ def test_projection_refuses_additional_meaning(field: str) -> None:
     with pytest.raises(ProjectionError):
         ActionProjection(original)
     prepared = prepare_action_input(original, lambda system, user: len(system) + len(user))
-    assert prepared.representation in {"canonical", "compact"}
+    assert prepared.representation == "canonical"
+    assert prepared.tuple_output is False
+    assert "ACTION atom" in prepared.system
 
 
 @pytest.mark.parametrize(
@@ -71,10 +77,53 @@ def test_selector_counts_full_instructions_and_uses_host_measurement() -> None:
     chosen = prepare_action_input(packet(), counter)
     assert chosen.representation == "canonical"
     assert chosen.counted_input_tokens == 1
-    assert len(counted) == 4
+    assert len(counted) == 3
     assert all(system and user for system, user in counted)
     with pytest.raises(ValueError):
         prepare_action_input(packet(), lambda system, user: True)
+
+
+def test_default_projection_uses_the_live_benchmark_contract() -> None:
+    chosen = prepare_action_input(packet(), lambda system, user: len(system) + len(user))
+    assert chosen.representation == "projection_tuple"
+    assert chosen.system == TUPLE_INPUT_INSTRUCTION
+    assert chosen.tuple_output is True
+    assert project_action(packet()).validate_response(chosen.user)
+
+
+def test_schema_heavy_model_input_requires_explicit_opt_in() -> None:
+    def counter(system: str, user: str) -> int:
+        return 0 if system.startswith(TYPED_COMPACT_INSTRUCTION) else 100
+
+    assert prepare_action_input(packet(), counter).representation != "compact"
+    chosen = prepare_action_input(packet(), counter, allow_compact=True)
+    assert chosen.representation == "compact"
+    assert chosen.user.startswith('["L1",[')
+
+
+def test_preparation_validates_one_snapshot_and_explicit_output_override() -> None:
+    with patch.object(
+        serializer, "require_semantic_validity", wraps=serializer.require_semantic_validity
+    ) as validate:
+        prepared = prepare_action_input(
+            packet(), lambda system, user: len(system) + len(user), tuple_output=False
+        )
+    assert validate.call_count == 1
+    assert prepared.tuple_output is False
+    assert "JSON object" in prepared.system
+
+
+def test_projection_keeps_a_stable_source_when_caller_mutates_sequences() -> None:
+    original = packet()
+    atoms = list(original.octad.atoms)
+    original = replace(original, octad=replace(original.octad, atoms=atoms))
+    projection = project_action(original)
+    source_bytes = canonical_dumps(projection.source)
+    source_hash = projection.source_sha256
+    atoms.clear()
+    assert canonical_dumps(projection.source) == source_bytes
+    assert projection.source_sha256 == source_hash
+    assert projection.validate_response(projection.dumps()) == projection.as_mapping()
 
 
 def test_identifier_at_eof_cannot_hang() -> None:
@@ -84,3 +133,12 @@ def test_identifier_at_eof_cannot_hang() -> None:
         timeout=5,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_default_compact_instruction_describes_the_default_wire_profile() -> None:
+    from lstp import compact_dumps
+    from lstp.inference import COMPACT_INSTRUCTION
+
+    assert len(json.loads(compact_dumps(packet()))) == 12
+    assert COMPACT_INSTRUCTION.startswith("Input is flat LSTP")
+    assert TYPED_COMPACT_INSTRUCTION.startswith('Input is LSTP v0.1 as ["L1",packet]')

@@ -1,0 +1,45 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "name": "create isolated wheel environment",
+      "returncode": 0,
+      "summary": null
+    },
+    {
+      "name": "offline wheel installation",
+      "returncode": 0,
+      "summary": null
+    },
+    {
+      "name": "installed import ownership",
+      "returncode": 0,
+      "summary": null
+    },
+    {
+      "name": "installed CLI",
+      "returncode": 0,
+      "summary": null
+    },
+    {
+      "name": "installed JSON validation",
+      "returncode": 0,
+      "summary": null
+    },
+    {
+      "name": "all sdist tests against installed wheel",
+      "returncode": 0,
+      "summary": "361 passed in 8.01s"
+    },
+    {
+      "name": "sdist independent JavaScript",
+      "returncode": 0,
+      "summary": null
+    }
+  ],
+  "artifacts": {
+    "lstp-0.1.0a1-py3-none-any.whl": "6b762e6e7ed4aa570a5446c3efeacb170f10116232471b6516c85560e4ad47d1",
+    "lstp-0.1.0a1.tar.gz": "683abcc6873e849c7f2dd103e2e1c9bfaaec8505c256b420960e2f2fb82b9df6"
+  },
+  "dependency_note": "Fresh wheel venv without runtime dependencies; existing developer dependencies reused for test execution only. Source code was not on PYTHONPATH."
+}

@@ -1,5 +1,7 @@
 # LSTP token optimization: implementation and verification
 
+Historical offline report. See [19 November refinement](REFINEMENT_2026-11-19.md) for the subsequent live evidence and current implementation.
+
 Date: 18 November 2026. Status: implementation verified offline; live token/cost targets remain unverified.
 
 ## Outcome

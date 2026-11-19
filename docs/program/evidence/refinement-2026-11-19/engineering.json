@@ -1,0 +1,54 @@
+{
+  "status": "passed",
+  "mode": "engineering",
+  "command": "python tools/run_release_checks.py --skip-build-smoke --no-build-isolation",
+  "python": "3.12",
+  "checks": [
+    {
+      "name": "schema contract",
+      "returncode": 0
+    },
+    {
+      "name": "ruff",
+      "returncode": 0
+    },
+    {
+      "name": "ruff format",
+      "returncode": 0
+    },
+    {
+      "name": "mypy",
+      "returncode": 0
+    },
+    {
+      "name": "pytest",
+      "returncode": 0
+    },
+    {
+      "name": "build",
+      "returncode": 0
+    },
+    {
+      "name": "independent JavaScript interoperability",
+      "returncode": 0
+    }
+  ],
+  "python_test_summary": "============================= 361 passed in 7.58s =============================",
+  "independent_js": {
+    "implementation": "independent-js-v0.1",
+    "manifest": "0.1",
+    "positive_json": 2,
+    "negative_json": 8,
+    "positive_lattice": 1,
+    "negative_lattice": 1,
+    "canonical_bytes": 1078,
+    "noncore_permission_fields": 6,
+    "semantic_mutation_cases": 9,
+    "compact_vectors": {
+      "positive": 4,
+      "negative": 6
+    },
+    "status": "passed"
+  },
+  "dependency_note": "Installed build and developer dependencies reused locally; no online dependency resolution"
+}

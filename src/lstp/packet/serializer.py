@@ -36,6 +36,7 @@ from lstp.models import (
     Pragmatics,
     Relation,
 )
+from lstp.packet.structural import validate_canonical_json_types
 from lstp.packet.validator import require_semantic_validity
 
 _BIDI_CONTROLS = {
@@ -53,6 +54,7 @@ _BIDI_CONTROLS = {
     "\u2069",
 }
 _MAX_CANONICAL_NUMBER_CHARS = 1024
+_MAX_DECIMAL_EXPONENT = 1024
 
 
 def _error(code: str, message: str, path: str = "$") -> CanonicalizationError:
@@ -320,10 +322,17 @@ def packet_to_mapping(packet: PacketEnvelope) -> dict[str, object]:
     }
 
 
+def _validated_mapping(packet: PacketEnvelope) -> dict[str, object]:
+    """Take one validated snapshot for an encoding operation; never cache packet state."""
+    require_semantic_validity(packet)
+    mapping = packet_to_mapping(packet)
+    _preflight(mapping)
+    return mapping
+
+
 def canonical_dumps(packet: PacketEnvelope) -> bytes:
     """Serialize a semantically valid packet to deterministic canonical UTF-8 bytes."""
-    require_semantic_validity(packet)
-    return _encode(packet_to_mapping(packet)).encode("utf-8")
+    return _encode(_validated_mapping(packet)).encode("utf-8")
 
 
 def _expect_object(value: object, path: str) -> Mapping[str, Any]:
@@ -525,17 +534,32 @@ def _check_structure(data: object) -> Mapping[str, Any]:
     return root
 
 
-def _check_canonical_strings(value: object, path: str = "$") -> None:
+def _preflight(value: object, path: str = "$") -> None:
+    """Shared Unicode and numeric safety checks before construction or expansion."""
     if isinstance(value, str):
         _check_string(value, path)
+    elif isinstance(value, Decimal):
+        if not value.is_finite():
+            raise _error("non_finite_number", "canonical numbers must be finite", path)
+        exponent = value.as_tuple().exponent
+        if not isinstance(exponent, int) or abs(exponent) > _MAX_DECIMAL_EXPONENT:
+            raise _error(
+                "number_exponent_limit",
+                "canonical decimal exponent exceeds implementation safety limit",
+                path,
+            )
+    elif isinstance(value, float):
+        if not math.isfinite(value):
+            raise _error("non_finite_number", "canonical numbers must be finite", path)
     elif isinstance(value, Mapping):
         for key, item in value.items():
-            if isinstance(key, str):
-                _check_string(key, f"{path}.<key>")
-            _check_canonical_strings(item, f"{path}.{key}")
-    elif isinstance(value, list):
+            if not isinstance(key, str):
+                raise _error("non_string_key", "canonical object keys must be strings", path)
+            _check_string(key, f"{path}.<key>")
+            _preflight(item, f"{path}.{key}")
+    elif isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
         for index, item in enumerate(value):
-            _check_canonical_strings(item, f"{path}[{index}]")
+            _preflight(item, f"{path}[{index}]")
 
 
 def canonical_loads(
@@ -547,7 +571,8 @@ def canonical_loads(
     """Decode, structurally check, type, and semantically validate a canonical packet."""
     decoded = loads_json(data) if limits is None else loads_json(data, limits=limits)
     root = _check_structure(decoded)
-    _check_canonical_strings(root)
+    validate_canonical_json_types(root)
+    _preflight(root)
     try:
         packet = PacketEnvelope.from_mapping(root)
     except (TypeError, ValueError) as exc:
