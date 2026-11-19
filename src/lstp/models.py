@@ -180,7 +180,7 @@ def _optional_non_negative_int(
         raise TypeError(f"expected integer at {path}.{key}")
     if value < 0:
         raise ValueError(f"value at {path}.{key} must be non-negative")
-    return value
+    return int(value)
 
 
 def _optional_confidence(

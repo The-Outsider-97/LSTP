@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 
-class TokenKind(str, Enum):  # noqa: UP042 - preserve the public Enum string representation
+class TokenKind(str, Enum):  # noqa: UP042 - preserve public Enum string formatting
     DIRECTIVE = "DIRECTIVE"
     URGENT_DIRECTIVE = "URGENT_DIRECTIVE"
     QUESTION = "QUESTION"

@@ -197,7 +197,7 @@ class _Compiler:
 
     def _string_list(self, expression: Expression, name: str) -> list[str]:
         value = self._literal(expression)
-        values = value if isinstance(value, tuple) else (value,)
+        values = value if isinstance(value, tuple) else [value]
         if not all(isinstance(item, str) for item in values):
             raise self._error(
                 "constraint_type",
@@ -387,10 +387,10 @@ class _Compiler:
             key = entry.key
             if entry.separator == ":":
                 label = self._add_value_atom(key, kind="concept")
-                value = self._materialize_expression(entry.value)
+                annotation = self._materialize_expression(entry.value)
                 self._add_relation(
                     "lstp.constraint_annotation",
-                    [label, value],
+                    [label, annotation],
                 )
                 continue
             if key == "mode":
@@ -631,9 +631,9 @@ class _Compiler:
                     "relation tail requires a target focus",
                     main.relation_tail.value,
                 )
-            value = self._materialize_expression(main.relation_tail.value)
+            tail = self._materialize_expression(main.relation_tail.value)
             relation_type = "is" if main.relation_tail.separator == "=" else "lstp.annotation"
-            self._add_relation(relation_type, [focus, value])
+            self._add_relation(relation_type, [focus, tail])
 
         if main.operation is not None:
             self._compile_operation(main.operation, focus)

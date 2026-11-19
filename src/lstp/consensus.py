@@ -111,7 +111,7 @@ class EtcdConsensusStore:
             raise ConsensusProtocolError("etcd response value is not base64")
         try:
             return base64.b64decode(value, validate=True)
-        except (ValueError, binascii.Error):
+        except ValueError:
             raise ConsensusProtocolError("etcd response contains invalid base64") from None
 
     def _key(self, key: str) -> str:

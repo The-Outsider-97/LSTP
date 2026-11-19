@@ -172,11 +172,10 @@ class OntologyRegistry:
                 continue
             if len(relation.arguments) != 2:
                 raise OntologyError(f"expected binary relation: {relation.type}")
+            assert term.range is not None  # paired with domain by OntologyTerm validation
             for atom_id, required in zip(
                 relation.arguments, (term.domain, term.range), strict=True
             ):
-                if required is None:
-                    raise OntologyError("relation range is required when domain is defined")
                 actual = types.get(atom_id)
                 if actual is None:
                     if require_types:

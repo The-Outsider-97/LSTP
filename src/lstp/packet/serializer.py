@@ -105,6 +105,7 @@ def _decimal_text(value: int | float | Decimal, path: str) -> str:
             digits_tuple = digits_tuple[:-1]
             exponent += 1
         digits = "".join(str(digit) for digit in digits_tuple) or "0"
+        assert isinstance(exponent, int)  # finite Decimal
         point = len(digits) + exponent
         if point <= 0:
             body = "0." + ("0" * (-point)) + digits
