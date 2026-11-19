@@ -382,6 +382,7 @@ class _Compiler:
         self._add_relation("lstp.operation", args)
 
     def _compile_constraints(self, block: ConstraintBlock) -> None:
+        value: JSONValue
         for entry in block.entries:
             key = entry.key
             if entry.separator == ":":
@@ -653,13 +654,13 @@ class _Compiler:
             elif isinstance(clause, OutputTopLevel):
                 self._compile_output(clause.output)
             elif isinstance(clause, ConfidenceTopLevel):
-                value = float(clause.confidence)
-                if self.confidence is not None and self.confidence != value:
+                clause_confidence = float(clause.confidence)
+                if self.confidence is not None and self.confidence != clause_confidence:
                     raise self._error(
                         "duplicate_confidence",
                         "conflicting confidence clauses",
                     )
-                self.confidence = value
+                self.confidence = clause_confidence
             elif isinstance(clause, EvidenceTopLevel):
                 self._compile_evidence(clause.evidence)
             elif isinstance(clause, MetadataClause):

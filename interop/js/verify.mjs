@@ -9,6 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { verifyCompactVectors } from "./compact.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..", "..");
@@ -458,6 +459,10 @@ for (const [label, mutate] of mutationCases) {
   expectFailure(() => validateFrozenShape(modified), label);
 }
 
+const compactVectors = verifyCompactVectors(
+  path.join(ROOT, "conformance", "compact-v1.json"), validateFrozenShape, encode, assert,
+);
+
 process.stdout.write(
   JSON.stringify({
     implementation: "independent-js-v0.1",
@@ -469,6 +474,7 @@ process.stdout.write(
     canonical_bytes: canonicalBytes,
     noncore_permission_fields: MANIFEST.noncanonical_permission_fields.length,
     semantic_mutation_cases: mutationCases.length,
+    compact_vectors: compactVectors,
     status: "passed",
   }) + "\n",
 );

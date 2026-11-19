@@ -204,6 +204,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="build and verify wheel/sdist in isolation without repeating source lint/tests",
     )
+    parser.add_argument(
+        "--no-build-isolation",
+        action="store_true",
+        help="use installed PEP 517 build dependencies (useful for offline engineering checks)",
+    )
     args = parser.parse_args(argv)
     if args.final and args.distribution_only:
         parser.error("--final and --distribution-only are mutually exclusive")
@@ -226,7 +231,10 @@ def main(argv: list[str] | None = None) -> int:
     dist = ROOT / "dist"
     if dist.exists():
         shutil.rmtree(dist)
-    results.append(_run("build", _python("-m", "build")))
+    build_command = _python("-m", "build")
+    if args.no_build_isolation:
+        build_command.append("--no-isolation")
+    results.append(_run("build", build_command))
 
     node = shutil.which("node")
     if node is None:

@@ -1,0 +1,393 @@
+Whitepaper-aligned v0.1 schema contract checks passed.
+All checks passed!
+89 files already formatted
+Success: no issues found in 28 source files
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-8.4.2, pluggy-1.7.0
+rootdir: <verification-workspace>\work\lstp-optimization
+configfile: pyproject.toml
+testpaths: tests
+collected 338 items
+
+tests\test_artifacts.py ....                                             [  1%]
+tests\test_authorization.py .....................                        [  7%]
+tests\test_authorization_replay_store.py .                               [  7%]
+tests\test_canonical_grammar_contract.py .....                           [  9%]
+tests\test_canonical_lattice.py ....................                     [ 15%]
+tests\test_canonical_lattice_serializer.py .........                     [ 17%]
+tests\test_canonical_serializer.py ..........                            [ 20%]
+tests\test_cli.py .......                                                [ 22%]
+tests\test_compact_carrier.py ................                           [ 27%]
+tests\test_conformance_vectors.py ..................                     [ 32%]
+tests\test_consensus.py .....                                            [ 34%]
+tests\test_costs.py .......                                              [ 36%]
+tests\test_examples.py ..                                                [ 36%]
+tests\test_formats.py ....                                               [ 38%]
+tests\test_grammar_contract.py ...                                       [ 39%]
+tests\test_inference.py .............                                    [ 42%]
+tests\test_json_input.py ............................................... [ 56%]
+..                                                                       [ 57%]
+tests\test_lantra_targets.py ..........                                  [ 60%]
+tests\test_lattice_extended.py ..........                                [ 63%]
+tests\test_lattice_runtime.py .......                                    [ 65%]
+tests\test_model_mapping_integrity.py ............................       [ 73%]
+tests\test_models.py ...........                                         [ 76%]
+tests\test_ontology.py .....                                             [ 78%]
+tests\test_release_properties.py ........................                [ 85%]
+tests\test_release_runner.py .................................           [ 95%]
+tests\test_replay_store.py ....                                          [ 96%]
+tests\test_schema_contract.py .......                                    [ 98%]
+tests\test_semantic_validator.py .....                                   [100%]
+
+============================= 338 passed in 7.58s =============================
+running egg_info
+writing src\lstp.egg-info\PKG-INFO
+writing dependency_links to src\lstp.egg-info\dependency_links.txt
+writing entry points to src\lstp.egg-info\entry_points.txt
+writing requirements to src\lstp.egg-info\requires.txt
+writing top-level names to src\lstp.egg-info\top_level.txt
+reading manifest file 'src\lstp.egg-info\SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+adding license file 'LICENSE'
+writing manifest file 'src\lstp.egg-info\SOURCES.txt'
+running sdist
+running egg_info
+writing src\lstp.egg-info\PKG-INFO
+writing dependency_links to src\lstp.egg-info\dependency_links.txt
+writing entry points to src\lstp.egg-info\entry_points.txt
+writing requirements to src\lstp.egg-info\requires.txt
+writing top-level names to src\lstp.egg-info\top_level.txt
+reading manifest file 'src\lstp.egg-info\SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+adding license file 'LICENSE'
+writing manifest file 'src\lstp.egg-info\SOURCES.txt'
+running check
+creating lstp-0.1.0a1
+creating lstp-0.1.0a1\conformance
+creating lstp-0.1.0a1\conformance\v0.1
+creating lstp-0.1.0a1\conformance\v0.1\lattice\canonical\negative
+creating lstp-0.1.0a1\conformance\v0.1\lattice\canonical\positive
+creating lstp-0.1.0a1\conformance\v0.1\lattice\canonical\unrepresentable
+creating lstp-0.1.0a1\conformance\v0.1\negative
+creating lstp-0.1.0a1\conformance\v0.1\positive
+creating lstp-0.1.0a1\docs
+creating lstp-0.1.0a1\docs\integration
+creating lstp-0.1.0a1\docs\program
+creating lstp-0.1.0a1\docs\program\evidence
+creating lstp-0.1.0a1\docs\program\evidence\token-optimization
+creating lstp-0.1.0a1\docs\program\reports
+creating lstp-0.1.0a1\examples\lattice
+creating lstp-0.1.0a1\examples\packets
+creating lstp-0.1.0a1\interop\js
+creating lstp-0.1.0a1\spec
+creating lstp-0.1.0a1\src\lstp
+creating lstp-0.1.0a1\src\lstp.egg-info
+creating lstp-0.1.0a1\src\lstp\packet
+creating lstp-0.1.0a1\src\lstp\text
+creating lstp-0.1.0a1\tests
+creating lstp-0.1.0a1\tools
+copying files to lstp-0.1.0a1...
+copying CHANGELOG.md -> lstp-0.1.0a1
+copying LICENSE -> lstp-0.1.0a1
+copying MANIFEST.in -> lstp-0.1.0a1
+copying README.md -> lstp-0.1.0a1
+copying pyproject.toml -> lstp-0.1.0a1
+copying conformance\compact-v1.json -> lstp-0.1.0a1\conformance
+copying conformance\v0.1\README.md -> lstp-0.1.0a1\conformance\v0.1
+copying conformance\v0.1\manifest.json -> lstp-0.1.0a1\conformance\v0.1
+copying conformance\v0.1\lattice\canonical\negative\wrong-segment-order.lstp -> lstp-0.1.0a1\conformance\v0.1\lattice\canonical\negative
+copying conformance\v0.1\lattice\canonical\positive\whitepaper-style.lstp -> lstp-0.1.0a1\conformance\v0.1\lattice\canonical\positive
+copying conformance\v0.1\lattice\canonical\unrepresentable\gov-ext-authorization-ref.json -> lstp-0.1.0a1\conformance\v0.1\lattice\canonical\unrepresentable
+copying conformance\v0.1\lattice\canonical\unrepresentable\rich-evidence.json -> lstp-0.1.0a1\conformance\v0.1\lattice\canonical\unrepresentable
+copying conformance\v0.1\negative\context-packet-id-mismatch.json -> lstp-0.1.0a1\conformance\v0.1\negative
+copying conformance\v0.1\negative\duplicate-atom-id.json -> lstp-0.1.0a1\conformance\v0.1\negative
+copying conformance\v0.1\negative\duplicate-evidence-id.json -> lstp-0.1.0a1\conformance\v0.1\negative
+copying conformance\v0.1\negative\missing-commit-scope.json -> lstp-0.1.0a1\conformance\v0.1\negative
+copying conformance\v0.1\negative\unknown-field.json -> lstp-0.1.0a1\conformance\v0.1\negative
+copying conformance\v0.1\negative\unknown-relation.json -> lstp-0.1.0a1\conformance\v0.1\negative
+copying conformance\v0.1\negative\unresolved-evidence-support.json -> lstp-0.1.0a1\conformance\v0.1\negative
+copying conformance\v0.1\negative\unresolved-relation.json -> lstp-0.1.0a1\conformance\v0.1\negative
+copying conformance\v0.1\positive\minimal.json -> lstp-0.1.0a1\conformance\v0.1\positive
+copying conformance\v0.1\positive\rich.json -> lstp-0.1.0a1\conformance\v0.1\positive
+copying docs\LSTP_Whitepaper.pdf -> lstp-0.1.0a1\docs
+copying docs\WHITEPAPER.md -> lstp-0.1.0a1\docs
+copying docs\integration\LANTRA-TARGET-CONTRACT-v0.1.md -> lstp-0.1.0a1\docs\integration
+copying docs\integration\OPTIONAL-ONTOLOGY-CONSENSUS-v0.1.md -> lstp-0.1.0a1\docs\integration
+copying docs\program\AUDIT-2026-09-22.md -> lstp-0.1.0a1\docs\program
+copying docs\program\CANONICAL-RECONCILIATION-2026-10-04.md -> lstp-0.1.0a1\docs\program
+copying docs\program\DECISIONS.md -> lstp-0.1.0a1\docs\program
+copying docs\program\PROGRAM.md -> lstp-0.1.0a1\docs\program
+copying docs\program\SCHEMA-RECONCILIATION.md -> lstp-0.1.0a1\docs\program
+copying docs\program\TRACEABILITY.md -> lstp-0.1.0a1\docs\program
+copying docs\program\WHITEPAPER-AUTHORITY-AUDIT-2026-10-06.md -> lstp-0.1.0a1\docs\program
+copying docs\program\baseline-inventory.json -> lstp-0.1.0a1\docs\program
+copying docs\program\normative-candidates.json -> lstp-0.1.0a1\docs\program
+copying docs\program\readiness.json -> lstp-0.1.0a1\docs\program
+copying docs\program\evidence\conformance-review-2026-10-07.json -> lstp-0.1.0a1\docs\program\evidence
+copying docs\program\evidence\interop-js-2026-10-07.json -> lstp-0.1.0a1\docs\program\evidence
+copying docs\program\evidence\slai-integration-2026-10-07.json -> lstp-0.1.0a1\docs\program\evidence
+copying docs\program\evidence\token-optimization\optimization_report.json -> lstp-0.1.0a1\docs\program\evidence\token-optimization
+copying docs\program\reports\2026-09-22--2026-09-24.md -> lstp-0.1.0a1\docs\program\reports
+copying docs\program\reports\2026-09-24--2026-09-26.md -> lstp-0.1.0a1\docs\program\reports
+copying docs\program\reports\2026-09-26--2026-09-28.md -> lstp-0.1.0a1\docs\program\reports
+copying docs\program\reports\2026-09-28--2026-09-30.md -> lstp-0.1.0a1\docs\program\reports
+copying docs\program\reports\2026-09-30--2026-10-02.md -> lstp-0.1.0a1\docs\program\reports
+copying docs\program\reports\2026-10-02--2026-10-04.md -> lstp-0.1.0a1\docs\program\reports
+copying docs\program\reports\2026-10-04--2026-10-06.md -> lstp-0.1.0a1\docs\program\reports
+copying docs\program\reports\2026-10-08--2026-10-10.md -> lstp-0.1.0a1\docs\program\reports
+copying docs\program\reports\2026-10-12--2026-10-14.md -> lstp-0.1.0a1\docs\program\reports
+copying examples\lattice\analyze-sales.lat -> lstp-0.1.0a1\examples\lattice
+copying examples\lattice\context-reference.lat -> lstp-0.1.0a1\examples\lattice
+copying examples\lattice\decision.lat -> lstp-0.1.0a1\examples\lattice
+copying examples\lattice\preview-email.lat -> lstp-0.1.0a1\examples\lattice
+copying examples\lattice\summarize-meeting.lat -> lstp-0.1.0a1\examples\lattice
+copying examples\packets\analyze-sales.packet.json -> lstp-0.1.0a1\examples\packets
+copying examples\packets\context-reference.packet.json -> lstp-0.1.0a1\examples\packets
+copying examples\packets\decision.packet.json -> lstp-0.1.0a1\examples\packets
+copying examples\packets\preview-email.packet.json -> lstp-0.1.0a1\examples\packets
+copying examples\packets\summarize-meeting.packet.json -> lstp-0.1.0a1\examples\packets
+copying interop\js\compact.mjs -> lstp-0.1.0a1\interop\js
+copying interop\js\verify.mjs -> lstp-0.1.0a1\interop\js
+copying spec\CANONICAL-v0.1.md -> lstp-0.1.0a1\spec
+copying spec\canonical-json-v0.1.md -> lstp-0.1.0a1\spec
+copying spec\compact-grammar.ebnf -> lstp-0.1.0a1\spec
+copying spec\compact-json-v1.md -> lstp-0.1.0a1\spec
+copying spec\grammar.ebnf -> lstp-0.1.0a1\spec
+copying spec\lstp-v0.1.md -> lstp-0.1.0a1\spec
+copying spec\octad_schema.json -> lstp-0.1.0a1\spec
+copying spec\operator-table.md -> lstp-0.1.0a1\spec
+copying spec\permissions-safety.md -> lstp-0.1.0a1\spec
+copying spec\vocabulary.md -> lstp-0.1.0a1\spec
+copying src\lstp\__init__.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\__main__.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\cli.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\consensus.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\costs.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\errors.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\formats.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\inference.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\json_input.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\models.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\ontology.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp\py.typed -> lstp-0.1.0a1\src\lstp
+copying src\lstp\version.py -> lstp-0.1.0a1\src\lstp
+copying src\lstp.egg-info\PKG-INFO -> lstp-0.1.0a1\src\lstp.egg-info
+copying src\lstp.egg-info\SOURCES.txt -> lstp-0.1.0a1\src\lstp.egg-info
+copying src\lstp.egg-info\dependency_links.txt -> lstp-0.1.0a1\src\lstp.egg-info
+copying src\lstp.egg-info\entry_points.txt -> lstp-0.1.0a1\src\lstp.egg-info
+copying src\lstp.egg-info\requires.txt -> lstp-0.1.0a1\src\lstp.egg-info
+copying src\lstp.egg-info\top_level.txt -> lstp-0.1.0a1\src\lstp.egg-info
+copying src\lstp\packet\__init__.py -> lstp-0.1.0a1\src\lstp\packet
+copying src\lstp\packet\authorization.py -> lstp-0.1.0a1\src\lstp\packet
+copying src\lstp\packet\canonical.py -> lstp-0.1.0a1\src\lstp\packet
+copying src\lstp\packet\compact.py -> lstp-0.1.0a1\src\lstp\packet
+copying src\lstp\packet\compiler.py -> lstp-0.1.0a1\src\lstp\packet
+copying src\lstp\packet\replay.py -> lstp-0.1.0a1\src\lstp\packet
+copying src\lstp\packet\serializer.py -> lstp-0.1.0a1\src\lstp\packet
+copying src\lstp\packet\structural.py -> lstp-0.1.0a1\src\lstp\packet
+copying src\lstp\packet\validator.py -> lstp-0.1.0a1\src\lstp\packet
+copying src\lstp\text\__init__.py -> lstp-0.1.0a1\src\lstp\text
+copying src\lstp\text\ast.py -> lstp-0.1.0a1\src\lstp\text
+copying src\lstp\text\canonical.py -> lstp-0.1.0a1\src\lstp\text
+copying src\lstp\text\canonical_serializer.py -> lstp-0.1.0a1\src\lstp\text
+copying src\lstp\text\parser.py -> lstp-0.1.0a1\src\lstp\text
+copying src\lstp\text\tokenizer.py -> lstp-0.1.0a1\src\lstp\text
+copying src\lstp\text\tokens.py -> lstp-0.1.0a1\src\lstp\text
+copying tests\test_artifacts.py -> lstp-0.1.0a1\tests
+copying tests\test_authorization.py -> lstp-0.1.0a1\tests
+copying tests\test_authorization_replay_store.py -> lstp-0.1.0a1\tests
+copying tests\test_canonical_grammar_contract.py -> lstp-0.1.0a1\tests
+copying tests\test_canonical_lattice.py -> lstp-0.1.0a1\tests
+copying tests\test_canonical_lattice_serializer.py -> lstp-0.1.0a1\tests
+copying tests\test_canonical_serializer.py -> lstp-0.1.0a1\tests
+copying tests\test_cli.py -> lstp-0.1.0a1\tests
+copying tests\test_compact_carrier.py -> lstp-0.1.0a1\tests
+copying tests\test_conformance_vectors.py -> lstp-0.1.0a1\tests
+copying tests\test_consensus.py -> lstp-0.1.0a1\tests
+copying tests\test_costs.py -> lstp-0.1.0a1\tests
+copying tests\test_examples.py -> lstp-0.1.0a1\tests
+copying tests\test_formats.py -> lstp-0.1.0a1\tests
+copying tests\test_grammar_contract.py -> lstp-0.1.0a1\tests
+copying tests\test_inference.py -> lstp-0.1.0a1\tests
+copying tests\test_json_input.py -> lstp-0.1.0a1\tests
+copying tests\test_lantra_targets.py -> lstp-0.1.0a1\tests
+copying tests\test_lattice_extended.py -> lstp-0.1.0a1\tests
+copying tests\test_lattice_runtime.py -> lstp-0.1.0a1\tests
+copying tests\test_model_mapping_integrity.py -> lstp-0.1.0a1\tests
+copying tests\test_models.py -> lstp-0.1.0a1\tests
+copying tests\test_ontology.py -> lstp-0.1.0a1\tests
+copying tests\test_release_properties.py -> lstp-0.1.0a1\tests
+copying tests\test_release_runner.py -> lstp-0.1.0a1\tests
+copying tests\test_replay_store.py -> lstp-0.1.0a1\tests
+copying tests\test_schema_contract.py -> lstp-0.1.0a1\tests
+copying tests\test_semantic_validator.py -> lstp-0.1.0a1\tests
+copying tools\check_lantra_targets.py -> lstp-0.1.0a1\tools
+copying tools\check_readiness.py -> lstp-0.1.0a1\tools
+copying tools\check_schema_contract.py -> lstp-0.1.0a1\tools
+copying tools\run_release_checks.py -> lstp-0.1.0a1\tools
+copying src\lstp.egg-info\SOURCES.txt -> lstp-0.1.0a1\src\lstp.egg-info
+Writing lstp-0.1.0a1\setup.cfg
+Creating tar archive
+removing 'lstp-0.1.0a1' (and everything under it)
+running egg_info
+writing src\lstp.egg-info\PKG-INFO
+writing dependency_links to src\lstp.egg-info\dependency_links.txt
+writing entry points to src\lstp.egg-info\entry_points.txt
+writing requirements to src\lstp.egg-info\requires.txt
+writing top-level names to src\lstp.egg-info\top_level.txt
+reading manifest file 'src\lstp.egg-info\SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+adding license file 'LICENSE'
+writing manifest file 'src\lstp.egg-info\SOURCES.txt'
+running bdist_wheel
+running build
+running build_py
+creating build\lib\lstp
+copying src\lstp\cli.py -> build\lib\lstp
+copying src\lstp\consensus.py -> build\lib\lstp
+copying src\lstp\costs.py -> build\lib\lstp
+copying src\lstp\errors.py -> build\lib\lstp
+copying src\lstp\formats.py -> build\lib\lstp
+copying src\lstp\inference.py -> build\lib\lstp
+copying src\lstp\json_input.py -> build\lib\lstp
+copying src\lstp\models.py -> build\lib\lstp
+copying src\lstp\ontology.py -> build\lib\lstp
+copying src\lstp\version.py -> build\lib\lstp
+copying src\lstp\__init__.py -> build\lib\lstp
+copying src\lstp\__main__.py -> build\lib\lstp
+creating build\lib\lstp\packet
+copying src\lstp\packet\authorization.py -> build\lib\lstp\packet
+copying src\lstp\packet\canonical.py -> build\lib\lstp\packet
+copying src\lstp\packet\compact.py -> build\lib\lstp\packet
+copying src\lstp\packet\compiler.py -> build\lib\lstp\packet
+copying src\lstp\packet\replay.py -> build\lib\lstp\packet
+copying src\lstp\packet\serializer.py -> build\lib\lstp\packet
+copying src\lstp\packet\structural.py -> build\lib\lstp\packet
+copying src\lstp\packet\validator.py -> build\lib\lstp\packet
+copying src\lstp\packet\__init__.py -> build\lib\lstp\packet
+creating build\lib\lstp\text
+copying src\lstp\text\ast.py -> build\lib\lstp\text
+copying src\lstp\text\canonical.py -> build\lib\lstp\text
+copying src\lstp\text\canonical_serializer.py -> build\lib\lstp\text
+copying src\lstp\text\parser.py -> build\lib\lstp\text
+copying src\lstp\text\tokenizer.py -> build\lib\lstp\text
+copying src\lstp\text\tokens.py -> build\lib\lstp\text
+copying src\lstp\text\__init__.py -> build\lib\lstp\text
+running egg_info
+writing src\lstp.egg-info\PKG-INFO
+writing dependency_links to src\lstp.egg-info\dependency_links.txt
+writing entry points to src\lstp.egg-info\entry_points.txt
+writing requirements to src\lstp.egg-info\requires.txt
+writing top-level names to src\lstp.egg-info\top_level.txt
+reading manifest file 'src\lstp.egg-info\SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+adding license file 'LICENSE'
+writing manifest file 'src\lstp.egg-info\SOURCES.txt'
+copying src\lstp\py.typed -> build\lib\lstp
+installing to build\bdist.win-amd64\wheel
+running install
+running install_lib
+creating build\bdist.win-amd64\wheel
+creating build\bdist.win-amd64\wheel\lstp
+copying build\lib\lstp\cli.py -> build\bdist.win-amd64\wheel\.\lstp
+copying build\lib\lstp\consensus.py -> build\bdist.win-amd64\wheel\.\lstp
+copying build\lib\lstp\costs.py -> build\bdist.win-amd64\wheel\.\lstp
+copying build\lib\lstp\errors.py -> build\bdist.win-amd64\wheel\.\lstp
+copying build\lib\lstp\formats.py -> build\bdist.win-amd64\wheel\.\lstp
+copying build\lib\lstp\inference.py -> build\bdist.win-amd64\wheel\.\lstp
+copying build\lib\lstp\json_input.py -> build\bdist.win-amd64\wheel\.\lstp
+copying build\lib\lstp\models.py -> build\bdist.win-amd64\wheel\.\lstp
+copying build\lib\lstp\ontology.py -> build\bdist.win-amd64\wheel\.\lstp
+creating build\bdist.win-amd64\wheel\lstp\packet
+copying build\lib\lstp\packet\authorization.py -> build\bdist.win-amd64\wheel\.\lstp\packet
+copying build\lib\lstp\packet\canonical.py -> build\bdist.win-amd64\wheel\.\lstp\packet
+copying build\lib\lstp\packet\compact.py -> build\bdist.win-amd64\wheel\.\lstp\packet
+copying build\lib\lstp\packet\compiler.py -> build\bdist.win-amd64\wheel\.\lstp\packet
+copying build\lib\lstp\packet\replay.py -> build\bdist.win-amd64\wheel\.\lstp\packet
+copying build\lib\lstp\packet\serializer.py -> build\bdist.win-amd64\wheel\.\lstp\packet
+copying build\lib\lstp\packet\structural.py -> build\bdist.win-amd64\wheel\.\lstp\packet
+copying build\lib\lstp\packet\validator.py -> build\bdist.win-amd64\wheel\.\lstp\packet
+copying build\lib\lstp\packet\__init__.py -> build\bdist.win-amd64\wheel\.\lstp\packet
+copying build\lib\lstp\py.typed -> build\bdist.win-amd64\wheel\.\lstp
+creating build\bdist.win-amd64\wheel\lstp\text
+copying build\lib\lstp\text\ast.py -> build\bdist.win-amd64\wheel\.\lstp\text
+copying build\lib\lstp\text\canonical.py -> build\bdist.win-amd64\wheel\.\lstp\text
+copying build\lib\lstp\text\canonical_serializer.py -> build\bdist.win-amd64\wheel\.\lstp\text
+copying build\lib\lstp\text\parser.py -> build\bdist.win-amd64\wheel\.\lstp\text
+copying build\lib\lstp\text\tokenizer.py -> build\bdist.win-amd64\wheel\.\lstp\text
+copying build\lib\lstp\text\tokens.py -> build\bdist.win-amd64\wheel\.\lstp\text
+copying build\lib\lstp\text\__init__.py -> build\bdist.win-amd64\wheel\.\lstp\text
+copying build\lib\lstp\version.py -> build\bdist.win-amd64\wheel\.\lstp
+copying build\lib\lstp\__init__.py -> build\bdist.win-amd64\wheel\.\lstp
+copying build\lib\lstp\__main__.py -> build\bdist.win-amd64\wheel\.\lstp
+running install_egg_info
+Copying src\lstp.egg-info to build\bdist.win-amd64\wheel\.\lstp-0.1.0a1-py3.12.egg-info
+running install_scripts
+creating build\bdist.win-amd64\wheel\lstp-0.1.0a1.dist-info\WHEEL
+creating '<verification-workspace>\work\lstp-optimization\dist\.tmp-iwhmm1oq\lstp-0.1.0a1-py3-none-any.whl' and adding 'build\bdist.win-amd64\wheel' to it
+adding 'lstp/__init__.py'
+adding 'lstp/__main__.py'
+adding 'lstp/cli.py'
+adding 'lstp/consensus.py'
+adding 'lstp/costs.py'
+adding 'lstp/errors.py'
+adding 'lstp/formats.py'
+adding 'lstp/inference.py'
+adding 'lstp/json_input.py'
+adding 'lstp/models.py'
+adding 'lstp/ontology.py'
+adding 'lstp/py.typed'
+adding 'lstp/version.py'
+adding 'lstp/packet/__init__.py'
+adding 'lstp/packet/authorization.py'
+adding 'lstp/packet/canonical.py'
+adding 'lstp/packet/compact.py'
+adding 'lstp/packet/compiler.py'
+adding 'lstp/packet/replay.py'
+adding 'lstp/packet/serializer.py'
+adding 'lstp/packet/structural.py'
+adding 'lstp/packet/validator.py'
+adding 'lstp/text/__init__.py'
+adding 'lstp/text/ast.py'
+adding 'lstp/text/canonical.py'
+adding 'lstp/text/canonical_serializer.py'
+adding 'lstp/text/parser.py'
+adding 'lstp/text/tokenizer.py'
+adding 'lstp/text/tokens.py'
+adding 'lstp-0.1.0a1.dist-info/licenses/LICENSE'
+adding 'lstp-0.1.0a1.dist-info/METADATA'
+adding 'lstp-0.1.0a1.dist-info/WHEEL'
+adding 'lstp-0.1.0a1.dist-info/entry_points.txt'
+adding 'lstp-0.1.0a1.dist-info/top_level.txt'
+adding 'lstp-0.1.0a1.dist-info/RECORD'
+removing build\bdist.win-amd64\wheel
+Successfully built lstp-0.1.0a1.tar.gz and lstp-0.1.0a1-py3-none-any.whl
+{"implementation":"independent-js-v0.1","manifest":"0.1","positive_json":2,"negative_json":8,"positive_lattice":1,"negative_lattice":1,"canonical_bytes":1078,"noncore_permission_fields":6,"semantic_mutation_cases":9,"compact_vectors":{"positive":4,"negative":6},"status":"passed"}
+==> schema contract
+C:\Python312\python.exe tools/check_schema_contract.py
+==> ruff
+C:\Python312\python.exe -m ruff check .
+==> ruff format
+C:\Python312\python.exe -m ruff format --check .
+==> mypy
+C:\Python312\python.exe -m mypy
+==> pytest
+C:\Python312\python.exe -m pytest
+==> build
+C:\Python312\python.exe -m build --no-isolation
+==> independent JavaScript interoperability
+C:\Program Files\nodejs\node.EXE interop/js/verify.mjs
+{"checks": [{"command": ["C:\\Python312\\python.exe", "tools/check_schema_contract.py"], "name": "schema contract", "returncode": 0}, {"command": ["C:\\Python312\\python.exe", "-m", "ruff", "check", "."], "name": "ruff", "returncode": 0}, {"command": ["C:\\Python312\\python.exe", "-m", "ruff", "format", "--check", "."], "name": "ruff format", "returncode": 0}, {"command": ["C:\\Python312\\python.exe", "-m", "mypy"], "name": "mypy", "returncode": 0}, {"command": ["C:\\Python312\\python.exe", "-m", "pytest"], "name": "pytest", "returncode": 0}, {"command": ["C:\\Python312\\python.exe", "-m", "build", "--no-isolation"], "name": "build", "returncode": 0}, {"command": ["C:\\Program Files\\nodejs\\node.EXE", "interop/js/verify.mjs"], "name": "independent JavaScript interoperability", "returncode": 0}], "mode": "engineering", "status": "passed"}
+* Getting build dependencies for sdist...
+warning: no files found matching '*.bnf' under directory 'spec'
+warning: no files found matching '*.json' under directory 'interop'
+* Building sdist...
+warning: no files found matching '*.bnf' under directory 'spec'
+warning: no files found matching '*.json' under directory 'interop'
+* Building wheel from sdist
+* Getting build dependencies for wheel...
+warning: no files found matching '*.bnf' under directory 'spec'
+warning: no files found matching '*.json' under directory 'interop'
+* Building wheel...
+warning: no files found matching '*.bnf' under directory 'spec'
+warning: no files found matching '*.json' under directory 'interop'

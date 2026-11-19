@@ -94,9 +94,16 @@ def _decimal_text(value: int | float | Decimal, path: str) -> str:
         if decimal_value == 0:
             return "0"
         sign = "-" if decimal_value.is_signed() else ""
-        normalized = decimal_value.copy_abs().normalize()
-        digits_tuple = normalized.as_tuple().digits
-        exponent = normalized.as_tuple().exponent
+        # Decimal.normalize() rounds under the ambient decimal context. Removing
+        # trailing zeroes directly preserves arbitrarily precise input values.
+        parts = decimal_value.copy_abs().as_tuple()
+        digits_tuple = parts.digits
+        exponent = parts.exponent
+        if not isinstance(exponent, int):
+            raise _error("non_finite_number", "canonical numbers must be finite", path)
+        while len(digits_tuple) > 1 and digits_tuple[-1] == 0:
+            digits_tuple = digits_tuple[:-1]
+            exponent += 1
         digits = "".join(str(digit) for digit in digits_tuple) or "0"
         assert isinstance(exponent, int)  # finite Decimal
         point = len(digits) + exponent

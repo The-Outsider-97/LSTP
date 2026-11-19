@@ -1,0 +1,234 @@
+{
+  "offline": {
+    "kind": "OFFLINE_ONLY",
+    "cases": 1000,
+    "lossless_canonical_byte_roundtrips": 1000,
+    "deterministic_projection_exact_matches": 1000,
+    "identical_json_tuple_controls": 1000,
+    "byte_sizes": {
+      "ordinary_json": {
+        "min": 195,
+        "median": 211,
+        "p95": 218,
+        "max": 222
+      },
+      "ordinary_json/instruction_plus_payload": {
+        "min": 887,
+        "median": 903,
+        "p95": 910,
+        "max": 914
+      },
+      "canonical_lstp": {
+        "min": 598,
+        "median": 618,
+        "p95": 628,
+        "max": 635
+      },
+      "canonical_lstp/instruction_plus_payload": {
+        "min": 1290,
+        "median": 1310,
+        "p95": 1320,
+        "max": 1327
+      },
+      "json_minimal": {
+        "min": 195,
+        "median": 211,
+        "p95": 218,
+        "max": 222
+      },
+      "json_minimal/instruction_plus_payload": {
+        "min": 394,
+        "median": 410,
+        "p95": 417,
+        "max": 421
+      },
+      "json_tuple_output": {
+        "min": 195,
+        "median": 211,
+        "p95": 218,
+        "max": 222
+      },
+      "json_tuple_output/instruction_plus_payload": {
+        "min": 393,
+        "median": 409,
+        "p95": 416,
+        "max": 420
+      },
+      "canonical_minimal": {
+        "min": 598,
+        "median": 618,
+        "p95": 628,
+        "max": 635
+      },
+      "canonical_minimal/instruction_plus_payload": {
+        "min": 796,
+        "median": 816,
+        "p95": 826,
+        "max": 833
+      },
+      "lossless_compact": {
+        "min": 289,
+        "median": 309,
+        "p95": 319,
+        "max": 326
+      },
+      "lossless_compact/instruction_plus_payload": {
+        "min": 1619,
+        "median": 1639,
+        "p95": 1649,
+        "max": 1656
+      },
+      "projection_object": {
+        "min": 172,
+        "median": 188,
+        "p95": 195,
+        "max": 199
+      },
+      "projection_object/instruction_plus_payload": {
+        "min": 371,
+        "median": 387,
+        "p95": 394,
+        "max": 398
+      },
+      "projection_tuple": {
+        "min": 91,
+        "median": 107,
+        "p95": 114,
+        "max": 118
+      },
+      "projection_tuple/instruction_plus_payload": {
+        "min": 323,
+        "median": 339,
+        "p95": 346,
+        "max": 350
+      },
+      "json_tuple_control": {
+        "min": 91,
+        "median": 107,
+        "p95": 114,
+        "max": 118
+      },
+      "json_tuple_control/instruction_plus_payload": {
+        "min": 323,
+        "median": 339,
+        "p95": 346,
+        "max": 350
+      },
+      "gzip_network_bytes": {
+        "min": 353,
+        "median": 369,
+        "p95": 376,
+        "max": 381
+      },
+      "gzip_base64_bytes_not_model_tokens": {
+        "min": 472,
+        "median": 492,
+        "p95": 504,
+        "max": 508
+      }
+    },
+    "cpu_microseconds": {
+      "canonical_encode_us": {
+        "min": 206,
+        "median": 382.85,
+        "p95": 543.8,
+        "max": 2124.1
+      },
+      "compact_encode_us": {
+        "min": 274.9,
+        "median": 522.55,
+        "p95": 711,
+        "max": 1502.7
+      },
+      "compact_decode_us": {
+        "min": 542.2,
+        "median": 984.4,
+        "p95": 1275.2,
+        "max": 2106.5
+      },
+      "projection_us": {
+        "min": 631.2,
+        "median": 1192.9,
+        "p95": 1557.9,
+        "max": 2019.6
+      }
+    },
+    "local_tokenizer_counts": null,
+    "tokenizer_command": null,
+    "provider_token_savings": null,
+    "provider_cost_savings": null,
+    "model_correctness": null
+  },
+  "historical_baseline": {
+    "manifest_model_mismatches": [],
+    "source_sha256": {
+      "manifest.json": "fd1e7d92c167a70bd7319dd31813d9772cc1e89782bfeec5f52788ddd0351259",
+      "cases.jsonl": "ff36c7a544b217aac33b38424ede65e4218938e0e036fe5efcb7685fd320fc24",
+      "results.jsonl": "1d49f80ed8c46006ca8d0981200ab39ce2f3b91d41d8c692f3b9bf2b2ddcac5a"
+    },
+    "groups": [
+      {
+        "provider": "gemini",
+        "model_in_raw_rows": "gemini-3.1-flash-lite",
+        "condition": "canonical_lstp",
+        "responses": 1000,
+        "exact_matches": 1000,
+        "input_tokens": 328963,
+        "output_tokens": 82878,
+        "recorded_nominal_usd": "0.20655775"
+      },
+      {
+        "provider": "gemini",
+        "model_in_raw_rows": "gemini-3.1-flash-lite",
+        "condition": "natural_language",
+        "responses": 1000,
+        "exact_matches": 586,
+        "input_tokens": 193575,
+        "output_tokens": 83459,
+        "recorded_nominal_usd": "0.17358225"
+      },
+      {
+        "provider": "gemini",
+        "model_in_raw_rows": "gemini-3.1-flash-lite",
+        "condition": "ordinary_json",
+        "responses": 1000,
+        "exact_matches": 1000,
+        "input_tokens": 199878,
+        "output_tokens": 82878,
+        "recorded_nominal_usd": "0.17428650"
+      },
+      {
+        "provider": "openai",
+        "model_in_raw_rows": "gpt-6-luna",
+        "condition": "canonical_lstp",
+        "responses": 1000,
+        "exact_matches": 998,
+        "input_tokens": 312176,
+        "output_tokens": 129392,
+        "recorded_nominal_usd": "0.0959136"
+      },
+      {
+        "provider": "openai",
+        "model_in_raw_rows": "gpt-6-luna",
+        "condition": "natural_language",
+        "responses": 1000,
+        "exact_matches": 940,
+        "input_tokens": 187397,
+        "output_tokens": 124138,
+        "recorded_nominal_usd": "0.0808087"
+      },
+      {
+        "provider": "openai",
+        "model_in_raw_rows": "gpt-6-luna",
+        "condition": "ordinary_json",
+        "responses": 1000,
+        "exact_matches": 1000,
+        "input_tokens": 189809,
+        "output_tokens": 91689,
+        "recorded_nominal_usd": "0.0648254"
+      }
+    ]
+  },
+  "live": null,
+  "targets": "UNVERIFIED"
+}

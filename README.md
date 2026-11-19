@@ -334,3 +334,9 @@ See [the optional ontology and consensus engineering profile](docs/integration/O
 for configuration, security boundaries, examples, and required external tests.
 These experimental integrations do not imply that LSTP is production-ready or
 LANTRA training-ready and do not alter existing readiness gates.
+
+## Optional efficiency interfaces
+
+The optional [L1/D1 carrier specification](spec/compact-json-v1.md) and [measured optimization assessment](docs/TOKEN_OPTIMIZATION_2026-11-18.md) distinguish canonical protocol bytes, lossless compact transport, and explicit inference views. Import compact_dumps/compact_loads or incremental_dumps/incremental_loads for transport, project_action for strict structured extraction, and prepare_action_input with a host-owned token counter for model requests. The CLI exposes compact-encode and compact-decode.
+
+The original 1,000-case corpus verifies 1,000 exact canonical-byte round trips and 1,000 deterministic extraction matches. Median payloads are 618 bytes canonical, 309 bytes L1, and 107 bytes for the narrow extraction array. These are byte measurements, not new model-token, API-cost or model-quality results. The 25% live targets remain unverified. The canonical/LANTRA contract and host authorization boundary remain authoritative.

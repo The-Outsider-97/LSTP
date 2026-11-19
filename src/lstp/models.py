@@ -175,7 +175,7 @@ def _optional_non_negative_int(
 ) -> int | None:
     if key not in data:
         return None
-    value = data[key]
+    value: object = data[key]
     if isinstance(value, bool) or not isinstance(value, int):
         raise TypeError(f"expected integer at {path}.{key}")
     if value < 0:
