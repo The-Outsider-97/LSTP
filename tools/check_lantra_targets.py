@@ -15,7 +15,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from lstp import LSTPError, canonical_loads, canonical_dumps, loads_json
+from lstp import LSTPError, canonical_dumps, canonical_loads, loads_json
 
 FIELDS = frozenset({"sample_id", "split", "input", "target"})
 SPLITS = frozenset({"train", "validation", "test"})
@@ -34,7 +34,9 @@ def _parse_record(raw: bytes, *, path: Path, line_no: int) -> dict[str, str]:
     try:
         obj = loads_json(raw)
     except (LSTPError, ValueError, TypeError) as exc:
-        raise TrainingTargetError(f"{where}: malformed JSONL record ({type(exc).__name__})") from exc
+        raise TrainingTargetError(
+            f"{where}: malformed JSONL record ({type(exc).__name__})"
+        ) from exc
     if not isinstance(obj, dict):
         raise TrainingTargetError(f"{where}: record must be an object")
     if set(obj) != FIELDS:
@@ -98,9 +100,7 @@ def verify_targets(paths: list[Path], *, require_all_splits: bool = False) -> di
                     raise TrainingTargetError(f"{where}: unsupported target version")
                 if canonical_dumps(packet) != target:
                     raise TrainingTargetError(f"{where}: target changed on round trip")
-                pair_key = hashlib.sha256(
-                    prompt_key.encode("ascii") + b"\0" + target
-                ).hexdigest()
+                pair_key = hashlib.sha256(prompt_key.encode("ascii") + b"\0" + target).hexdigest()
                 if pair_key in seen_pairs:
                     raise TrainingTargetError(f"{where}: duplicate input/target pair")
                 seen_pairs.add(pair_key)

@@ -38,8 +38,6 @@ def test_identifier_patterns_reject_trailing_controls() -> None:
 
 def test_extension_namespace_rejects_trailing_newline() -> None:
     schema = json.loads((ROOT / "spec/octad_schema.json").read_text())
-    validator = Draft202012Validator(
-        {"$defs": schema["$defs"], "$ref": "#/$defs/extensions"}
-    )
+    validator = Draft202012Validator({"$defs": schema["$defs"], "$ref": "#/$defs/extensions"})
     assert validator.is_valid({"slai": {}})
     assert not validator.is_valid({"slai\n": {}})

@@ -28,10 +28,7 @@ def test_october_candidate_permission_fields_are_rejected() -> None:
     permissions = schema["$defs"]["permissions"]  # type: ignore[index]
     permissions["properties"]["capabilities"] = {"type": "array"}  # type: ignore[index]
     failures = contract_failures(schema)
-    assert any(
-        failure.startswith("PERMISSION_NONCORE_FIELD:")
-        for failure in failures
-    )
+    assert any(failure.startswith("PERMISSION_NONCORE_FIELD:") for failure in failures)
 
 
 def test_pragmatics_type_is_required_and_act_is_not_canonical() -> None:

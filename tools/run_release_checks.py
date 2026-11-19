@@ -140,9 +140,7 @@ def _clean_distribution_smoke(results: list[CheckResult]) -> None:
         cli = _venv_script(wheel_env, "lstp")
         results.append(_run("wheel CLI version", [str(cli), "--version"], cwd=temp))
         results.append(_run("wheel CLI help", [str(cli), "--help"], cwd=temp))
-        results.append(
-            _run("wheel CLI JSON check", [str(cli), "json-check"], cwd=temp, stdin="{}")
-        )
+        results.append(_run("wheel CLI JSON check", [str(cli), "json-check"], cwd=temp, stdin="{}"))
 
         source_root = temp / "source"
         source_root.mkdir()
@@ -206,6 +204,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="build and verify wheel/sdist in isolation without repeating source lint/tests",
     )
+    parser.add_argument(
+        "--no-build-isolation",
+        action="store_true",
+        help="use installed PEP 517 build dependencies (useful for offline engineering checks)",
+    )
     args = parser.parse_args(argv)
     if args.final and args.distribution_only:
         parser.error("--final and --distribution-only are mutually exclusive")
@@ -221,16 +224,17 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         results.append(_run("ruff", _python("-m", "ruff", "check", ".")))
-        results.append(
-            _run("ruff format", _python("-m", "ruff", "format", "--check", "."))
-        )
+        results.append(_run("ruff format", _python("-m", "ruff", "format", "--check", ".")))
         results.append(_run("mypy", _python("-m", "mypy")))
         results.append(_run("pytest", _python("-m", "pytest")))
 
     dist = ROOT / "dist"
     if dist.exists():
         shutil.rmtree(dist)
-    results.append(_run("build", _python("-m", "build")))
+    build_command = _python("-m", "build")
+    if args.no_build_isolation:
+        build_command.append("--no-isolation")
+    results.append(_run("build", build_command))
 
     node = shutil.which("node")
     if node is None:
@@ -256,7 +260,9 @@ def main(argv: list[str] | None = None) -> int:
     print(
         json.dumps(
             {
-                "mode": "final" if args.final else ("distribution" if args.distribution_only else "engineering"),
+                "mode": "final"
+                if args.final
+                else ("distribution" if args.distribution_only else "engineering"),
                 "checks": [asdict(item) for item in results],
                 "status": "passed",
             },

@@ -85,22 +85,25 @@ def _decimal_text(value: int | float | Decimal, path: str) -> str:
     else:
         if isinstance(value, float):
             if not math.isfinite(value):
-                raise _error(
-                    "non_finite_number", "canonical numbers must be finite", path
-                )
+                raise _error("non_finite_number", "canonical numbers must be finite", path)
             decimal_value = Decimal(str(value))
         else:
             if not value.is_finite():
-                raise _error(
-                    "non_finite_number", "canonical numbers must be finite", path
-                )
+                raise _error("non_finite_number", "canonical numbers must be finite", path)
             decimal_value = value
         if decimal_value == 0:
             return "0"
         sign = "-" if decimal_value.is_signed() else ""
-        normalized = decimal_value.copy_abs().normalize()
-        digits_tuple = normalized.as_tuple().digits
-        exponent = normalized.as_tuple().exponent
+        # Decimal.normalize() rounds under the ambient decimal context. Removing
+        # trailing zeroes directly preserves arbitrarily precise input values.
+        parts = decimal_value.copy_abs().as_tuple()
+        digits_tuple = parts.digits
+        exponent = parts.exponent
+        if not isinstance(exponent, int):
+            raise _error("non_finite_number", "canonical numbers must be finite", path)
+        while len(digits_tuple) > 1 and digits_tuple[-1] == 0:
+            digits_tuple = digits_tuple[:-1]
+            exponent += 1
         digits = "".join(str(digit) for digit in digits_tuple) or "0"
         point = len(digits) + exponent
         if point <= 0:
@@ -111,9 +114,7 @@ def _decimal_text(value: int | float | Decimal, path: str) -> str:
             body = digits[:point] + "." + digits[point:]
         text = sign + body
     if len(text) > _MAX_CANONICAL_NUMBER_CHARS:
-        raise _error(
-            "number_too_large", "canonical number representation exceeds limit", path
-        )
+        raise _error("number_too_large", "canonical number representation exceeds limit", path)
     return text
 
 
@@ -133,9 +134,7 @@ def _encode(value: Any, path: str = "$") -> str:
         items: list[str] = []
         keys = list(value.keys())
         if not all(isinstance(key, str) for key in keys):
-            raise _error(
-                "non_string_key", "canonical JSON object keys must be strings", path
-            )
+            raise _error("non_string_key", "canonical JSON object keys must be strings", path)
         for key in sorted(keys, key=_utf16_sort_key):
             _check_string(key, f"{path}.<key>")
             items.append(
@@ -144,12 +143,12 @@ def _encode(value: Any, path: str = "$") -> str:
                 + _encode(value[key], f"{path}.{key}")
             )
         return "{" + ",".join(items) + "}"
-    if isinstance(value, Sequence) and not isinstance(
-        value, (str, bytes, bytearray)
-    ):
-        return "[" + ",".join(
-            _encode(item, f"{path}[{index}]") for index, item in enumerate(value)
-        ) + "]"
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return (
+            "["
+            + ",".join(_encode(item, f"{path}[{index}]") for index, item in enumerate(value))
+            + "]"
+        )
     raise _error(
         "unsupported_value",
         f"unsupported canonical value type: {type(value).__name__}",
@@ -316,11 +315,7 @@ def packet_to_mapping(packet: PacketEnvelope) -> dict[str, object]:
         "output": _output(packet.octad.output),
         "carrier": _thaw(packet.carrier),
         "audit": _thaw(packet.audit),
-        **(
-            {"extensions": _extensions(packet.extensions)}
-            if packet.extensions
-            else {}
-        ),
+        **({"extensions": _extensions(packet.extensions)} if packet.extensions else {}),
     }
 
 
@@ -346,14 +341,10 @@ def _strict_keys(
     data = _expect_object(value, path)
     unknown = sorted(set(data) - allowed)
     if unknown:
-        raise _error(
-            "unknown_field", f"unknown canonical field {unknown[0]!r}", path
-        )
+        raise _error("unknown_field", f"unknown canonical field {unknown[0]!r}", path)
     missing = sorted(set(required) - set(data))
     if missing:
-        raise _error(
-            "missing_field", f"missing required canonical field {missing[0]!r}", path
-        )
+        raise _error("missing_field", f"missing required canonical field {missing[0]!r}", path)
     return data
 
 
@@ -361,9 +352,7 @@ def _check_extensions(value: object, path: str) -> None:
     data = _expect_object(value, path)
     for namespace, payload in data.items():
         if not isinstance(namespace, str) or not namespace:
-            raise _error(
-                "extension_namespace", "extension namespace must be non-empty", path
-            )
+            raise _error("extension_namespace", "extension namespace must be non-empty", path)
         _expect_object(payload, f"{path}.{namespace}")
 
 
@@ -479,7 +468,7 @@ def _check_structure(data: object) -> Mapping[str, Any]:
             allowed={"packet_id", "depth", "agent", "label", "extensions"},
             required={"packet_id"},
         )
-    permissions = _strict_keys(
+    _strict_keys(
         root["permissions"],
         path="$.permissions",
         allowed={
@@ -567,7 +556,5 @@ def canonical_loads(
         supplied = data.encode("utf-8") if isinstance(data, str) else data
         expected = canonical_dumps(packet)
         if supplied != expected:
-            raise _error(
-                "non_canonical_bytes", "input is valid LSTP but not canonical byte form"
-            )
+            raise _error("non_canonical_bytes", "input is valid LSTP but not canonical byte form")
     return packet

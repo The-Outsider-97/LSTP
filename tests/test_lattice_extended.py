@@ -9,10 +9,7 @@ from lstp.text.parser import parse
 
 
 def test_parser_handles_scope_composition_and_zoom() -> None:
-    document = parse(
-        "!analyze @sales[-4Q..0Q] :: "
-        "lstp.eval(risk + cost | defer) -> JSON@z2"
-    )
+    document = parse("!analyze @sales[-4Q..0Q] :: lstp.eval(risk + cost | defer) -> JSON@z2")
     clause = document.clauses[0]
     assert isinstance(clause, MainClause)
     assert clause.focus is not None
@@ -42,27 +39,18 @@ def test_composition_alternative_exclusion_and_approximation_compile() -> None:
 
 
 def test_macro_definition_expands_before_compilation() -> None:
-    source = (
-        "def #Decision = { risk + cost }\n"
-        "!analyze @sales :: lstp.eval(#Decision) -> JSON"
-    )
+    source = "def #Decision = { risk + cost }\n!analyze @sales :: lstp.eval(#Decision) -> JSON"
     document = parse(source)
     assert isinstance(document.clauses[0], MacroDefinition)
     packet = compile_lattice(
         source,
         options=CompilerOptions(packet_id="p1", thread_id="t1"),
     )
-    assert any(
-        relation.type == "lstp.compose" for relation in packet.octad.relations
-    )
+    assert any(relation.type == "lstp.compose" for relation in packet.octad.relations)
 
 
 def test_claim_and_ambiguity_have_inspectable_relations() -> None:
-    source = (
-        "!analyze @sales -> JSON\n"
-        "claim: risk\n"
-        "ambig{meaning: finance | river}"
-    )
+    source = "!analyze @sales -> JSON\nclaim: risk\nambig{meaning: finance | river}"
     document = parse(source)
     assert isinstance(document.clauses[1], ClaimClause)
     assert isinstance(document.clauses[2], AmbiguityClause)
@@ -104,12 +92,7 @@ def test_target_plus_context_focus_resolves_stable_packet_reference() -> None:
 
 
 def test_layout_newlines_are_accepted_inside_constraint_block() -> None:
-    source = (
-        "!open @door {\n"
-        "mode=COMMIT,\n"
-        'scope=["urn:door:front"]\n'
-        "} -> JSON"
-    )
+    source = '!open @door {\nmode=COMMIT,\nscope=["urn:door:front"]\n} -> JSON'
     packet = compile_lattice(
         source,
         options=CompilerOptions(packet_id="p1", thread_id="t1"),

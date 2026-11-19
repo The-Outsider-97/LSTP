@@ -1,18 +1,33 @@
 from __future__ import annotations
 
-from lstp.models import Atom, Context, EvidenceItem, Octad, Output, PacketEnvelope, Permissions, Pragmatics, Relation
+from lstp.models import (
+    Atom,
+    Context,
+    EvidenceItem,
+    Octad,
+    Output,
+    PacketEnvelope,
+    Permissions,
+    Pragmatics,
+    Relation,
+)
 from lstp.packet.validator import validate_packet
 
 
 def packet_with(*, atoms=(), relations=(), permissions=None, evidence=()) -> PacketEnvelope:
     return PacketEnvelope(
         Octad(
-            pragmatics=Pragmatics(type="request", speech_act="command"), atoms=atoms, relations=relations,
-            context=Context(thread_id="thread-1"), confidence=1.0,
-            permissions=permissions or Permissions(), evidence=evidence,
+            pragmatics=Pragmatics(type="request", speech_act="command"),
+            atoms=atoms,
+            relations=relations,
+            context=Context(thread_id="thread-1"),
+            confidence=1.0,
+            permissions=permissions or Permissions(),
+            evidence=evidence,
             output=Output(format="NL"),
         ),
-        "packet-1", "0.1",
+        "packet-1",
+        "0.1",
     )
 
 

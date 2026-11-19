@@ -1,0 +1,520 @@
+{
+  "profile": "L1",
+  "positive": [
+    {
+      "compact": [
+        "L1",
+        [
+          "manual",
+          [
+            "inform"
+          ],
+          [],
+          [
+            "thread"
+          ],
+          [],
+          [
+            "NL"
+          ]
+        ]
+      ],
+      "canonical": {
+        "id": "manual",
+        "version": "0.1",
+        "pragmatics": {
+          "type": "inform"
+        },
+        "atoms": [],
+        "relations": [],
+        "context": {
+          "thread_id": "thread",
+          "references": []
+        },
+        "confidence": 1,
+        "permissions": {},
+        "evidence": [],
+        "output": {
+          "format": "NL"
+        },
+        "carrier": {},
+        "audit": {}
+      }
+    },
+    {
+      "compact": [
+        "L1",
+        [
+          "p1",
+          [
+            "inform"
+          ],
+          [],
+          [
+            "t1"
+          ],
+          [],
+          [
+            "NL"
+          ]
+        ]
+      ],
+      "canonical": {
+        "atoms": [],
+        "audit": {},
+        "carrier": {},
+        "confidence": 1,
+        "context": {
+          "references": [],
+          "thread_id": "t1"
+        },
+        "evidence": [],
+        "id": "p1",
+        "output": {
+          "format": "NL"
+        },
+        "permissions": {},
+        "pragmatics": {
+          "type": "inform"
+        },
+        "relations": [],
+        "version": "0.1"
+      }
+    },
+    {
+      "compact": [
+        "L1",
+        [
+          "p2",
+          [
+            "request",
+            "command",
+            "summarize",
+            null,
+            null,
+            0.25
+          ],
+          [
+            [
+              "a0",
+              "resource",
+              "report",
+              "TARGET",
+              null,
+              null,
+              {
+                "classification": "internal"
+              }
+            ]
+          ],
+          [
+            "t1",
+            null,
+            [],
+            null,
+            null,
+            "c1",
+            2,
+            null,
+            null,
+            null,
+            "Europe/Amsterdam",
+            {
+              "turns": 4
+            }
+          ],
+          [
+            "PREVIEW",
+            [
+              "urn:report:1"
+            ],
+            [
+              "urn:report:archive"
+            ],
+            null,
+            null,
+            true,
+            {
+              "max_items": 10
+            }
+          ],
+          [
+            "JSON",
+            null,
+            null,
+            null,
+            "en",
+            4096,
+            [
+              "concise"
+            ]
+          ],
+          [
+            [
+              "e0",
+              "user",
+              "urn:user:request"
+            ]
+          ],
+          [
+            [
+              "requests",
+              [
+                "a0"
+              ],
+              "r0",
+              0.75,
+              {
+                "source": "example"
+              }
+            ]
+          ],
+          0.5,
+          {
+            "profile": "json"
+          },
+          {
+            "source": "interop"
+          }
+        ]
+      ],
+      "canonical": {
+        "atoms": [
+          {
+            "attributes": {
+              "classification": "internal"
+            },
+            "id": "a0",
+            "kind": "resource",
+            "role": "TARGET",
+            "value": "report"
+          }
+        ],
+        "audit": {
+          "source": "interop"
+        },
+        "carrier": {
+          "profile": "json"
+        },
+        "confidence": 0.5,
+        "context": {
+          "conversation_id": "c1",
+          "references": [],
+          "thread_id": "t1",
+          "timezone": "Europe/Amsterdam",
+          "turn": 2,
+          "window": {
+            "turns": 4
+          }
+        },
+        "evidence": [
+          {
+            "id": "e0",
+            "source_ref": "urn:user:request",
+            "source_type": "user"
+          }
+        ],
+        "id": "p2",
+        "output": {
+          "format": "JSON",
+          "language": "en",
+          "max_bytes": 4096,
+          "requirements": [
+            "concise"
+          ]
+        },
+        "permissions": {
+          "forbid": [
+            "urn:report:archive"
+          ],
+          "limits": {
+            "max_items": 10
+          },
+          "mode": "PREVIEW",
+          "require_logging": true,
+          "scope": [
+            "urn:report:1"
+          ]
+        },
+        "pragmatics": {
+          "goal": "summarize",
+          "speech_act": "command",
+          "type": "request",
+          "urgency": 0.25
+        },
+        "relations": [
+          {
+            "arguments": [
+              "a0"
+            ],
+            "attributes": {
+              "source": "example"
+            },
+            "confidence": 0.75,
+            "id": "r0",
+            "type": "requests"
+          }
+        ],
+        "version": "0.1"
+      }
+    },
+    {
+      "compact": [
+        "L1",
+        [
+          "p1",
+          [
+            "request",
+            "command",
+            "slai.inspect"
+          ],
+          [
+            [
+              "a0",
+              "resource",
+              "roof",
+              "TARGET"
+            ],
+            [
+              "a1",
+              "concept",
+              "inspect",
+              "ACTION"
+            ]
+          ],
+          [
+            "thread",
+            {
+              "project": "spadra",
+              "stage": "review"
+            },
+            [
+              [
+                "previous",
+                0,
+                "host",
+                "origin"
+              ]
+            ],
+            null,
+            "previous",
+            "conversation",
+            1,
+            "agent",
+            [
+              "user"
+            ],
+            "2026-11-18T18:00:00Z",
+            "UTC",
+            {
+              "start": 1
+            },
+            "Leeuwarden",
+            {
+              "test": {
+                "id": "keep"
+              }
+            }
+          ],
+          [
+            "PREVIEW",
+            [
+              "roof"
+            ],
+            [
+              "other"
+            ],
+            true,
+            true,
+            true,
+            {
+              "max_calls": 2
+            }
+          ],
+          [
+            "JSON"
+          ],
+          [
+            [
+              "e0",
+              "user",
+              "urn:test:source"
+            ]
+          ]
+        ]
+      ],
+      "canonical": {
+        "atoms": [
+          {
+            "id": "a0",
+            "kind": "resource",
+            "role": "TARGET",
+            "value": "roof"
+          },
+          {
+            "id": "a1",
+            "kind": "concept",
+            "role": "ACTION",
+            "value": "inspect"
+          }
+        ],
+        "audit": {},
+        "carrier": {},
+        "confidence": 1,
+        "context": {
+          "audience": [
+            "user"
+          ],
+          "bindings": {
+            "project": "spadra",
+            "stage": "review"
+          },
+          "conversation_id": "conversation",
+          "extensions": {
+            "test": {
+              "id": "keep"
+            }
+          },
+          "location": "Leeuwarden",
+          "parent_packet_id": "previous",
+          "references": [
+            {
+              "agent": "host",
+              "depth": 0,
+              "label": "origin",
+              "packet_id": "previous"
+            }
+          ],
+          "speaker": "agent",
+          "thread_id": "thread",
+          "time": "2026-11-18T18:00:00Z",
+          "timezone": "UTC",
+          "turn": 1,
+          "window": {
+            "start": 1
+          }
+        },
+        "evidence": [
+          {
+            "id": "e0",
+            "source_ref": "urn:test:source",
+            "source_type": "user"
+          }
+        ],
+        "id": "p1",
+        "output": {
+          "format": "JSON"
+        },
+        "permissions": {
+          "forbid": [
+            "other"
+          ],
+          "limits": {
+            "max_calls": 2
+          },
+          "mode": "PREVIEW",
+          "require_confirmation": true,
+          "require_logging": true,
+          "require_review": true,
+          "scope": [
+            "roof"
+          ]
+        },
+        "pragmatics": {
+          "goal": "slai.inspect",
+          "speech_act": "command",
+          "type": "request"
+        },
+        "relations": [],
+        "version": "0.1"
+      }
+    }
+  ],
+  "negative": [
+    [],
+    [
+      "L2",
+      [
+        "manual",
+        [
+          "inform"
+        ],
+        [],
+        [
+          "thread"
+        ],
+        [],
+        [
+          "NL"
+        ]
+      ]
+    ],
+    [
+      "L1",
+      []
+    ],
+    [
+      "L1",
+      [
+        "p",
+        [
+          "inform"
+        ],
+        [],
+        [
+          "t"
+        ],
+        [
+          "COMMIT"
+        ],
+        [
+          "NL"
+        ]
+      ]
+    ],
+    [
+      "L1",
+      [
+        "manual",
+        [
+          "inform"
+        ],
+        [],
+        [
+          "thread"
+        ],
+        [],
+        [
+          "NL"
+        ],
+        [],
+        [],
+        true
+      ]
+    ],
+    [
+      "L1",
+      [
+        "manual",
+        [
+          "inform"
+        ],
+        [],
+        [
+          "thread"
+        ],
+        [],
+        [
+          "NL"
+        ],
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ]
+  ]
+}

@@ -52,7 +52,8 @@ def test_relative_context_resolution_is_stable_packet_id() -> None:
     packet = compile_lattice(
         "?risk ↑2 -> NL",
         options=CompilerOptions(
-            packet_id="p1", thread_id="t1",
+            packet_id="p1",
+            thread_id="t1",
             context_resolver=lambda depth, agent: f"history-{depth}",
         ),
     )

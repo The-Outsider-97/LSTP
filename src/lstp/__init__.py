@@ -6,12 +6,20 @@ from lstp.errors import (
     CompilationError,
     Diagnostic,
     JSONInputError,
-    LSTPError,
     LatticeSyntaxError,
+    LSTPError,
     ResourceLimitError,
     SemanticValidationError,
 )
 from lstp.formats import is_well_formed_bcp47, parse_rfc3339, validate_bcp47
+from lstp.inference import (
+    ActionProjection,
+    ModelInput,
+    ProjectionError,
+    decode_action_result,
+    prepare_action_input,
+    project_action,
+)
 from lstp.json_input import InputLimits, loads_json
 from lstp.models import (
     Atom,
@@ -40,6 +48,12 @@ from lstp.packet.authorization import (
     validate_delegation,
 )
 from lstp.packet.canonical import canonical_dumps, canonical_loads, packet_to_mapping
+from lstp.packet.compact import (
+    compact_dumps,
+    compact_loads,
+    incremental_dumps,
+    incremental_loads,
+)
 from lstp.packet.compiler import CompilerOptions, compile_lattice
 from lstp.packet.replay import ReplayGuard, ReplayStore, SQLiteReplayStore
 from lstp.packet.validator import ValidationResult, validate_packet
@@ -58,6 +72,16 @@ from lstp.text.tokenizer import tokenize
 from lstp.version import __version__
 
 __all__ = [
+    "ActionProjection",
+    "ModelInput",
+    "ProjectionError",
+    "decode_action_result",
+    "prepare_action_input",
+    "project_action",
+    "compact_dumps",
+    "compact_loads",
+    "incremental_dumps",
+    "incremental_loads",
     "Atom",
     "Authority",
     "AuthorizationDecision",

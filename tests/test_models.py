@@ -20,7 +20,14 @@ def make_octad() -> Octad:
 
 def test_octad_preserves_canonical_field_order() -> None:
     assert tuple(name for name, _ in make_octad().semantic_items()) == (
-        "pragmatics", "atoms", "relations", "context", "confidence", "permissions", "evidence", "output"
+        "pragmatics",
+        "atoms",
+        "relations",
+        "context",
+        "confidence",
+        "permissions",
+        "evidence",
+        "output",
     )
 
 
@@ -49,14 +56,22 @@ def test_envelope_rejects_unknown_protocol_version() -> None:
 
 
 def test_from_mapping_builds_typed_packet() -> None:
-    packet = PacketEnvelope.from_mapping({
-        "id": "p-1", "version": "0.1",
-        "pragmatics": {"type": "question", "speech_act": "question"},
-        "atoms": [{"id": "a0", "kind": "concept", "value": "mars"}],
-        "relations": [], "context": {"thread_id": "t-1", "references": []},
-        "confidence": 0.9, "permissions": {},
-        "evidence": [], "output": {"format": "JSON"}, "carrier": {}, "audit": {},
-    })
+    packet = PacketEnvelope.from_mapping(
+        {
+            "id": "p-1",
+            "version": "0.1",
+            "pragmatics": {"type": "question", "speech_act": "question"},
+            "atoms": [{"id": "a0", "kind": "concept", "value": "mars"}],
+            "relations": [],
+            "context": {"thread_id": "t-1", "references": []},
+            "confidence": 0.9,
+            "permissions": {},
+            "evidence": [],
+            "output": {"format": "JSON"},
+            "carrier": {},
+            "audit": {},
+        }
+    )
     assert packet.octad.atoms[0].id == "a0"
     assert packet.octad.permissions.mode is None
     assert packet.octad.permissions.scope == ()

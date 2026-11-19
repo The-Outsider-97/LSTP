@@ -1,0 +1,27 @@
+[
+  {
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "exitCode": 0,
+    "stdout": "Processing c:\\users\\jeane\\documents\\codex\\2026-11-18\\new-chat\\work\\lstp-optimization\\dist\\lstp-0.1.0a1-py3-none-any.whl\r\nInstalling collected packages: lstp\r\nSuccessfully installed lstp-0.1.0a1\r\n",
+    "stderr": ""
+  },
+  {
+    "exitCode": 0,
+    "stdout": "{\"installed_package\": \"C:\\\\Users\\\\jeane\\\\Documents\\\\Codex\\\\2026-11-18\\\\new-chat\\\\work\\\\wheel-verification\\\\Lib\\\\site-packages\\\\lstp\\\\__init__.py\", \"version\": \"0.1.0a1\", \"compact_cli_roundtrip\": \"passed\"}\r\n",
+    "stderr": ""
+  },
+  {
+    "exitCode": 0,
+    "stdout": "safe source distribution extraction passed\r\n",
+    "stderr": ""
+  },
+  {
+    "exitCode": 0,
+    "stdout": "........................................................................ [ 21%]\r\n........................................................................ [ 42%]\r\n........................................................................ [ 63%]\r\n........................................................................ [ 85%]\r\n..................................................                       [100%]\r\n338 passed in 12.49s\r\n",
+    "stderr": ""
+  }
+]

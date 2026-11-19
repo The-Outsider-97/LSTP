@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -111,7 +111,6 @@ def test_effective_authority_is_exact_four_way_intersection() -> None:
     assert effective.resources == frozenset({RESOURCE})
 
 
-
 @pytest.mark.parametrize(
     ("mode", "expected"),
     [
@@ -169,6 +168,7 @@ def test_forbid_removes_exact_scope_before_host_intersection() -> None:
     assert decision.allowed is False
     assert "resource_denied" in {item.code for item in decision.diagnostics}
 
+
 def test_unresolved_forbid_expression_fails_closed() -> None:
     packet = _packet()
     packet = PacketEnvelope(
@@ -197,9 +197,7 @@ def test_unresolved_forbid_expression_fails_closed() -> None:
         runtime=_authority("commit"),
     )
     assert decision.allowed is False
-    assert "unresolved_permission_forbid" in {
-        item.code for item in decision.diagnostics
-    }
+    assert "unresolved_permission_forbid" in {item.code for item in decision.diagnostics}
 
 
 def test_empty_trusted_resource_scope_is_never_wildcard() -> None:
@@ -263,10 +261,8 @@ def test_expired_permission_request_fails_closed() -> None:
         principal=_principal("commit"),
         policy=_policy("commit"),
         runtime=_authority("commit"),
-        authorization_context=HostAuthorizationContext(
-            expires_at="2026-10-05T12:00:00Z"
-        ),
-        now=datetime(2026, 10, 5, 12, 0, tzinfo=timezone.utc),
+        authorization_context=HostAuthorizationContext(expires_at="2026-10-05T12:00:00Z"),
+        now=datetime(2026, 10, 5, 12, 0, tzinfo=UTC),
     )
     assert decision.allowed is False
     assert "authorization_expired" in {item.code for item in decision.diagnostics}
@@ -320,9 +316,7 @@ def test_delegation_requires_authenticated_parent_and_attenuation() -> None:
         runtime=_authority("commit"),
         authorization_context=context,
     )
-    assert "delegation_parent_authority_missing" in {
-        item.code for item in no_parent.diagnostics
-    }
+    assert "delegation_parent_authority_missing" in {item.code for item in no_parent.diagnostics}
 
     narrowed_parent = DelegationContext(
         "parent-1",

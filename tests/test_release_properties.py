@@ -41,10 +41,7 @@ def test_compact_permission_mode_and_scope_are_preserved_exactly(
 @given(SAFE_RESOURCE)
 def test_compact_forbid_never_widens_requested_scope(resource: str) -> None:
     packet = compile_lattice(
-        (
-            '!inspect @target {mode=COMMIT, '
-            f'scope=["{resource}"], forbid=["{resource}"]}} -> JSON'
-        ),
+        (f'!inspect @target {{mode=COMMIT, scope=["{resource}"], forbid=["{resource}"]}} -> JSON'),
         options=CompilerOptions(packet_id="p1", thread_id="t1"),
     )
     assert packet.octad.permissions.scope == (resource,)
@@ -104,27 +101,15 @@ def test_noncore_permission_channels_fail_closed(field: str, value: object) -> N
         canonical_loads(json.dumps(packet, separators=(",", ":")))
 
 
-BASE_CANONICAL = (
-    '[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|'
-    'Π=()|E=()|Ω=(FORMAT=NL)]'
-)
+BASE_CANONICAL = '[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'
 
 
 @pytest.mark.parametrize(
     "mutated",
     [
-        (
-            '[A=()|π=(TYPE=INFORM)|R=()|C=(THREAD="t1")|κ=1|'
-            'Π=()|E=()|Ω=(FORMAT=NL)]'
-        ),
-        (
-            '[π=(TYPE=INFORM)|A=()|C=(THREAD="t1")|R=()|κ=1|'
-            'Π=()|E=()|Ω=(FORMAT=NL)]'
-        ),
-        (
-            '[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|Π=()|'
-            'κ=1|E=()|Ω=(FORMAT=NL)]'
-        ),
+        ('[A=()|π=(TYPE=INFORM)|R=()|C=(THREAD="t1")|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'),
+        ('[π=(TYPE=INFORM)|A=()|C=(THREAD="t1")|R=()|κ=1|Π=()|E=()|Ω=(FORMAT=NL)]'),
+        ('[π=(TYPE=INFORM)|A=()|R=()|C=(THREAD="t1")|Π=()|κ=1|E=()|Ω=(FORMAT=NL)]'),
     ],
 )
 def test_canonical_octad_segment_reordering_is_rejected(mutated: str) -> None:
@@ -216,9 +201,7 @@ def test_canonical_decoder_enforces_resource_limits_before_acceptance() -> None:
 
 
 def test_strict_canonical_byte_mode_rejects_whitespace_mutation() -> None:
-    packet = canonical_loads(
-        json.dumps(_minimal_packet_mapping(), separators=(",", ":"))
-    )
+    packet = canonical_loads(json.dumps(_minimal_packet_mapping(), separators=(",", ":")))
     canonical = canonical_dumps(packet)
     mutated = canonical.replace(b"{", b"{ ", 1)
     assert mutated != canonical

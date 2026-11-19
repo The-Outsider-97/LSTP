@@ -8,12 +8,14 @@ No consensus about semantic truth, neural predictions or execution authority.
 from __future__ import annotations
 
 import base64
+import binascii
 import hashlib
 import json
 import re
 import ssl
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
+from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
@@ -36,7 +38,9 @@ class ConsensusValue:
 
 
 class _DenyRedirect(HTTPRedirectHandler):
-    def redirect_request(self, req: Request, fp: Any, code: int, msg: str, headers: Any, newurl: str) -> None:
+    def redirect_request(
+        self, req: Request, fp: Any, code: int, msg: str, headers: Any, newurl: str
+    ) -> None:
         return None
 
 
@@ -62,8 +66,16 @@ class EtcdConsensusStore:
         transport: Transport | None = None,
     ) -> None:
         parsed = urlsplit(endpoint)
-        if parsed.scheme not in {"https", "http"} or not parsed.hostname or (
-            parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.path not in {"", "/"}
+        if (
+            parsed.scheme not in {"https", "http"}
+            or not parsed.hostname
+            or (
+                parsed.username
+                or parsed.password
+                or parsed.query
+                or parsed.fragment
+                or parsed.path not in {"", "/"}
+            )
         ):
             raise ValueError("endpoint must be an http(s) host URL without credentials or path")
         if parsed.scheme == "http" and parsed.hostname not in {"127.0.0.1", "localhost", "::1"}:
@@ -99,11 +111,16 @@ class EtcdConsensusStore:
             raise ConsensusProtocolError("etcd response value is not base64")
         try:
             return base64.b64decode(value, validate=True)
-        except (ValueError, base64.binascii.Error):
+        except (ValueError, binascii.Error):
             raise ConsensusProtocolError("etcd response contains invalid base64") from None
 
     def _key(self, key: str) -> str:
-        if not isinstance(key, str) or not _KEY_RE.fullmatch(key) or ".." in key.split("/") or len(key) > 512:
+        if (
+            not isinstance(key, str)
+            or not _KEY_RE.fullmatch(key)
+            or ".." in key.split("/")
+            or len(key) > 512
+        ):
             raise ValueError("invalid consensus key")
         return self._b64((self.namespace + "/" + key).encode("utf-8"))
 
@@ -131,7 +148,10 @@ class EtcdConsensusStore:
         header = response.get("header")
         if not isinstance(header, Mapping):
             raise ConsensusProtocolError("etcd response lacks revision header")
-        if self.expected_cluster_id is not None and str(header.get("cluster_id")) != self.expected_cluster_id:
+        if (
+            self.expected_cluster_id is not None
+            and str(header.get("cluster_id")) != self.expected_cluster_id
+        ):
             raise ConsensusProtocolError("etcd cluster ID does not match pinned cluster")
         return response
 
@@ -166,7 +186,9 @@ class EtcdConsensusStore:
 
     def compare_and_swap(self, key: str, expected_revision: int | None, value: bytes) -> bool:
         """Atomic create (None) or conditional update by etcd MOD revision."""
-        if expected_revision is not None and (type(expected_revision) is not int or expected_revision <= 0):
+        if expected_revision is not None and (
+            type(expected_revision) is not int or expected_revision <= 0
+        ):
             raise ValueError("expected_revision must be positive or None")
         if not isinstance(value, bytes) or len(value) > 1_048_576:
             raise ValueError("consensus value must be bytes <= 1 MiB")
@@ -174,13 +196,21 @@ class EtcdConsensusStore:
         compare = (
             {"key": encoded, "target": "VERSION", "result": "EQUAL", "version": "0"}
             if expected_revision is None
-            else {"key": encoded, "target": "MOD", "result": "EQUAL", "modRevision": str(expected_revision)}
+            else {
+                "key": encoded,
+                "target": "MOD",
+                "result": "EQUAL",
+                "modRevision": str(expected_revision),
+            }
         )
-        response = self._request("/v3/kv/txn", {
-            "compare": [compare],
-            "success": [{"requestPut": {"key": encoded, "value": self._b64(value)}}],
-            "failure": [],
-        })
+        response = self._request(
+            "/v3/kv/txn",
+            {
+                "compare": [compare],
+                "success": [{"requestPut": {"key": encoded, "value": self._b64(value)}}],
+                "failure": [],
+            },
+        )
         if type(response.get("succeeded")) is not bool:
             raise ConsensusProtocolError("etcd transaction lacks succeeded boolean")
         return response["succeeded"] is True
@@ -200,7 +230,9 @@ class EtcdConsensusStore:
             raise ValueError("invalid ontology version")
         if not re.fullmatch(r"[0-9a-f]{64}", digest):
             raise ValueError("ontology digest must be lowercase SHA-256 hex")
-        manifest = json.dumps({"digest": digest, "version": version}, sort_keys=True, separators=(",", ":"))
+        manifest = json.dumps(
+            {"digest": digest, "version": version}, sort_keys=True, separators=(",", ":")
+        )
         return self.compare_and_swap("ontology/active", expected_revision, manifest.encode("utf-8"))
 
 
@@ -225,21 +257,32 @@ class EtcdReplayStore:
     def reserve(self, operation_id: str, action_digest: str) -> str | None:
         key = self.consensus._key(self._key(operation_id))
         value = self._digest(action_digest)
-        response = self.consensus._request("/v3/kv/txn", {
-            "compare": [{"key": key, "target": "VERSION", "result": "EQUAL", "version": "0"}],
-            "success": [{"requestPut": {"key": key, "value": self.consensus._b64(value)}}],
-            "failure": [{"requestRange": {"key": key, "serializable": False}}],
-        })
+        response = self.consensus._request(
+            "/v3/kv/txn",
+            {
+                "compare": [{"key": key, "target": "VERSION", "result": "EQUAL", "version": "0"}],
+                "success": [{"requestPut": {"key": key, "value": self.consensus._b64(value)}}],
+                "failure": [{"requestRange": {"key": key, "serializable": False}}],
+            },
+        )
         succeeded = response.get("succeeded")
         if type(succeeded) is not bool:
             raise ConsensusProtocolError("etcd replay transaction lacks result")
         if succeeded:
             return None
         responses = response.get("responses")
-        if not isinstance(responses, list) or len(responses) != 1 or not isinstance(responses[0], Mapping):
+        if (
+            not isinstance(responses, list)
+            or len(responses) != 1
+            or not isinstance(responses[0], Mapping)
+        ):
             raise ConsensusProtocolError("missing replay conflict read")
         read = responses[0].get("response_range", responses[0].get("responseRange"))
-        if not isinstance(read, Mapping) or not isinstance(read.get("kvs"), list) or len(read["kvs"]) != 1:
+        if (
+            not isinstance(read, Mapping)
+            or not isinstance(read.get("kvs"), list)
+            or len(read["kvs"]) != 1
+        ):
             raise ConsensusProtocolError("missing replay-conflict value")
         entry = read["kvs"][0]
         if not isinstance(entry, Mapping):
@@ -263,6 +306,9 @@ class EtcdReplayStore:
 
 
 __all__ = [
-    "ConsensusProtocolError", "ConsensusUnavailable", "ConsensusValue",
-    "EtcdConsensusStore", "EtcdReplayStore",
+    "ConsensusProtocolError",
+    "ConsensusUnavailable",
+    "ConsensusValue",
+    "EtcdConsensusStore",
+    "EtcdReplayStore",
 ]

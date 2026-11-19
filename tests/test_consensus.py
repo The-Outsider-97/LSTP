@@ -7,7 +7,9 @@ from collections.abc import Mapping
 import pytest
 
 from lstp.consensus import (
-    ConsensusProtocolError, EtcdConsensusStore, EtcdReplayStore,
+    ConsensusProtocolError,
+    EtcdConsensusStore,
+    EtcdReplayStore,
 )
 
 
@@ -21,13 +23,17 @@ class MemoryGateway:
 
     def __call__(self, path: str, payload: Mapping[str, object]) -> Mapping[str, object]:
         self.requests.append((path, dict(payload)))
-        response: dict[str, object] = {"header": {"cluster_id": "42", "revision": str(self.revision)}}
+        response: dict[str, object] = {
+            "header": {"cluster_id": "42", "revision": str(self.revision)}
+        }
         key = payload.get("key")
         if path == "/v3/kv/range":
             assert payload["serializable"] is False
             if key in self.values:
                 value, rev, version = self.values[key]
-                response["kvs"] = [{"value": value, "mod_revision": str(rev), "version": str(version)}]
+                response["kvs"] = [
+                    {"value": value, "mod_revision": str(rev), "version": str(version)}
+                ]
             return response
         if path == "/v3/kv/deleterange":
             response["deleted"] = "1" if self.values.pop(key, None) else "0"
@@ -47,14 +53,24 @@ class MemoryGateway:
             self.revision += 1
             self.values[key] = (put["value"], self.revision, (old[2] + 1 if old else 1))
         elif payload.get("failure"):
-            response["responses"] = [{"response_range": {"kvs": [] if old is None else [{
-                "value": old[0], "mod_revision": str(old[1]), "version": str(old[2])
-            }]}}]
+            response["responses"] = [
+                {
+                    "response_range": {
+                        "kvs": []
+                        if old is None
+                        else [
+                            {"value": old[0], "mod_revision": str(old[1]), "version": str(old[2])}
+                        ]
+                    }
+                }
+            ]
         return response
 
 
 def store(gateway: MemoryGateway) -> EtcdConsensusStore:
-    return EtcdConsensusStore("https://127.0.0.1:2379", namespace="lstp/test", expected_cluster_id="42", transport=gateway)
+    return EtcdConsensusStore(
+        "https://127.0.0.1:2379", namespace="lstp/test", expected_cluster_id="42", transport=gateway
+    )
 
 
 def test_create_update_conflict_and_linearizable_read() -> None:
@@ -68,7 +84,9 @@ def test_create_update_conflict_and_linearizable_read() -> None:
     assert not consensus.compare_and_swap("ontology/active", record.revision + 1, b"wrong")
     assert consensus.compare_and_swap("ontology/active", record.revision, b"v2")
     assert consensus.get("ontology/active").value == b"v2"  # type: ignore[union-attr]
-    assert all(req["serializable"] is False for path, req in gateway.requests if path == "/v3/kv/range")
+    assert all(
+        req["serializable"] is False for path, req in gateway.requests if path == "/v3/kv/range"
+    )
 
 
 def test_ontology_digest_pointer_is_exact() -> None:
@@ -96,7 +114,11 @@ def test_distributed_replay_adapter_reserves_atomically() -> None:
 
 
 def test_untrusted_endpoints_and_invalid_keys_rejected() -> None:
-    for endpoint in ("http://example.com:2379", "https://u:p@example.com", "https://example.com/v3"):
+    for endpoint in (
+        "http://example.com:2379",
+        "https://u:p@example.com",
+        "https://example.com/v3",
+    ):
         with pytest.raises(ValueError):
             EtcdConsensusStore(endpoint)
     c = store(MemoryGateway())
@@ -117,7 +139,12 @@ def test_wrong_cluster_id_and_missing_conflict_are_fail_closed() -> None:
         c.get("key")
 
     def bad_gateway(path: str, payload: Mapping[str, object]) -> Mapping[str, object]:
-        return {"header": {"cluster_id": "42", "revision": "1"}, "succeeded": False, "responses": []}
+        return {
+            "header": {"cluster_id": "42", "revision": "1"},
+            "succeeded": False,
+            "responses": [],
+        }
+
     replay = EtcdReplayStore(EtcdConsensusStore("https://127.0.0.1:2379", transport=bad_gateway))
     with pytest.raises(ConsensusProtocolError, match="replay conflict"):
         replay.reserve("op", "digest")

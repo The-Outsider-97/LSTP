@@ -9,16 +9,31 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Any, Mapping, TypeAlias
+from typing import Any, TypeAlias
 
 JSONNumber: TypeAlias = int | float | Decimal
-JSONValue: TypeAlias = None | bool | JSONNumber | str | tuple["JSONValue", ...] | Mapping[str, "JSONValue"]
+JSONValue: TypeAlias = (
+    None | bool | JSONNumber | str | tuple["JSONValue", ...] | Mapping[str, "JSONValue"]
+)
 
 SUPPORTED_PROTOCOL_VERSIONS = frozenset({"0.1"})
-ATOM_KINDS = frozenset({"entity", "concept", "value", "event", "time", "location", "resource", "proposition", "unknown"})
+ATOM_KINDS = frozenset(
+    {
+        "entity",
+        "concept",
+        "value",
+        "event",
+        "time",
+        "location",
+        "resource",
+        "proposition",
+        "unknown",
+    }
+)
 SPECIAL_ARGUMENTS = frozenset({"SELF", "NOW", "USER", "SYSTEM"})
 PERMISSION_MODES = frozenset({"RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"})
 EVIDENCE_SOURCE_TYPES = frozenset({"user", "sensor", "model", "tool", "retrieved", "inferred"})
@@ -160,7 +175,7 @@ def _optional_non_negative_int(
 ) -> int | None:
     if key not in data:
         return None
-    value = data[key]
+    value: object = data[key]
     if isinstance(value, bool) or not isinstance(value, int):
         raise TypeError(f"expected integer at {path}.{key}")
     if value < 0:
@@ -214,7 +229,7 @@ class Pragmatics:
         )
 
     @classmethod
-    def from_mapping(cls, value: object) -> "Pragmatics":
+    def from_mapping(cls, value: object) -> Pragmatics:
         data = _mapping(value, path="$.pragmatics")
         _reject_unknown_keys(
             data,
@@ -276,13 +291,34 @@ class Atom:
         object.__setattr__(self, "value", _freeze(self.value, path=f"$.atoms[{self.id}].value"))
         if self.role is not None:
             _identifier(self.role, path=f"$.atoms[{self.id}].role", qualified=True)
-        object.__setattr__(self, "attributes", _freeze_object(self.attributes, path=f"$.atoms[{self.id}].attributes"))
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path=f"$.atoms[{self.id}].extensions"))
+        object.__setattr__(
+            self,
+            "attributes",
+            _freeze_object(self.attributes, path=f"$.atoms[{self.id}].attributes"),
+        )
+        object.__setattr__(
+            self,
+            "extensions",
+            _freeze_extensions(self.extensions, path=f"$.atoms[{self.id}].extensions"),
+        )
 
     @classmethod
-    def from_mapping(cls, value: object) -> "Atom":
+    def from_mapping(cls, value: object) -> Atom:
         data = _mapping(value, path="$.atoms[]")
-        _reject_unknown_keys(data, allowed={"id", "kind", "value", "role", "datatype", "language", "attributes", "extensions"}, path="$.atoms[]")
+        _reject_unknown_keys(
+            data,
+            allowed={
+                "id",
+                "kind",
+                "value",
+                "role",
+                "datatype",
+                "language",
+                "attributes",
+                "extensions",
+            },
+            path="$.atoms[]",
+        )
         return cls(
             id=_non_empty_string(data.get("id"), path="$.atoms[].id"),
             kind=_non_empty_string(data.get("kind"), path="$.atoms[].kind"),
@@ -314,17 +350,32 @@ class Relation:
         if self.id is not None and not _RELATION_ID_RE.fullmatch(self.id):
             raise ValueError(f"invalid relation id: {self.id!r}")
         if self.confidence is not None:
-            object.__setattr__(self, "confidence", _bounded_confidence(self.confidence, path="$.relations[].confidence"))
-        object.__setattr__(self, "attributes", _freeze_object(self.attributes, path="$.relations[].attributes"))
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.relations[].extensions"))
+            object.__setattr__(
+                self,
+                "confidence",
+                _bounded_confidence(self.confidence, path="$.relations[].confidence"),
+            )
+        object.__setattr__(
+            self, "attributes", _freeze_object(self.attributes, path="$.relations[].attributes")
+        )
+        object.__setattr__(
+            self, "extensions", _freeze_extensions(self.extensions, path="$.relations[].extensions")
+        )
 
     @classmethod
-    def from_mapping(cls, value: object) -> "Relation":
+    def from_mapping(cls, value: object) -> Relation:
         data = _mapping(value, path="$.relations[]")
-        _reject_unknown_keys(data, allowed={"type", "arguments", "id", "confidence", "attributes", "extensions"}, path="$.relations[]")
+        _reject_unknown_keys(
+            data,
+            allowed={"type", "arguments", "id", "confidence", "attributes", "extensions"},
+            path="$.relations[]",
+        )
         return cls(
             type=_non_empty_string(data.get("type"), path="$.relations[].type"),
-            arguments=tuple(_non_empty_string(x, path="$.relations[].arguments[]") for x in _sequence(data.get("arguments"), path="$.relations[].arguments")),
+            arguments=tuple(
+                _non_empty_string(x, path="$.relations[].arguments[]")
+                for x in _sequence(data.get("arguments"), path="$.relations[].arguments")
+            ),
             id=_optional_string(data, "id", path="$.relations[]"),
             confidence=_optional_confidence(data, "confidence", path="$.relations[]"),
             attributes=_mapping(data.get("attributes", {}), path="$.relations[].attributes"),
@@ -346,21 +397,31 @@ class ContextReference:
             raise ValueError("context reference depth must be a non-negative integer")
         if self.agent is not None:
             _identifier(self.agent, path="$.context.references[].agent")
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.context.references[].extensions"))
+        object.__setattr__(
+            self,
+            "extensions",
+            _freeze_extensions(self.extensions, path="$.context.references[].extensions"),
+        )
 
     @classmethod
-    def from_mapping(cls, value: object) -> "ContextReference":
+    def from_mapping(cls, value: object) -> ContextReference:
         data = _mapping(value, path="$.context.references[]")
-        _reject_unknown_keys(data, allowed={"packet_id", "depth", "agent", "label", "extensions"}, path="$.context.references[]")
-        depth = _optional_non_negative_int(
-            data, "depth", path="$.context.references[]"
+        _reject_unknown_keys(
+            data,
+            allowed={"packet_id", "depth", "agent", "label", "extensions"},
+            path="$.context.references[]",
         )
+        depth = _optional_non_negative_int(data, "depth", path="$.context.references[]")
         return cls(
-            packet_id=_non_empty_string(data.get("packet_id"), path="$.context.references[].packet_id"),
+            packet_id=_non_empty_string(
+                data.get("packet_id"), path="$.context.references[].packet_id"
+            ),
             depth=depth,
             agent=_optional_string(data, "agent", path="$.context.references[]"),
             label=_optional_string(data, "label", path="$.context.references[]"),
-            extensions=_mapping(data.get("extensions", {}), path="$.context.references[].extensions"),
+            extensions=_mapping(
+                data.get("extensions", {}), path="$.context.references[].extensions"
+            ),
         )
 
 
@@ -409,7 +470,7 @@ class Context:
         )
 
     @classmethod
-    def from_mapping(cls, value: object) -> "Context":
+    def from_mapping(cls, value: object) -> Context:
         data = _mapping(value, path="$.context")
         _reject_unknown_keys(
             data,
@@ -506,7 +567,7 @@ class Permissions:
         )
 
     @classmethod
-    def from_mapping(cls, value: object) -> "Permissions":
+    def from_mapping(cls, value: object) -> Permissions:
         data = _mapping(value, path="$.permissions")
         _reject_unknown_keys(
             data,
@@ -577,20 +638,43 @@ class EvidenceItem:
             if not (_RELATION_ID_RE.fullmatch(support) or _ATOM_ID_RE.fullmatch(support)):
                 raise ValueError(f"invalid evidence support reference: {support!r}")
         if self.confidence is not None:
-            object.__setattr__(self, "confidence", _bounded_confidence(self.confidence, path="$.evidence[].confidence"))
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.evidence[].extensions"))
+            object.__setattr__(
+                self,
+                "confidence",
+                _bounded_confidence(self.confidence, path="$.evidence[].confidence"),
+            )
+        object.__setattr__(
+            self, "extensions", _freeze_extensions(self.extensions, path="$.evidence[].extensions")
+        )
 
     @classmethod
-    def from_mapping(cls, value: object) -> "EvidenceItem":
+    def from_mapping(cls, value: object) -> EvidenceItem:
         data = _mapping(value, path="$.evidence[]")
-        _reject_unknown_keys(data, allowed={"id", "source_type", "source_ref", "input_hash", "span", "supports", "description", "confidence", "extensions"}, path="$.evidence[]")
+        _reject_unknown_keys(
+            data,
+            allowed={
+                "id",
+                "source_type",
+                "source_ref",
+                "input_hash",
+                "span",
+                "supports",
+                "description",
+                "confidence",
+                "extensions",
+            },
+            path="$.evidence[]",
+        )
         return cls(
             id=_non_empty_string(data.get("id"), path="$.evidence[].id"),
             source_type=_non_empty_string(data.get("source_type"), path="$.evidence[].source_type"),
             source_ref=_optional_string(data, "source_ref", path="$.evidence[]"),
             input_hash=_optional_string(data, "input_hash", path="$.evidence[]"),
             span=data.get("span"),
-            supports=tuple(_non_empty_string(x, path="$.evidence[].supports[]") for x in _sequence(data.get("supports", []), path="$.evidence[].supports")),
+            supports=tuple(
+                _non_empty_string(x, path="$.evidence[].supports[]")
+                for x in _sequence(data.get("supports", []), path="$.evidence[].supports")
+            ),
             description=_optional_string(data, "description", path="$.evidence[]"),
             confidence=_optional_confidence(data, "confidence", path="$.evidence[]"),
             extensions=_mapping(data.get("extensions", {}), path="$.evidence[].extensions"),
@@ -615,12 +699,27 @@ class Output:
             _identifier(self.channel, path="$.output.channel", qualified=True)
         if self.max_bytes is not None and (isinstance(self.max_bytes, bool) or self.max_bytes < 1):
             raise ValueError("output max_bytes must be a positive integer")
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.output.extensions"))
+        object.__setattr__(
+            self, "extensions", _freeze_extensions(self.extensions, path="$.output.extensions")
+        )
 
     @classmethod
-    def from_mapping(cls, value: object) -> "Output":
+    def from_mapping(cls, value: object) -> Output:
         data = _mapping(value, path="$.output")
-        _reject_unknown_keys(data, allowed={"format", "schema", "channel", "target", "language", "max_bytes", "requirements", "extensions"}, path="$.output")
+        _reject_unknown_keys(
+            data,
+            allowed={
+                "format",
+                "schema",
+                "channel",
+                "target",
+                "language",
+                "max_bytes",
+                "requirements",
+                "extensions",
+            },
+            path="$.output",
+        )
         return cls(
             format=_non_empty_string(data.get("format"), path="$.output.format"),
             schema=_optional_string(data, "schema", path="$.output"),
@@ -628,7 +727,10 @@ class Output:
             target=_optional_string(data, "target", path="$.output"),
             language=_optional_string(data, "language", path="$.output"),
             max_bytes=_optional_non_negative_int(data, "max_bytes", path="$.output"),
-            requirements=tuple(_non_empty_string(x, path="$.output.requirements[]") for x in _sequence(data.get("requirements", []), path="$.output.requirements")),
+            requirements=tuple(
+                _non_empty_string(x, path="$.output.requirements[]")
+                for x in _sequence(data.get("requirements", []), path="$.output.requirements")
+            ),
             extensions=_mapping(data.get("extensions", {}), path="$.output.extensions"),
         )
 
@@ -645,22 +747,39 @@ class Octad:
     output: Output
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "confidence", _bounded_confidence(self.confidence, path="$.confidence"))
+        object.__setattr__(
+            self, "confidence", _bounded_confidence(self.confidence, path="$.confidence")
+        )
 
     def semantic_items(self) -> tuple[tuple[str, object], ...]:
-        return (("pragmatics", self.pragmatics), ("atoms", self.atoms), ("relations", self.relations), ("context", self.context), ("confidence", self.confidence), ("permissions", self.permissions), ("evidence", self.evidence), ("output", self.output))
+        return (
+            ("pragmatics", self.pragmatics),
+            ("atoms", self.atoms),
+            ("relations", self.relations),
+            ("context", self.context),
+            ("confidence", self.confidence),
+            ("permissions", self.permissions),
+            ("evidence", self.evidence),
+            ("output", self.output),
+        )
 
     @classmethod
-    def from_mapping(cls, value: object) -> "Octad":
+    def from_mapping(cls, value: object) -> Octad:
         data = _mapping(value, path="$")
         return cls(
             pragmatics=Pragmatics.from_mapping(data.get("pragmatics")),
             atoms=tuple(Atom.from_mapping(x) for x in _sequence(data.get("atoms"), path="$.atoms")),
-            relations=tuple(Relation.from_mapping(x) for x in _sequence(data.get("relations"), path="$.relations")),
+            relations=tuple(
+                Relation.from_mapping(x)
+                for x in _sequence(data.get("relations"), path="$.relations")
+            ),
             context=Context.from_mapping(data.get("context")),
             confidence=_bounded_confidence(data.get("confidence"), path="$.confidence"),
             permissions=Permissions.from_mapping(data.get("permissions")),
-            evidence=tuple(EvidenceItem.from_mapping(x) for x in _sequence(data.get("evidence"), path="$.evidence")),
+            evidence=tuple(
+                EvidenceItem.from_mapping(x)
+                for x in _sequence(data.get("evidence"), path="$.evidence")
+            ),
             output=Output.from_mapping(data.get("output")),
         )
 
@@ -680,15 +799,35 @@ class PacketEnvelope:
             raise ValueError(f"unsupported protocol_version: {self.protocol_version!r}")
         object.__setattr__(self, "carrier", _freeze_object(self.carrier, path="$.carrier"))
         object.__setattr__(self, "audit", _freeze_object(self.audit, path="$.audit"))
-        object.__setattr__(self, "extensions", _freeze_extensions(self.extensions, path="$.extensions"))
+        object.__setattr__(
+            self, "extensions", _freeze_extensions(self.extensions, path="$.extensions")
+        )
 
     def semantically_equals(self, other: object) -> bool:
         return isinstance(other, PacketEnvelope) and self.octad == other.octad
 
     @classmethod
-    def from_mapping(cls, value: object) -> "PacketEnvelope":
+    def from_mapping(cls, value: object) -> PacketEnvelope:
         data = _mapping(value, path="$")
-        _reject_unknown_keys(data, allowed={"id", "version", "pragmatics", "atoms", "relations", "context", "confidence", "permissions", "evidence", "output", "carrier", "audit", "extensions"}, path="$")
+        _reject_unknown_keys(
+            data,
+            allowed={
+                "id",
+                "version",
+                "pragmatics",
+                "atoms",
+                "relations",
+                "context",
+                "confidence",
+                "permissions",
+                "evidence",
+                "output",
+                "carrier",
+                "audit",
+                "extensions",
+            },
+            path="$",
+        )
         return cls(
             octad=Octad.from_mapping(data),
             packet_id=_non_empty_string(data.get("id"), path="$.id"),
