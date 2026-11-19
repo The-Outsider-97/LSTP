@@ -40,8 +40,7 @@ class OntologyTerm:
         if self.kind not in {"concept", "relation"}:
             raise OntologyError("term kind must be concept or relation")
         if not isinstance(self.parents, tuple) or any(
-            not isinstance(parent, str) or not _TERM_RE.fullmatch(parent)
-            for parent in self.parents
+            not isinstance(parent, str) or not _TERM_RE.fullmatch(parent) for parent in self.parents
         ):
             raise OntologyError("invalid parent term")
         if len(self.parents) != len(set(self.parents)) or self.identifier in self.parents:
@@ -54,7 +53,8 @@ class OntologyTerm:
             if value is not None and (not isinstance(value, str) or not _TERM_RE.fullmatch(value)):
                 raise OntologyError("invalid domain/range term")
         if self.iri is not None and (
-            not isinstance(self.iri, str) or not self.iri.startswith(("https://", "http://", "urn:"))
+            not isinstance(self.iri, str)
+            or not self.iri.startswith(("https://", "http://", "urn:"))
             or any(ord(c) < 33 for c in self.iri)
         ):
             raise OntologyError("iri must be an absolute HTTP(S) or URN identifier")
@@ -172,11 +172,16 @@ class OntologyRegistry:
                 continue
             if len(relation.arguments) != 2:
                 raise OntologyError(f"expected binary relation: {relation.type}")
-            for atom_id, required in zip(relation.arguments, (term.domain, term.range)):
+            assert term.range is not None  # paired with domain by OntologyTerm validation
+            for atom_id, required in zip(
+                relation.arguments, (term.domain, term.range), strict=True
+            ):
                 actual = types.get(atom_id)
                 if actual is None:
                     if require_types:
-                        raise OntologyError(f"missing ontology type for relation argument: {atom_id}")
+                        raise OntologyError(
+                            f"missing ontology type for relation argument: {atom_id}"
+                        )
                 elif not self.is_a(actual, required):
                     raise OntologyError(f"ontology type mismatch for relation argument: {atom_id}")
 
@@ -199,7 +204,9 @@ class OntologyRegistry:
 
     def digest(self) -> str:
         """Registry governance fingerprint; not an LSTP packet signature."""
-        snapshot = json.dumps(self.to_mapping(), sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+        snapshot = json.dumps(
+            self.to_mapping(), sort_keys=True, ensure_ascii=False, separators=(",", ":")
+        )
         return hashlib.sha256(snapshot.encode("utf-8")).hexdigest()
 
     @classmethod
@@ -210,14 +217,22 @@ class OntologyRegistry:
             raise OntologyError("invalid ontology term/alias collection")
         terms: list[OntologyTerm] = []
         for entry in data["terms"]:
-            if not isinstance(entry, dict) or set(entry) != {
-                "identifier", "kind", "parents", "domain", "range", "iri"
-            } or not isinstance(entry["parents"], list):
+            if (
+                not isinstance(entry, dict)
+                or set(entry) != {"identifier", "kind", "parents", "domain", "range", "iri"}
+                or not isinstance(entry["parents"], list)
+            ):
                 raise OntologyError("invalid ontology term shape")
-            terms.append(OntologyTerm(
-                entry["identifier"], entry["kind"], tuple(entry["parents"]),
-                entry["domain"], entry["range"], entry["iri"],
-            ))
+            terms.append(
+                OntologyTerm(
+                    entry["identifier"],
+                    entry["kind"],
+                    tuple(entry["parents"]),
+                    entry["domain"],
+                    entry["range"],
+                    entry["iri"],
+                )
+            )
         return cls(data["version"], terms, aliases=data["aliases"])
 
 
@@ -241,14 +256,20 @@ def upper_ontology() -> OntologyRegistry:
         "property": ("abstract",),
         "time": ("abstract",),
     }
-    terms = [OntologyTerm("lstp.upper." + name, "concept", tuple("lstp.upper." + p for p in parents))
-             for name, parents in names.items()]
-    terms.extend([
-        OntologyTerm("lstp.upper.part_of", "relation", (), root, root),
-        OntologyTerm("lstp.upper.located_at", "relation", (), root, "lstp.upper.place"),
-        OntologyTerm("lstp.upper.participates_in", "relation", (), "lstp.upper.agent", "lstp.upper.event"),
-        OntologyTerm("lstp.upper.describes", "relation", (), "lstp.upper.information", root),
-    ])
+    terms = [
+        OntologyTerm("lstp.upper." + name, "concept", tuple("lstp.upper." + p for p in parents))
+        for name, parents in names.items()
+    ]
+    terms.extend(
+        [
+            OntologyTerm("lstp.upper.part_of", "relation", (), root, root),
+            OntologyTerm("lstp.upper.located_at", "relation", (), root, "lstp.upper.place"),
+            OntologyTerm(
+                "lstp.upper.participates_in", "relation", (), "lstp.upper.agent", "lstp.upper.event"
+            ),
+            OntologyTerm("lstp.upper.describes", "relation", (), "lstp.upper.information", root),
+        ]
+    )
     return OntologyRegistry("0.1", terms)
 
 

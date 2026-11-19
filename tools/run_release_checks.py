@@ -140,9 +140,7 @@ def _clean_distribution_smoke(results: list[CheckResult]) -> None:
         cli = _venv_script(wheel_env, "lstp")
         results.append(_run("wheel CLI version", [str(cli), "--version"], cwd=temp))
         results.append(_run("wheel CLI help", [str(cli), "--help"], cwd=temp))
-        results.append(
-            _run("wheel CLI JSON check", [str(cli), "json-check"], cwd=temp, stdin="{}")
-        )
+        results.append(_run("wheel CLI JSON check", [str(cli), "json-check"], cwd=temp, stdin="{}"))
 
         source_root = temp / "source"
         source_root.mkdir()
@@ -221,9 +219,7 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         results.append(_run("ruff", _python("-m", "ruff", "check", ".")))
-        results.append(
-            _run("ruff format", _python("-m", "ruff", "format", "--check", "."))
-        )
+        results.append(_run("ruff format", _python("-m", "ruff", "format", "--check", ".")))
         results.append(_run("mypy", _python("-m", "mypy")))
         results.append(_run("pytest", _python("-m", "pytest")))
 
@@ -256,7 +252,9 @@ def main(argv: list[str] | None = None) -> int:
     print(
         json.dumps(
             {
-                "mode": "final" if args.final else ("distribution" if args.distribution_only else "engineering"),
+                "mode": "final"
+                if args.final
+                else ("distribution" if args.distribution_only else "engineering"),
                 "checks": [asdict(item) for item in results],
                 "status": "passed",
             },

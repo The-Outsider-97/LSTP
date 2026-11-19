@@ -48,9 +48,7 @@ _CORE_SPEECH_TO_WIRE = {
     "statement": "STATEMENT",
 }
 _IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
-_QUALIFIED_IDENTIFIER_RE = re.compile(
-    r"^[A-Za-z_][A-Za-z0-9_-]*(?:\.[A-Za-z_][A-Za-z0-9_-]*)*$"
-)
+_QUALIFIED_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*(?:\.[A-Za-z_][A-Za-z0-9_-]*)*$")
 
 
 def _error(message: str, path: str) -> CompilationError:
@@ -214,13 +212,7 @@ def _relations(octad: Octad) -> str:
         if relation.attributes:
             metadata.append("ATTRIBUTES=" + _json_text(relation.attributes))
         suffix = "{" + ",".join(metadata) + "}" if metadata else ""
-        encoded.append(
-            relation.type
-            + "("
-            + ",".join(relation.arguments)
-            + ")"
-            + suffix
-        )
+        encoded.append(relation.type + "(" + ",".join(relation.arguments) + ")" + suffix)
     return "R=(" + ",".join(encoded) + ")"
 
 
@@ -361,11 +353,7 @@ def canonical_lattice_dumps(
     framed = "[" + core + "]"
     if label is None:
         return framed
-    return (
-        _require_identifier(label, path="$.carrier.label", qualified=False)
-        + ":"
-        + framed
-    )
+    return _require_identifier(label, path="$.carrier.label", qualified=False) + ":" + framed
 
 
 def canonical_lattice_document_dumps(
@@ -384,8 +372,7 @@ def canonical_lattice_document_dumps(
             "$",
         )
     return "\n".join(
-        canonical_lattice_dumps(packet.octad, label=packet.label)
-        for packet in document.packets
+        canonical_lattice_dumps(packet.octad, label=packet.label) for packet in document.packets
     )
 
 

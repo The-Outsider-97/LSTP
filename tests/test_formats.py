@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import timezone
+from datetime import UTC
 
 from lstp.formats import is_well_formed_bcp47, parse_rfc3339
 from lstp.models import Atom, Context, Octad, Output, PacketEnvelope, Permissions, Pragmatics
@@ -13,7 +13,11 @@ def _packet(
     output_language: str | None = None,
     atom_language: str | None = None,
 ) -> PacketEnvelope:
-    atoms = () if atom_language is None else (Atom("a0", "concept", value="hello", language=atom_language),)
+    atoms = (
+        ()
+        if atom_language is None
+        else (Atom("a0", "concept", value="hello", language=atom_language),)
+    )
     return PacketEnvelope(
         Octad(
             Pragmatics("inform"),
@@ -32,7 +36,7 @@ def _packet(
 
 def test_rfc3339_requires_valid_calendar_and_timezone() -> None:
     parsed = parse_rfc3339("2026-10-05T21:11:12.123456789+02:00")
-    assert parsed.tzinfo is timezone.utc
+    assert parsed.tzinfo is UTC
 
     for invalid in (
         "2026-02-30T12:00:00Z",

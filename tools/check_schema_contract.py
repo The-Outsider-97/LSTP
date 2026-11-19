@@ -25,8 +25,15 @@ OCTAD_FIELDS = {
     "output",
 }
 ATOM_KINDS = {
-    "entity", "concept", "value", "event", "time", "location",
-    "resource", "proposition", "unknown",
+    "entity",
+    "concept",
+    "value",
+    "event",
+    "time",
+    "location",
+    "resource",
+    "proposition",
+    "unknown",
 }
 PERMISSION_MODES = {"RO", "SUGGEST", "PREVIEW", "RW", "EXEC", "COMMIT"}
 EVIDENCE_TYPES = {"user", "sensor", "model", "tool", "retrieved", "inferred"}
@@ -140,9 +147,7 @@ def contract_failures(schema: dict[str, Any]) -> list[str]:
         "delegation",
     ):
         if field in per_props:
-            failures.append(
-                f"PERMISSION_NONCORE_FIELD: field {field!r} must not be canonical v0.1"
-            )
+            failures.append(f"PERMISSION_NONCORE_FIELD: field {field!r} must not be canonical v0.1")
 
     evidence_item = defs.get("evidenceItem", {})
     eprops = _properties(evidence_item)

@@ -12,14 +12,17 @@ from lstp.models import (
     OUTPUT_FORMATS,
     Atom,
     Context,
-    ContextReference as CanonicalContextReference,
     EvidenceItem,
+    JSONValue,
     Octad,
     Output,
     PacketEnvelope,
     Permissions,
     Pragmatics,
     Relation,
+)
+from lstp.models import (
+    ContextReference as CanonicalContextReference,
 )
 from lstp.packet.validator import CORE_RELATIONS, require_semantic_validity
 from lstp.text.ast import (
@@ -89,7 +92,7 @@ class _Compiler:
         self.register: str | None = None
         self.output: Output | None = None
         self.confidence: float | None = None
-        self.audit_metadata: dict[str, object] = {}
+        self.audit_metadata: dict[str, JSONValue] = {}
         self.macros: dict[str, Expression] = {}
         self._macro_stack: list[str] = []
 
@@ -172,7 +175,7 @@ class _Compiler:
             )
         return expression
 
-    def _literal(self, expression: Expression) -> object:
+    def _literal(self, expression: Expression) -> JSONValue:
         expression = self._expand(expression)
         if isinstance(expression, Identifier):
             return expression.value
@@ -185,7 +188,7 @@ class _Compiler:
         if isinstance(expression, NullLiteral):
             return None
         if isinstance(expression, ListExpression):
-            return [self._literal(item) for item in expression.items]
+            return tuple(self._literal(item) for item in expression.items)
         raise self._error(
             "expected_literal",
             "expected scalar or list literal",
@@ -194,7 +197,7 @@ class _Compiler:
 
     def _string_list(self, expression: Expression, name: str) -> list[str]:
         value = self._literal(expression)
-        values = value if isinstance(value, list) else [value]
+        values = value if isinstance(value, tuple) else [value]
         if not all(isinstance(item, str) for item in values):
             raise self._error(
                 "constraint_type",
@@ -214,13 +217,13 @@ class _Compiler:
         return value
 
     @staticmethod
-    def _scope_value(value: ScopeValue) -> object:
+    def _scope_value(value: ScopeValue) -> JSONValue:
         return value.value
 
-    def _scope_attributes(self, scope: ScopeExpression | None) -> dict[str, object]:
+    def _scope_attributes(self, scope: ScopeExpression | None) -> dict[str, JSONValue]:
         if scope is None:
             return {}
-        items: list[object] = []
+        items: list[JSONValue] = []
         for item in scope.items:
             if isinstance(item, ScopeValue):
                 items.append({"value": self._scope_value(item)})
@@ -234,16 +237,16 @@ class _Compiler:
             elif isinstance(item, ScopeRange):
                 items.append(
                     {
-                        "range": [
+                        "range": (
                             self._scope_value(item.start),
                             self._scope_value(item.end),
-                        ]
+                        )
                     }
                 )
         return {
             "lstp_scope": {
-                "items": items,
-                "joiners": list(scope.joiners),
+                "items": tuple(items),
+                "joiners": tuple(scope.joiners),
             }
         }
 
@@ -259,7 +262,7 @@ class _Compiler:
         )
         return atom_id
 
-    def _add_value_atom(self, value: object, *, kind: str = "value") -> str:
+    def _add_value_atom(self, value: JSONValue, *, kind: str = "value") -> str:
         atom_id = self._next_atom()
         self.atoms.append(Atom(atom_id, kind, value=value))
         return atom_id
@@ -269,7 +272,7 @@ class _Compiler:
         relation_type: str,
         arguments: list[str],
         *,
-        attributes: dict[str, object] | None = None,
+        attributes: dict[str, JSONValue] | None = None,
     ) -> str:
         relation_id = self._next_relation()
         self.relations.append(
@@ -322,10 +325,7 @@ class _Compiler:
                     "operation must use a core or namespaced relation",
                     expression,
                 )
-            refs = [
-                self._materialize_expression(item)
-                for item in expression.arguments
-            ]
+            refs = [self._materialize_expression(item) for item in expression.arguments]
             if not refs:
                 raise self._error(
                     "relation_requires_argument",
@@ -336,30 +336,20 @@ class _Compiler:
             return self._relation_result_atom(relation_id)
         if isinstance(expression, CompositionExpression):
             refs = [self._materialize_expression(item) for item in expression.items]
-            return self._relation_result_atom(
-                self._add_relation("lstp.compose", refs)
-            )
+            return self._relation_result_atom(self._add_relation("lstp.compose", refs))
         if isinstance(expression, AlternativeExpression):
             refs = [self._materialize_expression(item) for item in expression.items]
-            return self._relation_result_atom(
-                self._add_relation("lstp.alternative", refs)
-            )
+            return self._relation_result_atom(self._add_relation("lstp.alternative", refs))
         if isinstance(expression, UnaryExpression):
             ref = self._materialize_expression(expression.operand)
-            return self._relation_result_atom(
-                self._add_relation("lstp.exclude", [ref])
-            )
+            return self._relation_result_atom(self._add_relation("lstp.exclude", [ref]))
         if isinstance(expression, ApproximationExpression):
             ref = self._materialize_expression(expression.operand)
-            return self._relation_result_atom(
-                self._add_relation("lstp.approximate", [ref])
-            )
+            return self._relation_result_atom(self._add_relation("lstp.approximate", [ref]))
         if isinstance(expression, AnnotationExpression):
             label = self._add_value_atom(expression.label, kind="concept")
             value = self._materialize_expression(expression.value)
-            return self._relation_result_atom(
-                self._add_relation("lstp.annotation", [label, value])
-            )
+            return self._relation_result_atom(self._add_relation("lstp.annotation", [label, value]))
         raise self._error(
             "unsupported_expression",
             "expression has no canonical mapping",
@@ -378,10 +368,7 @@ class _Compiler:
             args: list[str] = []
             if focus is not None:
                 args.append(focus)
-            args.extend(
-                self._materialize_expression(item)
-                for item in expression.arguments
-            )
+            args.extend(self._materialize_expression(item) for item in expression.arguments)
             if not args:
                 raise self._error(
                     "relation_requires_argument",
@@ -399,10 +386,10 @@ class _Compiler:
             key = entry.key
             if entry.separator == ":":
                 label = self._add_value_atom(key, kind="concept")
-                value = self._materialize_expression(entry.value)
+                annotation = self._materialize_expression(entry.value)
                 self._add_relation(
                     "lstp.constraint_annotation",
-                    [label, value],
+                    [label, annotation],
                 )
                 continue
             if key == "mode":
@@ -568,11 +555,7 @@ class _Compiler:
                 "unknown_output_format",
                 f"output format {clause.format!r} is not canonical",
             )
-        extensions = (
-            {}
-            if clause.zoom is None
-            else {"lstp": {"zoom": clause.zoom}}
-        )
+        extensions = {} if clause.zoom is None else {"lstp": {"zoom": clause.zoom}}
         candidate = Output(clause.format, extensions=extensions)
         if self.output is not None and self.output != candidate:
             raise self._error(
@@ -592,10 +575,7 @@ class _Compiler:
                     item.value,
                 )
             value = self._literal(item.value)
-            if (
-                item.key in self.audit_metadata
-                and self.audit_metadata[item.key] != value
-            ):
+            if item.key in self.audit_metadata and self.audit_metadata[item.key] != value:
                 raise self._error(
                     "duplicate_metadata",
                     f"conflicting metadata key {item.key!r}",
@@ -620,11 +600,7 @@ class _Compiler:
 
     def compile(self, document: Document) -> PacketEnvelope:
         self._register_macros(document)
-        mains = [
-            item
-            for item in document.clauses
-            if isinstance(item, MainClause)
-        ]
+        mains = [item for item in document.clauses if isinstance(item, MainClause)]
         if len(mains) != 1:
             raise self._error(
                 "main_clause_cardinality",
@@ -654,15 +630,9 @@ class _Compiler:
                     "relation tail requires a target focus",
                     main.relation_tail.value,
                 )
-            value = self._materialize_expression(
-                main.relation_tail.value
-            )
-            relation_type = (
-                "is"
-                if main.relation_tail.separator == "="
-                else "lstp.annotation"
-            )
-            self._add_relation(relation_type, [focus, value])
+            tail = self._materialize_expression(main.relation_tail.value)
+            relation_type = "is" if main.relation_tail.separator == "=" else "lstp.annotation"
+            self._add_relation(relation_type, [focus, tail])
 
         if main.operation is not None:
             self._compile_operation(main.operation, focus)
@@ -702,10 +672,7 @@ class _Compiler:
                     clause.key,
                     kind="concept",
                 )
-                alternatives = [
-                    self._materialize_expression(item)
-                    for item in clause.alternatives
-                ]
+                alternatives = [self._materialize_expression(item) for item in clause.alternatives]
                 self._add_relation(
                     "lstp.ambiguity",
                     [key, *alternatives],
@@ -713,7 +680,8 @@ class _Compiler:
             elif isinstance(clause, ContextCommand):
                 raise self._error(
                     "runtime_context_command",
-                    "ctx.push/ctx.pop are runtime commands and cannot be serialized as canonical packet semantics",
+                    "ctx.push/ctx.pop are runtime commands and cannot be serialized "
+                    "as canonical packet semantics",
                 )
             elif isinstance(clause, MacroDefinition):
                 continue
@@ -734,11 +702,7 @@ class _Compiler:
                     self.options.thread_id,
                     references=tuple(self.context_refs),
                 ),
-                (
-                    self.options.default_confidence
-                    if self.confidence is None
-                    else self.confidence
-                ),
+                (self.options.default_confidence if self.confidence is None else self.confidence),
                 Permissions(
                     mode=self.mode,
                     scope=tuple(self.scope),

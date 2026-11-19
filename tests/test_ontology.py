@@ -24,10 +24,13 @@ def test_reject_unknown_parent_and_cycles() -> None:
     with pytest.raises(OntologyError, match="parent"):
         OntologyRegistry("1.0", [OntologyTerm("test.child", "concept", ("test.absent",))])
     with pytest.raises(OntologyError, match="cycle"):
-        OntologyRegistry("1.0", [
-            OntologyTerm("test.a", "concept", ("test.b",)),
-            OntologyTerm("test.b", "concept", ("test.a",)),
-        ])
+        OntologyRegistry(
+            "1.0",
+            [
+                OntologyTerm("test.a", "concept", ("test.b",)),
+                OntologyTerm("test.b", "concept", ("test.a",)),
+            ],
+        )
 
 
 def test_no_silent_namespace_or_alias_invention() -> None:
@@ -44,13 +47,20 @@ def test_no_silent_namespace_or_alias_invention() -> None:
 
 def test_packet_relation_domain_range_checks_and_missing_types() -> None:
     ontology = upper_ontology()
+
     def atom(identifier: str, declared: str | None) -> SimpleNamespace:
-        return SimpleNamespace(id=identifier, attributes={} if declared is None else {"ontology_type": declared})
+        return SimpleNamespace(
+            id=identifier, attributes={} if declared is None else {"ontology_type": declared}
+        )
+
     def packet(second: str | None, relation_name: str = "lstp.upper.located_at") -> SimpleNamespace:
-        return SimpleNamespace(octad=SimpleNamespace(
-            atoms=[atom("a0", "lstp.upper.person"), atom("a1", second)],
-            relations=[SimpleNamespace(type=relation_name, arguments=("a0", "a1"))],
-        ))
+        return SimpleNamespace(
+            octad=SimpleNamespace(
+                atoms=[atom("a0", "lstp.upper.person"), atom("a1", second)],
+                relations=[SimpleNamespace(type=relation_name, arguments=("a0", "a1"))],
+            )
+        )
+
     ontology.validate_packet(packet("lstp.upper.place"))  # type: ignore[arg-type]
     with pytest.raises(OntologyError, match="type mismatch"):
         ontology.validate_packet(packet("lstp.upper.information"))  # type: ignore[arg-type]

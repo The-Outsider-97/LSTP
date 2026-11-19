@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from lstp.errors import AuthorizationError, Diagnostic
 from lstp.formats import parse_rfc3339
@@ -17,9 +17,7 @@ MODE_CAPABILITIES: dict[str, frozenset[str]] = {
     "PREVIEW": frozenset({"read", "suggest", "prepare"}),
     "RW": frozenset({"read", "suggest", "prepare", "write"}),
     "EXEC": frozenset({"read", "suggest", "prepare", "write", "execute"}),
-    "COMMIT": frozenset(
-        {"read", "suggest", "prepare", "write", "execute", "commit"}
-    ),
+    "COMMIT": frozenset({"read", "suggest", "prepare", "write", "execute", "commit"}),
 }
 if frozenset(MODE_CAPABILITIES) != PERMISSION_MODES:
     raise RuntimeError("host mode-capability mapping is incomplete")
@@ -32,7 +30,7 @@ def _diag(code: str, message: str, path: str | None = None) -> Diagnostic:
 
 
 def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,11 +91,7 @@ class HostDelegationBinding:
             raise ValueError("delegator must be non-empty when supplied")
         if self.principal is not None and not self.principal:
             raise ValueError("principal must be non-empty when supplied")
-        if (
-            self.parent_packet is None
-            and self.delegator is None
-            and self.principal is None
-        ):
+        if self.parent_packet is None and self.delegator is None and self.principal is None:
             raise ValueError("host delegation binding must identify at least one link")
 
 
@@ -189,11 +183,7 @@ def _requested_authority(permissions: Permissions) -> Authority:
     subtract exact capabilities or scope entries; unresolved forbid expressions
     are rejected by action authorization rather than guessed.
     """
-    capabilities = (
-        frozenset()
-        if permissions.mode is None
-        else MODE_CAPABILITIES[permissions.mode]
-    )
+    capabilities = frozenset() if permissions.mode is None else MODE_CAPABILITIES[permissions.mode]
     forbidden = frozenset(permissions.forbid)
     capabilities = capabilities - (forbidden & CAPABILITIES)
     resources = frozenset(permissions.scope) - forbidden
@@ -217,10 +207,7 @@ def effective_authority(
         & runtime.capabilities
     )
     resources = (
-        requested.resources
-        & principal.authority.resources
-        & policy.resources
-        & runtime.resources
+        requested.resources & principal.authority.resources & policy.resources & runtime.resources
     )
     return Authority(capabilities, resources)
 
@@ -238,38 +225,49 @@ def validate_delegation(
     diagnostics: list[Diagnostic] = []
 
     if delegation.parent_packet is not None and delegation.parent_packet != parent.packet_id:
-        diagnostics.append(_diag(
-            "delegation_parent_mismatch",
-            "delegation parent_packet does not match authenticated parent packet",
-            "$.host_authorization.delegation.parent_packet",
-        ))
+        diagnostics.append(
+            _diag(
+                "delegation_parent_mismatch",
+                "delegation parent_packet does not match authenticated parent packet",
+                "$.host_authorization.delegation.parent_packet",
+            )
+        )
     if delegation.delegator is not None and delegation.delegator != parent.principal_id:
-        diagnostics.append(_diag(
-            "delegator_mismatch",
-            "delegation delegator does not match authenticated parent principal",
-            "$.host_authorization.delegation.delegator",
-        ))
+        diagnostics.append(
+            _diag(
+                "delegator_mismatch",
+                "delegation delegator does not match authenticated parent principal",
+                "$.host_authorization.delegation.delegator",
+            )
+        )
     if delegation.principal is not None and delegation.principal != child.principal_id:
-        diagnostics.append(_diag(
-            "delegated_principal_mismatch",
-            "delegation principal does not match authenticated child principal",
-            "$.host_authorization.delegation.principal",
-        ))
+        diagnostics.append(
+            _diag(
+                "delegated_principal_mismatch",
+                "delegation principal does not match authenticated child principal",
+                "$.host_authorization.delegation.principal",
+            )
+        )
 
     extra_capabilities = requested.capabilities - parent.authority.capabilities
     if extra_capabilities:
-        diagnostics.append(_diag(
-            "delegation_capability_widening",
-            f"delegation requests capabilities outside parent authority: {sorted(extra_capabilities)!r}",
-            "$.permissions.mode",
-        ))
+        diagnostics.append(
+            _diag(
+                "delegation_capability_widening",
+                "delegation requests capabilities outside parent authority: "
+                f"{sorted(extra_capabilities)!r}",
+                "$.permissions.mode",
+            )
+        )
     extra_resources = requested.resources - parent.authority.resources
     if extra_resources:
-        diagnostics.append(_diag(
-            "delegation_resource_widening",
-            "delegation requests resources outside parent authority",
-            "$.permissions.scope",
-        ))
+        diagnostics.append(
+            _diag(
+                "delegation_resource_widening",
+                "delegation requests resources outside parent authority",
+                "$.permissions.scope",
+            )
+        )
     return tuple(diagnostics)
 
 
@@ -311,35 +309,40 @@ def authorize_operation(
             expiry = parse_rfc3339(authorization_context.expires_at)
             current = now or _utc_now()
             if current.tzinfo is None:
-                diagnostics.append(_diag(
-                    "invalid_authorization_clock",
-                    "authorization clock must be timezone-aware",
-                ))
-            elif current.astimezone(timezone.utc) >= expiry:
-                diagnostics.append(_diag(
-                    "authorization_expired",
-                    "trusted host authorization context has expired",
-                    "$.host_authorization.expires_at",
-                ))
+                diagnostics.append(
+                    _diag(
+                        "invalid_authorization_clock",
+                        "authorization clock must be timezone-aware",
+                    )
+                )
+            elif current.astimezone(UTC) >= expiry:
+                diagnostics.append(
+                    _diag(
+                        "authorization_expired",
+                        "trusted host authorization context has expired",
+                        "$.host_authorization.expires_at",
+                    )
+                )
 
         if authorization_context.authorization_ref is not None:
-            if (
-                authorization_context.authorization_ref
-                not in policy.trusted_authorization_refs
-            ):
-                diagnostics.append(_diag(
-                    "authorization_ref_untrusted",
-                    "authorization_ref is not recognized by trusted host policy",
-                    "$.host_authorization.authorization_ref",
-                ))
+            if authorization_context.authorization_ref not in policy.trusted_authorization_refs:
+                diagnostics.append(
+                    _diag(
+                        "authorization_ref_untrusted",
+                        "authorization_ref is not recognized by trusted host policy",
+                        "$.host_authorization.authorization_ref",
+                    )
+                )
 
         if authorization_context.delegation is not None:
             if parent is None:
-                diagnostics.append(_diag(
-                    "delegation_parent_authority_missing",
-                    "delegated operation requires authenticated parent authority",
-                    "$.host_authorization.delegation",
-                ))
+                diagnostics.append(
+                    _diag(
+                        "delegation_parent_authority_missing",
+                        "delegated operation requires authenticated parent authority",
+                        "$.host_authorization.delegation",
+                    )
+                )
             else:
                 diagnostics.extend(
                     validate_delegation(
@@ -352,42 +355,59 @@ def authorize_operation(
 
     effective = effective_authority(packet, principal=principal, policy=policy, runtime=runtime)
     if operation.capability not in effective.capabilities:
-        diagnostics.append(_diag(
-            "capability_denied",
-            f"operation capability {operation.capability!r} is not effectively authorized",
-            "$.permissions.mode",
-        ))
+        diagnostics.append(
+            _diag(
+                "capability_denied",
+                f"operation capability {operation.capability!r} is not effectively authorized",
+                "$.permissions.mode",
+            )
+        )
     if operation.resource_id not in effective.resources:
-        diagnostics.append(_diag(
-            "resource_denied",
-            "operation resource is outside effective scope",
-            "$.permissions.scope",
-        ))
+        diagnostics.append(
+            _diag(
+                "resource_denied",
+                "operation resource is outside effective scope",
+                "$.permissions.scope",
+            )
+        )
 
     confirmation_required = (
-        permissions.require_confirmation
-        or operation.capability in policy.require_confirmation_for
+        permissions.require_confirmation or operation.capability in policy.require_confirmation_for
     )
-    review_required = permissions.require_review or operation.capability in policy.require_review_for
-    logging_required = permissions.require_logging or operation.capability in policy.require_logging_for
+    review_required = (
+        permissions.require_review or operation.capability in policy.require_review_for
+    )
+    logging_required = (
+        permissions.require_logging or operation.capability in policy.require_logging_for
+    )
 
     if confirmation_required and not operation.confirmed:
-        diagnostics.append(_diag(
-            "confirmation_required",
-            "trusted confirmation is required for this operation",
-        ))
+        diagnostics.append(
+            _diag(
+                "confirmation_required",
+                "trusted confirmation is required for this operation",
+            )
+        )
     if review_required and not operation.reviewed:
         diagnostics.append(_diag("review_required", "host review is required for this operation"))
     if logging_required and not operation.logging_ready:
-        diagnostics.append(_diag("logging_required", "audit logging must be ready before execution"))
+        diagnostics.append(
+            _diag("logging_required", "audit logging must be ready before execution")
+        )
 
     if diagnostics:
-        return AuthorizationDecision(False, tuple(diagnostics), effective.capabilities, effective.resources)
+        return AuthorizationDecision(
+            False, tuple(diagnostics), effective.capabilities, effective.resources
+        )
 
     if replay_guard is not None and operation.capability in _SIDE_EFFECTS:
         existing_digest = replay_guard.reserve(operation.operation_id, operation.action_digest)
         if existing_digest is not None:
-            code = "operation_changed" if existing_digest != operation.action_digest else "replay_detected"
+            code = (
+                "operation_changed"
+                if existing_digest != operation.action_digest
+                else "replay_detected"
+            )
             message = (
                 "operation id was already bound to different action content"
                 if code == "operation_changed"

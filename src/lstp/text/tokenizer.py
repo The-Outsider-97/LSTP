@@ -8,13 +8,27 @@ from lstp.errors import Diagnostic, LatticeSyntaxError
 from lstp.text.tokens import Token, TokenKind
 
 _SINGLE = {
-    "!": TokenKind.DIRECTIVE, "?": TokenKind.QUESTION, ".": TokenKind.DECLARATIVE,
-    "@": TokenKind.AT, "↑": TokenKind.CONTEXT, "=": TokenKind.EQUAL,
-    ":": TokenKind.COLON, "{": TokenKind.LBRACE, "}": TokenKind.RBRACE,
-    "[": TokenKind.LBRACKET, "]": TokenKind.RBRACKET, "(": TokenKind.LPAREN,
-    ")": TokenKind.RPAREN, ",": TokenKind.COMMA, "|": TokenKind.PIPE,
-    "+": TokenKind.PLUS, "-": TokenKind.MINUS, "~": TokenKind.TILDE,
-    "%": TokenKind.PERCENT, ";": TokenKind.SEMICOLON, "#": TokenKind.HASH,
+    "!": TokenKind.DIRECTIVE,
+    "?": TokenKind.QUESTION,
+    ".": TokenKind.DECLARATIVE,
+    "@": TokenKind.AT,
+    "↑": TokenKind.CONTEXT,
+    "=": TokenKind.EQUAL,
+    ":": TokenKind.COLON,
+    "{": TokenKind.LBRACE,
+    "}": TokenKind.RBRACE,
+    "[": TokenKind.LBRACKET,
+    "]": TokenKind.RBRACKET,
+    "(": TokenKind.LPAREN,
+    ")": TokenKind.RPAREN,
+    ",": TokenKind.COMMA,
+    "|": TokenKind.PIPE,
+    "+": TokenKind.PLUS,
+    "-": TokenKind.MINUS,
+    "~": TokenKind.TILDE,
+    "%": TokenKind.PERCENT,
+    ";": TokenKind.SEMICOLON,
+    "#": TokenKind.HASH,
 }
 
 
@@ -65,7 +79,7 @@ class Tokenizer:
             elif char == '"':
                 break
         try:
-            value = json.loads(self.source[start:self.index])
+            value = json.loads(self.source[start : self.index])
         except json.JSONDecodeError:
             raise self._error("invalid_string", "invalid JSON-style string escape") from None
         return self._token(TokenKind.STRING, value, line, column)
@@ -78,47 +92,73 @@ class Tokenizer:
             self._advance()
             while self._peek().isdigit():
                 self._advance()
-        return self._token(TokenKind.NUMBER, self.source[start:self.index], line, column)
+        return self._token(TokenKind.NUMBER, self.source[start : self.index], line, column)
 
     def _read_identifier(self) -> Token:
         line, column, start = self.line, self.column, self.index
         self._advance()
         while True:
             char = self._peek()
-            if char.isascii() and (char.isalnum() or char in "_-"):
+            if char and char.isascii() and (char.isalnum() or char in "_-"):
                 self._advance()
-            elif char == "." and self._peek(1).isascii() and (self._peek(1).isalpha() or self._peek(1) == "_"):
+            elif (
+                char == "."
+                and self._peek(1).isascii()
+                and (self._peek(1).isalpha() or self._peek(1) == "_")
+            ):
                 self._advance()
                 self._advance()
             else:
                 break
-        return self._token(TokenKind.IDENTIFIER, self.source[start:self.index], line, column)
+        return self._token(TokenKind.IDENTIFIER, self.source[start : self.index], line, column)
 
     def tokenize(self) -> tuple[Token, ...]:
         tokens: list[Token] = []
         while self.index < len(self.source):
             char = self._peek()
             if char in " \t":
-                self._advance(); continue
+                self._advance()
+                continue
             if char in "\r\n":
                 line, column = self.line, self.column
                 if char == "\r":
                     self._advance()
-                    if self._peek() == "\n": self._advance()
-                else: self._advance()
-                tokens.append(self._token(TokenKind.NEWLINE, "\n", line, column)); continue
+                    if self._peek() == "\n":
+                        self._advance()
+                else:
+                    self._advance()
+                tokens.append(self._token(TokenKind.NEWLINE, "\n", line, column))
+                continue
             line, column = self.line, self.column
-            pair = self.source[self.index:self.index + 2]
+            pair = self.source[self.index : self.index + 2]
             if pair in {"!!", "->", "::", ".."}:
-                kind = {"!!": TokenKind.URGENT_DIRECTIVE, "->": TokenKind.ARROW, "::": TokenKind.DOUBLE_COLON, "..": TokenKind.RANGE}[pair]
-                self._advance(); self._advance(); tokens.append(self._token(kind, pair, line, column)); continue
-            if char == '"': tokens.append(self._read_string()); continue
-            if char.isdigit(): tokens.append(self._read_number()); continue
-            if char.isascii() and (char.isalpha() or char == "_"): tokens.append(self._read_identifier()); continue
-            kind = _SINGLE.get(char)
-            if kind is not None:
-                self._advance(); tokens.append(self._token(kind, char, line, column)); continue
-            raise self._error("unexpected_character", f"unexpected Lattice character U+{ord(char):04X}")
+                kind = {
+                    "!!": TokenKind.URGENT_DIRECTIVE,
+                    "->": TokenKind.ARROW,
+                    "::": TokenKind.DOUBLE_COLON,
+                    "..": TokenKind.RANGE,
+                }[pair]
+                self._advance()
+                self._advance()
+                tokens.append(self._token(kind, pair, line, column))
+                continue
+            if char == '"':
+                tokens.append(self._read_string())
+                continue
+            if char.isdigit():
+                tokens.append(self._read_number())
+                continue
+            if char.isascii() and (char.isalpha() or char == "_"):
+                tokens.append(self._read_identifier())
+                continue
+            single_kind = _SINGLE.get(char)
+            if single_kind is not None:
+                self._advance()
+                tokens.append(self._token(single_kind, char, line, column))
+                continue
+            raise self._error(
+                "unexpected_character", f"unexpected Lattice character U+{ord(char):04X}"
+            )
         tokens.append(self._token(TokenKind.EOF, "", self.line, self.column))
         return tuple(tokens)
 

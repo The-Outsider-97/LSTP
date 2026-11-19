@@ -5,10 +5,10 @@ from __future__ import annotations
 import io
 import json
 import tarfile
+from pathlib import Path
 from typing import cast
 
 import pytest
-from pathlib import Path
 
 from tools.run_release_checks import _safe_extract_sdist
 
@@ -49,9 +49,7 @@ def test_sdist_includes_interoperability_assets() -> None:
     assert all((directory / path).is_file() for path in paths)
 
 
-def _extract_entries(
-    tmp_path: Path, entries: list[tuple[tarfile.TarInfo, bytes | None]]
-) -> None:
+def _extract_entries(tmp_path: Path, entries: list[tuple[tarfile.TarInfo, bytes | None]]) -> None:
     stream = io.BytesIO()
     with tarfile.open(fileobj=stream, mode="w") as archive:
         for member, payload in entries:
@@ -70,9 +68,20 @@ def _regular(name: str) -> tuple[tarfile.TarInfo, bytes]:
 @pytest.mark.parametrize(
     "name",
     [
-        "../escape", "/absolute", "pkg/../escape", "pkg/./file", "pkg//file",
-        r"pkg\\file", "pkg/CON", "pkg/aux.txt", "pkg/COM1.log",
-        "pkg/trailing.", "pkg/trailing ", "pkg/colon:bad", ".", "pkg/..",
+        "../escape",
+        "/absolute",
+        "pkg/../escape",
+        "pkg/./file",
+        "pkg//file",
+        r"pkg\\file",
+        "pkg/CON",
+        "pkg/aux.txt",
+        "pkg/COM1.log",
+        "pkg/trailing.",
+        "pkg/trailing ",
+        "pkg/colon:bad",
+        ".",
+        "pkg/..",
     ],
 )
 def test_sdist_rejects_unsafe_member_names(tmp_path: Path, name: str) -> None:
@@ -83,8 +92,7 @@ def test_sdist_rejects_unsafe_member_names(tmp_path: Path, name: str) -> None:
 
 @pytest.mark.parametrize(
     "kind",
-    [tarfile.SYMTYPE, tarfile.LNKTYPE, tarfile.CHRTYPE,
-     tarfile.BLKTYPE, tarfile.FIFOTYPE],
+    [tarfile.SYMTYPE, tarfile.LNKTYPE, tarfile.CHRTYPE, tarfile.BLKTYPE, tarfile.FIFOTYPE],
 )
 def test_sdist_rejects_links_and_special_files(tmp_path: Path, kind: bytes) -> None:
     member = tarfile.TarInfo("pkg/unsafe")
@@ -149,9 +157,7 @@ def test_sdist_rejects_member_count_limit(tmp_path: Path) -> None:
         _safe_extract_sdist(archive, tmp_path)
 
 
-def test_sdist_requires_secure_filter(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_sdist_requires_secure_filter(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     member = tarfile.TarInfo("pkg/a")
     archive = cast(tarfile.TarFile, _NoExtractArchive([member]))
     monkeypatch.delattr(tarfile, "data_filter", raising=False)
